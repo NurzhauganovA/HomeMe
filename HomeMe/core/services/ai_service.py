@@ -1,3 +1,6 @@
+import ast
+import re
+
 import google.generativeai as genai
 from google.api_core import exceptions
 import json
@@ -18,25 +21,36 @@ class EnhancedAIService:
     def __init__(self):
         api_key = getattr(settings, 'GEMINI_API_KEY')
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-3-flash-preview')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+        # print("🔍 Поиск доступных моделей...\n")
+        #
+        # try:
+        #     for m in genai.list_models():
+        #         # Нам нужны только те, которые умеют генерировать текст (generateContent)
+        #         if 'generateContent' in m.supported_generation_methods:
+        #             print(f"- {m.name}")
+        # except Exception as e:
+        #     print(f"Ошибка при получении списка: {e}")
 
         # Кэш для экономии запросов
         self._location_cache = {}
         self._query_enrichment_cache = {}
 
-    def _generate_with_retry(self, prompt: str, retries=3, temperature=0.3):
+    def _generate_with_retry(self, prompt: str, retries=3, temperature=0.3, json_mode=False):
         """Умная генерация с retry логикой и настраиваемой температурой"""
         for attempt in range(retries):
             try:
-                response = self.model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=temperature,
-                        top_p=0.95,
-                        top_k=40,
-                        max_output_tokens=2048,
-                    )
+                # Настройка конфига
+                config = genai.types.GenerationConfig(
+                    temperature=temperature,
+                    top_p=0.95,
+                    top_k=40,
+                    max_output_tokens=4096,  # Увеличим лимит токенов на всякий случай
+                    response_mime_type="application/json" if json_mode else "text/plain"
                 )
+
+                response = self.model.generate_content(prompt, generation_config=config)
                 return response
             except exceptions.ResourceExhausted as e:
                 wait_time = 10 * (attempt + 1)
@@ -70,14 +84,54 @@ class EnhancedAIService:
         return ""
 
     def _parse_json_response(self, text: str) -> Optional[Dict]:
-        """Парсинг JSON с очисткой markdown"""
+        """Парсинг JSON с поиском границ и поддержкой Python-синтаксиса"""
         if not text:
             return None
+
         try:
-            clean = text.replace('```json', '').replace('```', '').strip()
-            return json.loads(clean)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parse error: {e}\nText: {text}")
+            # 1. Поиск границ JSON (чтобы убрать "Here is your JSON..." в начале)
+            text = text.strip()
+
+            # Ищем индексы начала объекта или списка
+            start_brace = text.find('{')
+            start_bracket = text.find('[')
+
+            start = -1
+            end = -1
+
+            # Определяем, что начинается раньше (объект или список) и ищем конец
+            if start_brace != -1 and (start_bracket == -1 or start_brace < start_bracket):
+                start = start_brace
+                end = text.rfind('}') + 1
+            elif start_bracket != -1 and (start_brace == -1 or start_bracket < start_brace):
+                start = start_bracket
+                end = text.rfind(']') + 1
+
+            if start != -1 and end > start:
+                json_str = text[start:end]
+            else:
+                # Если скобок не нашли, пробуем чистить как было (на всякий случай)
+                json_str = text.replace('```json', '').replace('```', '').strip()
+
+            # 2. Чистка висячих запятых (Regex)
+            json_str = re.sub(r',\s*]', ']', json_str)
+            json_str = re.sub(r',\s*}', '}', json_str)
+
+            # 3. Попытка стандартного JSON парсинга
+            return json.loads(json_str)
+
+        except json.JSONDecodeError:
+            try:
+                # 4. FALLBACK: Python eval
+                # Спасает, если AI вернул одинарные кавычки: {'key': 'value'}
+                return ast.literal_eval(json_str)
+            except Exception:
+                # 5. ЛОГИРОВАНИЕ ОШИБКИ
+                # Это самое важное: мы увидим в консоли, какой именно текст сломал парсер
+                logger.error(f"❌ JSON Parse Failed. Bad text content:\n{text}")
+                return None
+        except Exception as e:
+            logger.error(f"❌ Unexpected Error in JSON parser: {e}")
             return None
 
     # ======================== STAGE 1: INTENT CLASSIFICATION ========================
@@ -258,7 +312,7 @@ class EnhancedAIService:
     "reasoning": "Запрос указывает на семейные ценности и тишину"
 }}"""
 
-        response = self._generate_with_retry(prompt, temperature=0.3)
+        response = self._generate_with_retry(prompt, temperature=0.3, json_mode=True)
         text = self._extract_text(response)
         result = self._parse_json_response(text)
 
@@ -454,7 +508,13 @@ class EnhancedAIService:
                 content=text,
                 task_type="retrieval_document"
             )
-            return result['embedding']
+            embedding = result.get('embedding')
+
+            # Нормализуем в список, чтобы избежать ошибок truth value для numpy array
+            if embedding is None:
+                return None
+
+            return list(embedding)
         except Exception as e:
             logger.error(f"Embedding error: {e}")
             return None

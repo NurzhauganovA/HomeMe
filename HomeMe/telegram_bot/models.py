@@ -457,3 +457,93 @@ class UserFeedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.user.name}: {self.rating}⭐"
+
+
+class BIComplex(models.Model):
+    """
+    ЖК или очередь (realEstate из API)
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bi_uuid = models.CharField("UUID из API", max_length=100, unique=True, db_index=True)
+
+    # Основные данные
+    name = models.CharField("Название ЖК", max_length=255)
+    address = models.CharField("Адрес", max_length=500, blank=True)
+    city_uuid = models.CharField("UUID Города", max_length=100, db_index=True)
+
+    # Геолокация (из API realEstateList)
+    latitude = models.FloatField("Широта", null=True, blank=True)
+    longitude = models.FloatField("Долгота", null=True, blank=True)
+
+    # Характеристики ЖК
+    class_name = models.CharField("Класс жилья", max_length=100, blank=True)  # Комфорт, Бизнес...
+    deadline = models.CharField("Срок сдачи", max_length=50, blank=True)
+    min_price = models.DecimalField("Цена от", max_digits=15, decimal_places=2, null=True)
+
+    # Медиа
+    website = models.URLField(blank=True)
+    image_url = models.URLField("Фото 400px", blank=True)
+
+    # === AI Brain ===
+    # Сюда пишем теги после анализа описания и локации (quiet, park, center)
+    features = models.JSONField("AI Теги", default=dict)
+    # Сюда пишем векторное представление ЖК для умного поиска
+    embedding = VectorField(dimensions=768, null=True, blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def get_text_for_embedding(self):
+        """Формирует текст для векторизации"""
+        # Можно добавить сюда названия ближайших парков (если есть свой гео-сервис)
+        return f"ЖК {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Теги: {', '.join(self.features.keys())}"
+
+    class Meta:
+        db_table = 'bi_complexes'
+        verbose_name = "ЖК"
+        verbose_name_plural = "ЖК"
+
+
+class BIUnit(models.Model):
+    """
+    Конкретная квартира (Placement из API).
+    Хранит точные параметры для фильтрации.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bi_uuid = models.CharField("UUID Квартиры", max_length=100, unique=True, db_index=True)
+
+    # Связь с ЖК
+    complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
+
+    # Параметры квартиры
+    room_count = models.IntegerField("Комнат", db_index=True)
+    floor = models.IntegerField("Этаж")
+    max_floor = models.IntegerField("Всего этажей", null=True)
+    area = models.FloatField("Площадь")
+
+    # Цена
+    price = models.DecimalField("Базовая цена", max_digits=15, decimal_places=2)
+    price_discount = models.DecimalField("Цена со скидкой", max_digits=15, decimal_places=2, null=True)
+
+    # Дополнительно
+    block_name = models.CharField("Блок/Секция", max_length=100, blank=True)
+    deadline = models.CharField("Срок сдачи секции", max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)  # Если пропала из API -> False
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['price_discount', 'room_count']),
+            models.Index(fields=['area']),
+        ]
+        db_table = 'bi_units'
+        verbose_name = "Квартира в ЖК"
+        verbose_name_plural = "Квартиры в ЖК"
+
+    def __str__(self):
+        return f"{self.room_count}-комн, {self.area}м2 в {self.complex.name}"
+
+    @property
+    def current_price(self):
+        return self.price_discount if self.price_discount else self.price

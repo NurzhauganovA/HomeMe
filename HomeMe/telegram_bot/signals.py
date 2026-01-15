@@ -49,7 +49,7 @@ def generate_property_embedding(sender, instance, **kwargs):
             logger.info(f"🧠 Generating embedding for property: {instance.title[:30]}...")
             embedding = ai.get_embedding(full_text)
 
-            if embedding:
+            if embedding is not None:
                 instance.embedding = embedding
                 logger.info(f"✅ Embedding generated successfully (dim: {len(embedding)})")
             else:

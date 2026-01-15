@@ -2,7 +2,7 @@ import math
 from pgvector.django import CosineDistance
 from django.db.models import Q, F
 from core.bi_client import EnhancedBIGroupClient
-from telegram_bot.models import SecondaryProperty
+from telegram_bot.models import SecondaryProperty, BIUnit, BIComplex
 from core.dto import PropertyDTO
 from typing import List, Dict, Optional
 import logging
@@ -20,87 +20,54 @@ class EnhancedSearchService:
         self.bi_client = EnhancedBIGroupClient()
         self.ai_service = ai_service
 
-    def intelligent_search(self, analysis_result: Dict, limit: int = 10) -> List[PropertyDTO]:
+    def intelligent_search(self, analysis_result: Dict, limit: int = 10):
         """
-        ГЛАВНЫЙ МЕТОД ПОИСКА.
-        Принимает результат comprehensive analysis и ищет жилье.
+        Гибридный поиск:
+        1. Находим подходящие ЖК по Вектору и Локации.
+        2. Внутри этих ЖК ищем конкретные квартиры по параметрам.
         """
-        logger.info("🔍 Starting intelligent search...")
 
-        # Извлекаем параметры из анализа
-        city = analysis_result.get('city')
-        district = analysis_result.get('district')
-        rooms = analysis_result.get('rooms')
-        max_price = analysis_result.get('max_price')
-        min_price = analysis_result.get('min_price')
-        min_area = analysis_result.get('min_area')
-        max_area = analysis_result.get('max_area')
+        # 1. Фильтруем ЖК (Complexes)
+        complex_qs = BIComplex.objects.all()
 
-        lifestyle_tags = analysis_result.get('lifestyle_tags', [])
-        semantic_keywords = analysis_result.get('semantic_keywords', [])
-        description_phrases = analysis_result.get('description_match_phrases', [])
-        exclusion_keywords = analysis_result.get('exclusion_keywords', [])
-        embedding_text = analysis_result.get('embedding_text', '')
+        # Гео-фильтр (если есть координаты от AI)
+        lat, lon = analysis_result.get('coordinates', (None, None))
+        if lat and lon:
+            # Тут можно использовать Haversine формулу или PostGIS
+            # Для простоты MVP: квадрат поиска
+            radius = 0.03  # ~3km
+            complex_qs = complex_qs.filter(
+                latitude__range=(lat - radius, lat + radius),
+                longitude__range=(lon - radius, lon + radius)
+            )
 
-        # Геоданные от AI (dict -> tuple для фильтрации)
-        coordinates_dict = analysis_result.get('coordinates')
-        coordinates = None
-        if isinstance(coordinates_dict, dict) and coordinates_dict.get('lat') is not None and coordinates_dict.get('lon') is not None:
-            coordinates = (coordinates_dict['lat'], coordinates_dict['lon'])
-        radius_km = analysis_result.get('radius_km')
+        # Векторный поиск по ЖК (если есть текстовый запрос стиля жизни)
+        query_text = analysis_result.get('embedding_text')
+        if query_text:
+            embedding = self.ai_service.get_embedding(query_text)
+            if embedding:
+                # Сортируем ЖК по похожести (Cosine Distance)
+                complex_qs = complex_qs.order_by(CosineDistance('embedding', embedding))
 
-        # Добавляем локационные ключевые слова (ориентиры и т.п.)
-        location_keywords = list(semantic_keywords)
-        for landmark in analysis_result.get('nearby_landmarks', []):
-            if landmark:
-                location_keywords.append(str(landmark))
+        # Берем топ-5 подходящих ЖК
+        top_complexes = list(complex_qs[:5])
 
+        # 2. Ищем Квартиры (Units) в этих ЖК
         results = []
+        for comp in top_complexes:
+            units = BIUnit.objects.filter(
+                complex=comp,
+                is_active=True,
+                price_discount__lte=analysis_result.get('max_price', 9999999999),
+                room_count=analysis_result.get('rooms', 0) if analysis_result.get('rooms') else None
+                # Добавьте area фильтры и т.д.
+            ).order_by('price_discount')[:2]  # Берем по 2 лучших варианта из каждого ЖК
 
-        # ========== ЭТАП 1: BI GROUP API ==========
-        logger.info("📡 Searching BI Group API...")
-        bi_results = self._search_bi_group(
-            city=city,
-            district=district,
-            rooms=rooms,
-            max_price=max_price,
-            min_price=min_price,
-            min_area=min_area,
-            max_area=max_area,
-            semantic_keywords=location_keywords,
-            coordinates=coordinates,
-            radius_km=radius_km
-        )
-        results.extend(bi_results)
-        logger.info(f"✅ BI Group: {len(bi_results)} results")
+            for u in units:
+                # Конвертируем в ваш DTO для ответа пользователю
+                results.append(self._map_unit_to_dto(u, comp))
 
-        # ========== ЭТАП 2: ВТОРИЧКА ==========
-        logger.info("🏠 Searching secondary market...")
-        secondary_results = self._search_secondary_intelligent(
-            city=city,
-            district=district,
-            rooms=rooms,
-            max_price=max_price,
-            min_price=min_price,
-            min_area=min_area,
-            max_area=max_area,
-            lifestyle_tags=lifestyle_tags,
-            semantic_keywords=location_keywords,
-            description_phrases=description_phrases,
-            exclusion_keywords=exclusion_keywords,
-            embedding_text=embedding_text,
-            coordinates=coordinates,
-            radius_km=radius_km,
-            limit=limit
-        )
-        results.extend(secondary_results)
-        logger.info(f"✅ Secondary: {len(secondary_results)} results")
-
-        # ========== ЭТАП 3: УМНАЯ СОРТИРОВКА ==========
-        ranked_results = self._rank_results(results, analysis_result)
-
-        logger.info(f"✅ Total results: {len(ranked_results)}")
-        return ranked_results[:limit]
+        return results
 
     def _search_bi_group(self, city, district, rooms, max_price, min_price,
                          min_area, max_area, semantic_keywords, coordinates, radius_km) -> List[PropertyDTO]:

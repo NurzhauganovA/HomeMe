@@ -497,3 +497,75 @@ class EnhancedBIGroupClient:
         except Exception as e:
             logger.error(f"❌ Error getting statistics: {e}")
             return {}
+
+    def get_all_real_estates(self) -> List[Dict]:
+        """Получает ВСЕ ЖК (обходим пагинацию)"""
+        all_items = []
+        page = 1
+        page_size = 100  # Ставим побольше
+
+        while True:
+            payload = {
+                "companyIds": self.COMPANY_IDS,
+                "propertyTypes": self.PROPERTY_TYPES,
+                "pageNo": page,
+                "pageSize": page_size
+            }
+            try:
+                data = self._make_request("https://apigw.bi.group/sales-picker/microfe-v3/realEstateList", payload)
+                items = data.get("realEstates", [])
+
+                if not items:
+                    break
+
+                all_items.extend(items)
+                logger.info(f"📥 Fetched page {page} of RealEstates (got {len(items)})")
+
+                if len(items) < page_size:  # Последняя страница
+                    break
+                page += 1
+
+            except Exception as e:
+                logger.error(f"❌ Error fetching real estates page {page}: {e}")
+                break
+
+        return all_items
+
+    def get_placements_for_complex(self, complex_uuid: str) -> List[Dict]:
+        """Получает ВСЕ квартиры конкретного ЖК"""
+        all_placements = []
+        page = 1
+        page_size = 50
+
+        while True:
+            payload = {
+                "companyIds": self.COMPANY_IDS,
+                "propertyTypes": self.PROPERTY_TYPES,
+                "realEstateUUIDs": [complex_uuid],
+                "pageNo": page,
+                "pageSize": page_size
+            }
+            try:
+                data = self._make_request("https://apigw.bi.group/sales-picker/microfe-v3/placementList", payload)
+                items = data.get("placements", [])
+
+                if not items:
+                    break
+
+                all_placements.extend(items)
+
+                if len(items) < page_size:
+                    break
+                page += 1
+
+            except Exception as e:
+                # Некоторые ЖК могут не иметь квартир в продаже
+                break
+
+        return all_placements
+
+    def _make_request(self, url: str, payload: Dict) -> Dict:
+        """Вспомогательный метод для чистоты кода"""
+        response = self.session.post(url, json=payload, headers=self._get_headers(), timeout=10)
+        response.raise_for_status()
+        return response.json()
