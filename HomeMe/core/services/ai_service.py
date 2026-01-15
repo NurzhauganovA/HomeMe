@@ -2,190 +2,479 @@ import google.generativeai as genai
 from google.api_core import exceptions
 import json
 import logging
-import os
 import time
+from typing import Dict, List, Optional, Tuple
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
-class AIService:
+class EnhancedAIService:
+    """
+    Профессиональная многоступенчатая AI-система для интеллектуального поиска недвижимости.
+    Включает: NLU, геокодирование, анализ предпочтений, валидацию и обогащение данных.
+    """
+
     def __init__(self):
-        # Настройка API
         api_key = getattr(settings, 'GEMINI_API_KEY')
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-3-flash-preview')
+        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
-    def get_embedding(self, text: str):
-        """Превращает текст в вектор (768 чисел)"""
-        try:
-            # Используем модель для эмбеддингов
-            result = genai.embed_content(
-                model="models/text-embedding-004",  # Или models/embedding-001
-                content=text,
-                task_type="retrieval_document",
-                title="Property Description"
-            )
-            return result['embedding']
-        except Exception as e:
-            logger.error(f"Embedding Error: {e}")
-            return None
+        # Кэш для экономии запросов
+        self._location_cache = {}
+        self._query_enrichment_cache = {}
 
-    def _generate_with_retry(self, prompt: str, retries=3):
-        """Пытается получить ответ, при ошибке 429 ждет и пробует снова"""
+    def _generate_with_retry(self, prompt: str, retries=3, temperature=0.3):
+        """Умная генерация с retry логикой и настраиваемой температурой"""
         for attempt in range(retries):
             try:
-                return self.model.generate_content(prompt)
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=temperature,
+                        top_p=0.95,
+                        top_k=40,
+                        max_output_tokens=2048,
+                    )
+                )
+                return response
             except exceptions.ResourceExhausted as e:
-                wait_time = 10 * (attempt + 1)  # Ждем 10с, потом 20с...
-                logger.warning(f"Gemini 429 Error (Quota). Waiting {wait_time}s... Attempt {attempt + 1}/{retries}")
+                wait_time = 10 * (attempt + 1)
+                logger.warning(f"Gemini quota exceeded. Retry {attempt + 1}/{retries} after {wait_time}s")
                 time.sleep(wait_time)
             except Exception as e:
-                logger.error(f"Gemini Error: {e}")
-                return None
+                logger.error(f"Gemini error: {e}")
+                if attempt == retries - 1:
+                    return None
         return None
 
     @staticmethod
     def _extract_text(response) -> str:
-        """
-        Безопасно извлекает текст из ответа Gemini.
-        Бывают случаи, когда response.text бросает ValueError из-за пустых Part.
-        """
+        """Безопасное извлечение текста из ответа Gemini"""
         if not response:
             return ""
-        # Прямой быстрый путь
         try:
             return response.text or ""
         except Exception:
-            pass
-
-        # Фолбэк: вытаскиваем из кандидатов
-        try:
-            candidates = getattr(response, "candidates", None) or []
-            for cand in candidates:
-                content = getattr(cand, "content", None)
-                parts = getattr(content, "parts", None) or []
-                for part in parts:
-                    text = getattr(part, "text", None)
-                    if text:
-                        return text
-        except Exception as e:
-            logger.error(f"Failed to extract text from Gemini response: {e}")
-
+            try:
+                candidates = getattr(response, "candidates", [])
+                for cand in candidates:
+                    content = getattr(cand, "content", None)
+                    parts = getattr(content, "parts", [])
+                    for part in parts:
+                        text = getattr(part, "text", None)
+                        if text:
+                            return text
+            except Exception as e:
+                logger.error(f"Failed to extract text: {e}")
         return ""
 
-    def analyze_message(self, user_text: str, current_context: dict = None) -> dict:
-        context_str = json.dumps(current_context, ensure_ascii=False) if current_context else {}
-
-        prompt = f"""
-            ТЫ — HomeMe, профессиональный ИИ-консультант по недвижимости.
-
-            ТВОЯ ЗАДАЧА:
-            Проанализировать сообщение и вернуть JSON с параметрами поиска.
-
-            ИЗВЛЕЧЕНИЕ ПАРАМЕТРОВ (params) для интента "search_objects":
-            - "rooms" (int): Количество комнат.
-            - "max_price" (int): Максимальный бюджет (50 млн -> 50000000).
-            - "city" (str): Город. ОЧЕНЬ ВАЖНО. Варианты: "Astana", "Almaty", "Shymkent", "Atyrau". По умолчанию null (если не указан).
-            - "district" (str): Ключевые слова локации (EXPO, Есильский, Ботанический, Мега, Центр).
-
-            ПРАВИЛА КОНТЕКСТА:
-            - Текущий контекст: {context_str}
-            - Если пользователь пишет "Найди в районе EXPO", это значит district="EXPO", city="Astana" (так как EXPO в Астане).
-            - Алиасы: "левый берег", "левберег", "Esil" -> city="Astana", district="левый берег".
-            - Если пишет "В Алматы", то city="Almaty".
-
-            ФОРМАТ ОТВЕТА (JSON):
-            {{
-                "intent": "search_objects" или "greeting" или "consult_location",
-                "params": {{
-                    "rooms": null,
-                    "max_price": null,
-                    "city": "Astana",
-                    "district": "EXPO"
-                }},
-                "reply_text": "Ответ пользователю"
-            }}
-
-            Входящее сообщение: "{user_text}"
-        """
-
-        response = self._generate_with_retry(prompt)
-
-        resp_text = self._extract_text(response)
-        if resp_text:
-            try:
-                clean_text = resp_text.replace('```json', '').replace('```', '').strip()
-                return json.loads(clean_text)
-            except json.JSONDecodeError:
-                return {"intent": "greeting", "params": {}, "reply_text": "Не понял формат."}
-
-        # Если после всех попыток ответа нет
-        return {"intent": "greeting", "params": {}, "reply_text": "Сервисы перегружены, попробуйте через минуту."}
-
-    def generate_consultation(self, query: str) -> str:
-        prompt = f"""
-        Ты эксперт по недвижимости Астаны. Пользователь спрашивает: "{query}".
-        Расскажи кратко и честно про этот район/вопрос. Выдели плюсы и минусы.
-        Не предлагай конкретные квартиры, просто дай справку.
-        """
-        response = self._generate_with_retry(prompt)
-        if response:
-            text = self._extract_text(response)
-            if text:
-                return text
-        return "Не удалось получить консультацию сейчас."
-
-    def resolve_location_and_prefs(self, user_text: str, current_context: dict | None = None) -> dict:
-        """
-        Нормализация города/района и извлечение предпочтений (тихо/шумно/парки/метро и т.д.) через LLM.
-        Возвращает dict c полями:
-        - city: Один из ["Astana", "Almaty", "Shymkent", "Atyrau"] или null.
-        - district_normalized: Нормализованное название/район или null.
-        - nearby_keywords: Список строк (ориентиры: EXPO, Mega, парк, набережная).
-        - lifestyle_tags: Список тегов предпочтений: ["quiet","noisy","park","school","metro","center","view","green","family","student"].
-        - confidence: float 0..1.
-        - reason: краткое объяснение.
-        """
-        context_str = json.dumps(current_context, ensure_ascii=False) if current_context else "{}"
-
-        prompt = f"""
-        Ты — HomeMe AI. Твоя задача: нормализовать локацию и предпочтения для поиска жилья.
-
-        Правила:
-        - Города: только Astana, Almaty, Shymkent, Atyrau. Если не уверен — null.
-        - Если встречается EXPO, левый берег, Есильский район — это Astana (Есильский).
-        - Для "тихо/шумно/рядом с парком/метро/центром" выдай lifestyle_tags.
-        - Не придумывай адреса. Если уверенность < 0.35 — ставь city=null, district_normalized=null.
-
-        Формат JSON (строго, без комментариев):
-        {{
-            "city": "Astana",
-            "district_normalized": "Есильский район",
-            "nearby_keywords": ["EXPO", "Mega Silk Way"],
-            "lifestyle_tags": ["quiet", "park"],
-            "confidence": 0.82,
-            "reason": "Пользователь упомянул EXPO и тишину"
-        }}
-
-        Контекст предыдущих параметров: {context_str}
-        Сообщение пользователя: "{user_text}"
-        """
-
-        response = self._generate_with_retry(prompt)
-        resp_text = self._extract_text(response)
-        if not resp_text:
-            return {}
-
+    def _parse_json_response(self, text: str) -> Optional[Dict]:
+        """Парсинг JSON с очисткой markdown"""
+        if not text:
+            return None
         try:
-            clean_text = resp_text.replace('```json', '').replace('```', '').strip()
-            data = json.loads(clean_text)
-            # Жесткие ограничения на города
-            if data.get("city") not in ["Astana", "Almaty", "Shymkent", "Atyrau", None]:
-                data["city"] = None
-            # Нормализация списков
-            data["nearby_keywords"] = data.get("nearby_keywords") or []
-            data["lifestyle_tags"] = data.get("lifestyle_tags") or []
-            return data
-        except Exception:
-            return {}
+            clean = text.replace('```json', '').replace('```', '').strip()
+            return json.loads(clean)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}\nText: {text}")
+            return None
+
+    # ======================== STAGE 1: INTENT CLASSIFICATION ========================
+
+    def classify_intent(self, user_message: str, context: Dict = None) -> Dict:
+        """
+        Первый этап: классификация намерения пользователя.
+        Определяет, что хочет пользователь: искать, консультироваться или связаться.
+        """
+        context_info = json.dumps(context or {}, ensure_ascii=False)
+
+        prompt = f"""Ты — HomeMe AI, эксперт по анализу запросов о недвижимости.
+
+ЗАДАЧА: Определить намерение (intent) пользователя.
+
+ВОЗМОЖНЫЕ ИНТЕНТЫ:
+1. "search_objects" - Хочет найти/посмотреть квартиры
+2. "consult_location" - Спрашивает о районе/локации (информационный запрос)
+3. "contact_expert" - Хочет связаться с живым экспертом
+4. "greeting" - Приветствие или общая беседа
+5. "refine_search" - Уточнение/изменение параметров поиска
+
+КОНТЕКСТ ДИАЛОГА: {context_info}
+СООБЩЕНИЕ: "{user_message}"
+
+Верни JSON:
+{{
+    "intent": "search_objects",
+    "confidence": 0.95,
+    "reasoning": "Пользователь явно запрашивает поиск недвижимости",
+    "is_continuation": false
+}}"""
+
+        response = self._generate_with_retry(prompt, temperature=0.2)
+        text = self._extract_text(response)
+        result = self._parse_json_response(text)
+
+        if not result:
+            return {
+                "intent": "greeting",
+                "confidence": 0.3,
+                "reasoning": "Не удалось классифицировать",
+                "is_continuation": False
+            }
+
+        return result
+
+    # ======================== STAGE 2: GEOGRAPHIC INTELLIGENCE ========================
+
+    def resolve_location_intelligence(self, user_message: str, context: Dict = None) -> Dict:
+        """
+        Второй этап: интеллектуальное геокодирование и нормализация локаций.
+        AI сам понимает EXPO, Левый берег, "рядом с Mega" и т.д.
+        """
+        cache_key = f"{user_message[:50]}_{context.get('city', '')}"
+        if cache_key in self._location_cache:
+            return self._location_cache[cache_key]
+
+        context_info = json.dumps(context or {}, ensure_ascii=False)
+
+        prompt = f"""Ты — географический AI-эксперт по городам Казахстана (Астана, Алматы, Шымкент, Атырау).
+
+ЗАДАЧА: Нормализовать и обогатить географическую информацию из запроса пользователя.
+
+ГОРОДА (только эти):
+- Astana (Астана, Нурсултан)
+- Almaty (Алматы)
+- Shymkent (Шымкент)
+- Atyrau (Атырау)
+
+ИЗВЕСТНЫЕ РАЙОНЫ АСТАНЫ:
+- Есильский район (Левый берег, Yesil, Esil) - новый центр, EXPO, Mega Silk Way, Байтерек
+- Сарыаркинский район (Правый берег) - старый город, рынки
+- Алматинский район - жилые массивы
+- Байконурский район - промзона, жилье
+
+ИЗВЕСТНЫЕ ЛОКАЦИИ АСТАНЫ:
+- EXPO - Есильский р-н, бизнес-центр, координаты ~51.091, 71.417
+- Mega Silk Way - рядом с EXPO
+- Хан Шатыр - центр
+- Назарбаев Университет - рядом с EXPO
+- Ботанический сад - север города
+
+АЛМАТЫ:
+- Алмалинский район - центр, Арбат
+- Медеуский район - элитный, горы
+- Бостандыкский - деловой
+- Ауэзовский - жилой массив
+
+ПРАВИЛА:
+1. Если уверенность < 0.4, возвращай city=null, district=null
+2. EXPO автоматически = Astana + Есильский район
+3. "Левый берег" = Astana + Есильский
+4. Ориентиры (парк, метро, ТЦ) добавляй в nearby_landmarks
+5. Не придумывай адреса - только то, что реально есть
+
+КОНТЕКСТ: {context_info}
+ЗАПРОС: "{user_message}"
+
+Верни JSON:
+{{
+    "city": "Astana",
+    "city_confidence": 0.95,
+    "district": "Есильский район",
+    "district_normalized": "Yesil District",
+    "nearby_landmarks": ["EXPO", "Mega Silk Way"],
+    "coordinates_estimate": {{"lat": 51.091, "lon": 71.417}},
+    "radius_km": 5.0,
+    "confidence": 0.88,
+    "reasoning": "Упомянут EXPO, который находится в Есильском районе Астаны"
+}}"""
+
+        response = self._generate_with_retry(prompt, temperature=0.1)
+        text = self._extract_text(response)
+        result = self._parse_json_response(text)
+
+        if not result or result.get('confidence', 0) < 0.4:
+            return {
+                "city": None,
+                "district": None,
+                "confidence": 0.0,
+                "reasoning": "Не удалось определить локацию с достаточной уверенностью"
+            }
+
+        self._location_cache[cache_key] = result
+        return result
+
+    # ======================== STAGE 3: LIFESTYLE & PREFERENCES EXTRACTION ========================
+
+    def extract_lifestyle_preferences(self, user_message: str, context: Dict = None) -> Dict:
+        """
+        Третий этап: извлечение lifestyle-предпочтений и нефункциональных требований.
+        "Тихо", "для семьи", "рядом с метро", "зеленый район" и т.д.
+        """
+        prompt = f"""Ты — AI-психолог недвижимости. Анализируешь lifestyle-предпочтения.
+
+КАТЕГОРИИ ПРЕДПОЧТЕНИЙ:
+
+1. АТМОСФЕРА:
+   - quiet (тихо, спокойно)
+   - lively (оживленно, центр)
+   - nature (зелено, парки)
+   - urban (городской стиль)
+
+2. ИНФРАСТРУКТУРА:
+   - metro (метро рядом)
+   - school (школы, детсады)
+   - mall (ТЦ, магазины)
+   - medical (поликлиники)
+   - park (парки, скверы)
+   - gym (спортзалы)
+
+3. ЦЕЛЕВАЯ АУДИТОРИЯ:
+   - family (семья с детьми)
+   - student (студент)
+   - young_professional (молодой специалист)
+   - investor (инвестор)
+   - retiree (пенсионер)
+
+4. ОСОБЫЕ ТРЕБОВАНИЯ:
+   - view (красивый вид)
+   - new_building (новостройка)
+   - renovation (с ремонтом)
+   - parking (парковка)
+   - security (охрана)
+
+ЗАПРОС: "{user_message}"
+
+Извлеки максимум информации и верни JSON:
+{{
+    "lifestyle_tags": ["quiet", "family", "park", "school"],
+    "priority_tags": ["quiet", "park"],
+    "extracted_phrases": ["где тихо", "для семьи"],
+    "target_audience": "family",
+    "confidence": 0.75,
+    "reasoning": "Запрос указывает на семейные ценности и тишину"
+}}"""
+
+        response = self._generate_with_retry(prompt, temperature=0.3)
+        text = self._extract_text(response)
+        result = self._parse_json_response(text)
+
+        return result or {"lifestyle_tags": [], "confidence": 0.0}
+
+    # ======================== STAGE 4: PARAMETER EXTRACTION ========================
+
+    def extract_search_parameters(self, user_message: str, context: Dict = None) -> Dict:
+        """
+        Четвертый этап: извлечение конкретных параметров поиска.
+        Цена, комнаты, площадь и т.д.
+        """
+        context_info = json.dumps(context or {}, ensure_ascii=False)
+
+        prompt = f"""Ты — AI-аналитик параметров недвижимости.
+
+ИЗВЛЕКАЕМЫЕ ПАРАМЕТРЫ:
+1. rooms (int) - количество комнат (1, 2, 3, 4+)
+2. min_price / max_price (int) - бюджет в тенге
+3. min_area / max_area (float) - площадь в м²
+4. floor_preferences (list) - предпочтения по этажу ["not_first", "not_last", "high"]
+5. property_type (str) - "new_building", "secondary", "any"
+
+РАСПОЗНАВАНИЕ ФОРМУЛИРОВОК:
+- "двушка" = 2 комнаты
+- "до 50 лямов" = max_price: 50000000
+- "40-50 квадратов" = min_area: 40, max_area: 50
+- "не первый этаж" = floor_preferences: ["not_first"]
+
+КОНТЕКСТ: {context_info}
+ЗАПРОС: "{user_message}"
+
+Верни JSON:
+{{
+    "rooms": 2,
+    "max_price": 50000000,
+    "min_area": 40,
+    "max_area": 60,
+    "floor_preferences": ["not_first"],
+    "property_type": "any",
+    "confidence": 0.85,
+    "extracted_entities": {{"rooms": "двушка", "price": "до 50 млн"}}
+}}"""
+
+        response = self._generate_with_retry(prompt, temperature=0.2)
+        text = self._extract_text(response)
+        result = self._parse_json_response(text)
+
+        return result or {"confidence": 0.0}
+
+    # ======================== STAGE 5: QUERY ENRICHMENT & SEMANTIC EXPANSION ========================
+
+    def enrich_search_query(self, user_message: str, location_data: Dict,
+                            lifestyle_data: Dict, params_data: Dict) -> Dict:
+        """
+        Пятый этап: семантическое обогащение запроса для умного векторного поиска.
+        Генерирует синонимы, связанные термины и поисковые ключи.
+        """
+        combined_context = {
+            "location": location_data,
+            "lifestyle": lifestyle_data,
+            "params": params_data
+        }
+        context_str = json.dumps(combined_context, ensure_ascii=False)
+
+        prompt = f"""Ты — AI для семантического обогащения поисковых запросов.
+
+ЗАДАЧА: Создать расширенное поисковое представление для векторного поиска.
+
+ВХОДНЫЕ ДАННЫЕ:
+{context_str}
+
+ОРИГИНАЛЬНЫЙ ЗАПРОС: "{user_message}"
+
+Сгенерируй:
+1. semantic_keywords - ключевые слова с синонимами
+2. description_match_phrases - фразы для поиска в описаниях
+3. exclusion_keywords - что точно НЕ подходит
+4. embedding_text - итоговый текст для векторизации
+
+ПРИМЕР:
+Если "тихая квартира рядом с парком для семьи":
+- semantic_keywords: ["тихий", "спокойный", "зеленый", "парк", "сквер", "семейный", "детская площадка"]
+- description_match_phrases: ["тихий район", "рядом парк", "для семьи", "детская инфраструктура"]
+- exclusion_keywords: ["шумный", "ночной клуб", "трасса"]
+
+Верни JSON:
+{{
+    "semantic_keywords": ["тихий", "парк"],
+    "description_match_phrases": ["тихий район", "зеленая зона"],
+    "exclusion_keywords": ["шумный"],
+    "embedding_text": "Тихая спокойная квартира в зеленом районе рядом с парком для семьи с детьми",
+    "search_weight_factors": {{
+        "location_weight": 0.4,
+        "lifestyle_weight": 0.35,
+        "params_weight": 0.25
+    }}
+}}"""
+
+        response = self._generate_with_retry(prompt, temperature=0.4)
+        text = self._extract_text(response)
+        result = self._parse_json_response(text)
+
+        return result or {"embedding_text": user_message}
+
+    # ======================== MASTER ORCHESTRATION ========================
+
+    def analyze_query_comprehensive(self, user_message: str, context: Dict = None) -> Dict:
+        """
+        ГЛАВНЫЙ МЕТОД: Оркестрирует все этапы анализа.
+        Возвращает полное понимание запроса пользователя.
+        """
+        logger.info(f"🧠 Starting comprehensive analysis for: {user_message[:50]}...")
+
+        # Stage 1: Intent
+        intent_result = self.classify_intent(user_message, context)
+        logger.info(f"📌 Intent: {intent_result.get('intent')} (conf: {intent_result.get('confidence')})")
+
+        # Если не поиск - возвращаем базовый результат
+        if intent_result.get('intent') not in ['search_objects', 'refine_search']:
+            return {
+                "intent": intent_result.get('intent'),
+                "confidence": intent_result.get('confidence'),
+                "stage": "intent_only"
+            }
+
+        # Stage 2: Location Intelligence
+        location_result = self.resolve_location_intelligence(user_message, context)
+        logger.info(f"📍 Location: {location_result.get('city')}, {location_result.get('district')}")
+
+        # Stage 3: Lifestyle
+        lifestyle_result = self.extract_lifestyle_preferences(user_message, context)
+        logger.info(f"🎯 Lifestyle tags: {lifestyle_result.get('lifestyle_tags', [])}")
+
+        # Stage 4: Parameters
+        params_result = self.extract_search_parameters(user_message, context)
+        logger.info(f"📊 Params: {params_result}")
+
+        # Stage 5: Semantic Enrichment
+        enrichment_result = self.enrich_search_query(
+            user_message, location_result, lifestyle_result, params_result
+        )
+        logger.info(f"✨ Enrichment completed")
+
+        # Собираем финальный результат
+        comprehensive_result = {
+            "intent": intent_result.get('intent'),
+            "intent_confidence": intent_result.get('confidence'),
+
+            # Location
+            "city": location_result.get('city'),
+            "district": location_result.get('district'),
+            "nearby_landmarks": location_result.get('nearby_landmarks', []),
+            "coordinates": location_result.get('coordinates_estimate'),
+            "location_confidence": location_result.get('confidence', 0),
+
+            # Parameters
+            "rooms": params_result.get('rooms'),
+            "max_price": params_result.get('max_price'),
+            "min_price": params_result.get('min_price'),
+            "min_area": params_result.get('min_area'),
+            "max_area": params_result.get('max_area'),
+            "floor_preferences": params_result.get('floor_preferences', []),
+            "property_type": params_result.get('property_type'),
+
+            # Lifestyle
+            "lifestyle_tags": lifestyle_result.get('lifestyle_tags', []),
+            "priority_tags": lifestyle_result.get('priority_tags', []),
+            "target_audience": lifestyle_result.get('target_audience'),
+
+            # Enrichment
+            "semantic_keywords": enrichment_result.get('semantic_keywords', []),
+            "description_match_phrases": enrichment_result.get('description_match_phrases', []),
+            "exclusion_keywords": enrichment_result.get('exclusion_keywords', []),
+            "embedding_text": enrichment_result.get('embedding_text', user_message),
+
+            # Overall
+            "analysis_complete": True,
+            "stage": "comprehensive"
+        }
+
+        logger.info(f"✅ Comprehensive analysis complete!")
+        return comprehensive_result
+
+    # ======================== EMBEDDINGS ========================
+
+    def get_embedding(self, text: str):
+        """Генерация эмбеддинга для векторного поиска"""
+        try:
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=text,
+                task_type="retrieval_document"
+            )
+            return result['embedding']
+        except Exception as e:
+            logger.error(f"Embedding error: {e}")
+            return None
+
+    # ======================== CONSULTATION (RAG) ========================
+
+    def generate_consultation(self, query: str, location_info: Dict = None) -> str:
+        """Генерация консультации по району"""
+        location_context = json.dumps(location_info or {}, ensure_ascii=False)
+
+        prompt = f"""Ты — эксперт по недвижимости Казахстана.
+
+КОНТЕКСТ ЛОКАЦИИ: {location_context}
+ВОПРОС: "{query}"
+
+Дай профессиональную консультацию:
+1. Краткое описание района/локации
+2. Плюсы (3-4 пункта)
+3. Минусы (2-3 пункта)
+4. Для кого подходит
+5. Средние цены (если знаешь)
+
+Стиль: дружелюбный эксперт, честный, без преувеличений."""
+
+        response = self._generate_with_retry(prompt, temperature=0.6)
+        return self._extract_text(response) or "Не удалось получить консультацию."

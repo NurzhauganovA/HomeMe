@@ -1,96 +1,276 @@
 from pgvector.django import CosineDistance
-from django.db.models import Q
-from core.bi_client import BIGroupClient
+from django.db.models import Q, F
+from core.bi_client import EnhancedBIGroupClient
 from telegram_bot.models import SecondaryProperty
 from core.dto import PropertyDTO
-from core.services.ai_service import AIService
-from core.location_resolver import resolve_location, infer_city_from_district, collect_location_keywords
+from typing import List, Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class UnifiedSearchService:
-    def __init__(self):
-        self.bi_client = BIGroupClient()
-        self.ai_service = AIService()
+class EnhancedSearchService:
+    """
+    Профессиональный сервис поиска недвижимости.
+    Интегрирует AI-анализ, многоступенчатую фильтрацию и умную сортировку.
+    """
 
-    def search(self, rooms=None, max_price=None, city=None, district=None, source='all', query_text=None,
-               location_keywords=None, lifestyle_tags=None) -> list[PropertyDTO]:
+    def __init__(self, ai_service):
+        self.bi_client = EnhancedBIGroupClient()
+        self.ai_service = ai_service
+
+    def intelligent_search(self, analysis_result: Dict, limit: int = 10) -> List[PropertyDTO]:
+        """
+        ГЛАВНЫЙ МЕТОД ПОИСКА.
+        Принимает результат comprehensive analysis и ищет жилье.
+        """
+        logger.info("🔍 Starting intelligent search...")
+
+        # Извлекаем параметры из анализа
+        city = analysis_result.get('city')
+        district = analysis_result.get('district')
+        rooms = analysis_result.get('rooms')
+        max_price = analysis_result.get('max_price')
+        min_price = analysis_result.get('min_price')
+        min_area = analysis_result.get('min_area')
+        max_area = analysis_result.get('max_area')
+
+        lifestyle_tags = analysis_result.get('lifestyle_tags', [])
+        semantic_keywords = analysis_result.get('semantic_keywords', [])
+        description_phrases = analysis_result.get('description_match_phrases', [])
+        exclusion_keywords = analysis_result.get('exclusion_keywords', [])
+        embedding_text = analysis_result.get('embedding_text', '')
+        coordinates = analysis_result.get('coordinates')
+
         results = []
 
-        # Нормализуем город по району, чтобы "EXPO" привязывался к Астане
-        resolved_location = resolve_location(city, district)
-        if not city and district:
-            city = infer_city_from_district(district) or city
+        # ========== ЭТАП 1: BI GROUP API ==========
+        logger.info("📡 Searching BI Group API...")
+        bi_results = self._search_bi_group(
+            city=city,
+            district=district,
+            rooms=rooms,
+            max_price=max_price,
+            min_price=min_price,
+            min_area=min_area,
+            max_area=max_area,
+            semantic_keywords=semantic_keywords,
+            coordinates=coordinates
+        )
+        results.extend(bi_results)
+        logger.info(f"✅ BI Group: {len(bi_results)} results")
 
-        # 1. BI Group (API + Фильтры)
-        if source in ['all', 'bi_group']:
-            bi_results = self.bi_client.search_properties(
-                rooms=rooms,
-                max_price=max_price,
-                city=city,
-                district=district,
-                location=resolved_location,
-                location_keywords=location_keywords,
-            )
-            results.extend(bi_results)
+        # ========== ЭТАП 2: ВТОРИЧКА ==========
+        logger.info("🏠 Searching secondary market...")
+        secondary_results = self._search_secondary_intelligent(
+            city=city,
+            district=district,
+            rooms=rooms,
+            max_price=max_price,
+            min_price=min_price,
+            min_area=min_area,
+            max_area=max_area,
+            lifestyle_tags=lifestyle_tags,
+            semantic_keywords=semantic_keywords,
+            description_phrases=description_phrases,
+            exclusion_keywords=exclusion_keywords,
+            embedding_text=embedding_text,
+            limit=limit
+        )
+        results.extend(secondary_results)
+        logger.info(f"✅ Secondary: {len(secondary_results)} results")
 
-        # 2. Вторичка (Векторный поиск + Фильтры)
-        if source in ['all', 'secondary']:
-            qs = SecondaryProperty.objects.filter(is_active=True)
+        # ========== ЭТАП 3: УМНАЯ СОРТИРОВКА ==========
+        ranked_results = self._rank_results(results, analysis_result)
 
-            # Сначала жесткие фильтры
-            if rooms:
-                qs = qs.filter(rooms=rooms)
-            if max_price:
-                qs = qs.filter(price__lte=max_price)
+        logger.info(f"✅ Total results: {len(ranked_results)}")
+        return ranked_results[:limit]
 
-            # Фильтр по району/локации (текстовый, т.к. нет координат)
-            combined_keywords = collect_location_keywords(resolved_location, district)
-            if location_keywords:
-                combined_keywords.extend([kw for kw in location_keywords if kw])
-            if combined_keywords:
-                location_query = Q()
-                for kw in combined_keywords:
-                    location_query |= Q(address__icontains=kw) | Q(title__icontains=kw) | Q(description__icontains=kw)
-                qs = qs.filter(location_query)
+    def _search_bi_group(self, city, district, rooms, max_price, min_price,
+                         min_area, max_area, semantic_keywords, coordinates) -> List[PropertyDTO]:
+        """Поиск в BI Group с интеллектуальными фильтрами"""
 
-            # Если есть текст запроса -> Сортируем по смыслу
-            embedding_pieces = []
-            if query_text:
-                embedding_pieces.append(query_text)
-            if district:
-                embedding_pieces.append(str(district))
-            if lifestyle_tags:
-                embedding_pieces.append(" ".join(lifestyle_tags))
-            if combined_keywords:
-                embedding_pieces.append(" ".join(combined_keywords))
+        # Базовый поиск через существующий клиент
+        results = self.bi_client.search_properties(
+            rooms=rooms,
+            max_price=max_price,
+            city=city,
+            district=district,
+            location_keywords=semantic_keywords,
+            limit=50  # Берем больше для пост-фильтрации
+        )
 
-            embedding_text = " ; ".join(embedding_pieces).strip() if embedding_pieces else None
-            if embedding_text:
-                query_vec = self.ai_service.get_embedding(embedding_text)
+        # Дополнительная фильтрация по площади
+        if min_area or max_area:
+            filtered = []
+            for r in results:
+                if min_area and r.area < min_area:
+                    continue
+                if max_area and r.area > max_area:
+                    continue
+                filtered.append(r)
+            results = filtered
 
-                if query_vec:
-                    # CosineDistance: чем меньше число, тем ближе смысл (0 = идентично)
-                    qs = qs.alias(distance=CosineDistance('embedding', query_vec)) \
-                        .order_by('distance')
-                else:
-                    # Если вектор не создался, просто последние добавленные
-                    qs = qs.order_by('-created_at')
-            else:
-                qs = qs.order_by('-created_at')
-
-            # Берем топ-3 самых подходящих
-            for p in qs[:3]:
-                dto = PropertyDTO(
-                    source="secondary",
-                    title=p.title,
-                    address=p.address,
-                    price=float(p.price),
-                    rooms=p.rooms,
-                    area=p.area,
-                    floor=p.floor,
-                    description=p.description,
-                    url=f"https://homeme.kz/obj/{p.id}"
-                )
-                results.append(dto)
+        # Фильтр по минимальной цене
+        if min_price:
+            results = [r for r in results if r.price >= min_price]
 
         return results
+
+    def _search_secondary_intelligent(self, city, district, rooms, max_price, min_price,
+                                      min_area, max_area, lifestyle_tags, semantic_keywords,
+                                      description_phrases, exclusion_keywords, embedding_text,
+                                      limit) -> List[PropertyDTO]:
+        """
+        Интеллектуальный поиск по вторичке с векторной близостью и многокритериальной фильтрацией
+        """
+        qs = SecondaryProperty.objects.filter(is_active=True)
+
+        # ========== ЖЕСТКИЕ ФИЛЬТРЫ ==========
+        if rooms:
+            qs = qs.filter(rooms=rooms)
+
+        if max_price:
+            qs = qs.filter(price__lte=max_price)
+
+        if min_price:
+            qs = qs.filter(price__gte=min_price)
+
+        if min_area:
+            qs = qs.filter(area__gte=min_area)
+
+        if max_area:
+            qs = qs.filter(area__lte=max_area)
+
+        # ========== ИНТЕЛЛЕКТУАЛЬНЫЕ ФИЛЬТРЫ ==========
+
+        # 1. Локация (район, ключевые слова)
+        if district or semantic_keywords:
+            location_q = Q()
+
+            if district:
+                location_q |= Q(address__icontains=district) | Q(description__icontains=district)
+
+            for keyword in semantic_keywords:
+                if keyword:
+                    location_q |= (
+                            Q(address__icontains=keyword) |
+                            Q(title__icontains=keyword) |
+                            Q(description__icontains=keyword)
+                    )
+
+            if location_q:
+                qs = qs.filter(location_q)
+
+        # 2. Lifestyle фильтры (если есть описания в БД)
+        if lifestyle_tags:
+            lifestyle_q = Q()
+
+            # Маппинг lifestyle -> ключевые слова для поиска в описании
+            lifestyle_keywords_map = {
+                'quiet': ['тихий', 'спокойный', 'уютный', 'тихо'],
+                'lively': ['центр', 'оживленн', 'активн'],
+                'nature': ['парк', 'зелен', 'сквер', 'лес', 'природ'],
+                'family': ['семь', 'детск', 'школ', 'сад', 'площадк'],
+                'student': ['универ', 'студ', 'общежит', 'вуз'],
+                'metro': ['метро', 'станци'],
+                'park': ['парк', 'сквер', 'зелен'],
+                'school': ['школ', 'лицей', 'гимназ', 'детск'],
+                'mall': ['тц', 'торговый', 'магазин', 'мега', 'mall'],
+                'view': ['вид', 'панорам', 'окн'],
+                'renovation': ['ремонт', 'евроремонт', 'дизайн'],
+                'parking': ['парков', 'гараж', 'машиномест'],
+                'security': ['охран', 'консьерж', 'домофон', 'видеонаблюд']
+            }
+
+            for tag in lifestyle_tags:
+                keywords = lifestyle_keywords_map.get(tag, [])
+                for kw in keywords:
+                    lifestyle_q |= Q(description__icontains=kw) | Q(title__icontains=kw)
+
+            if lifestyle_q:
+                qs = qs.filter(lifestyle_q)
+
+        # 3. Exclusion фильтр (что НЕ должно быть)
+        if exclusion_keywords:
+            for exclude_kw in exclusion_keywords:
+                if exclude_kw:
+                    qs = qs.exclude(
+                        Q(description__icontains=exclude_kw) | Q(title__icontains=exclude_kw)
+                    )
+
+        # ========== ВЕКТОРНАЯ СОРТИРОВКА ==========
+        if embedding_text:
+            query_vec = self.ai_service.get_embedding(embedding_text)
+
+            if query_vec:
+                logger.info("🎯 Using vector similarity search")
+                # Сортируем по косинусной близости
+                qs = qs.alias(
+                    similarity=CosineDistance('embedding', query_vec)
+                ).order_by('similarity')  # Меньше = ближе
+            else:
+                logger.warning("⚠️ Vector embedding failed, using fallback sorting")
+                qs = qs.order_by('-created_at')
+        else:
+            # Fallback: по дате добавления
+            qs = qs.order_by('-created_at')
+
+        # ========== КОНВЕРТАЦИЯ В DTO ==========
+        results = []
+        for p in qs[:limit * 2]:  # Берем с запасом для ранжирования
+            dto = PropertyDTO(
+                source="secondary",
+                title=p.title,
+                address=p.address,
+                price=float(p.price),
+                rooms=p.rooms,
+                area=p.area,
+                floor=p.floor,
+                description=p.description or "",
+                url=f"https://homeme.kz/obj/{p.id}",
+                image_url=p.image.url if p.image else ""
+            )
+            results.append(dto)
+
+        return results
+
+    def _rank_results(self, results: List[PropertyDTO], analysis: Dict) -> List[PropertyDTO]:
+        """
+        Финальное ранжирование результатов на основе AI-анализа.
+        Учитывает приоритеты: локация > lifestyle > цена/параметры.
+        """
+        if not results:
+            return []
+
+        priority_tags = analysis.get('priority_tags', [])
+        lifestyle_tags = analysis.get('lifestyle_tags', [])
+
+        # Простая эвристика: BI Group приоритетнее, но учитываем lifestyle
+        def score_result(dto: PropertyDTO) -> float:
+            score = 0.0
+
+            # Бонус для BI Group (новостройки приоритетнее)
+            if dto.source == 'bi_group':
+                score += 2.0
+
+            # Бонус за совпадение с lifestyle (поиск в описании)
+            desc_lower = dto.description.lower()
+            title_lower = dto.title.lower()
+            address_lower = dto.address.lower()
+
+            combined_text = f"{title_lower} {address_lower} {desc_lower}"
+
+            for tag in priority_tags:
+                if tag in combined_text:
+                    score += 1.5
+
+            for tag in lifestyle_tags:
+                if tag in combined_text:
+                    score += 0.5
+
+            return score
+
+        # Сортируем по score (выше = лучше)
+        ranked = sorted(results, key=score_result, reverse=True)
+        return ranked

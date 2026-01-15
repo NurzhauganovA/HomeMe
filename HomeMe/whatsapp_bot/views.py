@@ -7,7 +7,7 @@ from django.conf import settings
 from asgiref.sync import async_to_sync
 
 from whatsapp_bot.services import send_whatsapp_message
-from core.services.dialog_manager import DialogManager
+from core.services.dialog_manager import EnhancedDialogManager
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def whatsapp_webhook(request):
                                 text_body = message_data['text']['body']
 
                                 # --- ЗАПУСК AI ЛОГИКИ ---
-                                manager = DialogManager()
+                                manager = EnhancedDialogManager()
 
                                 # Django View синхронная, поэтому вызываем async код через async_to_sync
                                 response = async_to_sync(manager.process_message)(

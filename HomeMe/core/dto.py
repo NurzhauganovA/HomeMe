@@ -1,28 +1,332 @@
-from dataclasses import dataclass
+"""
+Enhanced Data Transfer Objects (DTO)
+Профессиональные модели данных для передачи информации о недвижимости
+между слоями приложения.
+"""
+
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict
+from datetime import datetime
 
 
 @dataclass
 class PropertyDTO:
+    """
+    Унифицированный DTO для объекта недвижимости.
+    Работает как для BI Group API, так и для вторичного рынка.
+    """
+
+    # Обязательные поля
     source: str  # 'bi_group' или 'secondary'
     title: str
     address: str
-    price: float
+    price: float  # В тенге
     rooms: int
-    area: float
+    area: float  # Площадь в м²
     floor: int
+
+    # Опциональные поля
     description: str = ""
     url: str = ""
     image_url: str = ""
 
-    def to_telegram_message(self) -> str:
-        """HTML формат для Telegram"""
-        price_mln = self.price / 1_000_000
-        icon = "🏗" if self.source == 'bi_group' else "🏠"
+    # Дополнительные метаданные
+    total_floors: Optional[int] = None
+    building_type: Optional[str] = None  # "new", "secondary"
+    property_class: Optional[str] = None  # "Комфорт", "Бизнес", "Элит"
+    deadline: Optional[str] = None  # Срок сдачи для новостроек
 
-        return (
-            f"{icon} <b>{self.title}</b>\n"
-            f"📍 {self.address}\n"
-            f"💰 <b>{price_mln:.1f} млн ₸</b>\n"
-            f"📐 {self.rooms}-комн, {self.area} м², {self.floor} эт.\n"
-            f"<a href='{self.url}'>🔗 Подробнее на сайте</a>"
-        )
+    # Геолокация
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    district: Optional[str] = None
+    city: Optional[str] = None
+
+    # Условия продажи
+    has_installment: bool = False
+    has_mortgage: bool = False
+    mortgage_banks: List[str] = field(default_factory=list)
+
+    # Контакты (только для вторички)
+    owner_phone: Optional[str] = None
+    owner_name: Optional[str] = None
+
+    # Служебные поля
+    relevance_score: float = 0.0  # Оценка релевантности (для ранжирования)
+    matched_keywords: List[str] = field(default_factory=list)
+    created_at: Optional[datetime] = None
+
+    @property
+    def price_per_sqm(self) -> float:
+        """Цена за квадратный метр"""
+        if self.area > 0:
+            return self.price / self.area
+        return 0.0
+
+    @property
+    def price_millions(self) -> float:
+        """Цена в миллионах тенге"""
+        return self.price / 1_000_000
+
+    @property
+    def is_new_building(self) -> bool:
+        """Новостройка или нет"""
+        return self.source == 'bi_group' or self.building_type == 'new'
+
+    def to_telegram_message(self) -> str:
+        """
+        Форматирует объект для отправки в Telegram (HTML).
+        Красивый, информативный формат с эмодзи.
+        """
+        icon = "🏗" if self.is_new_building else "🏠"
+
+        # Заголовок
+        msg = f"{icon} <b>{self.title}</b>\n"
+
+        # Адрес
+        msg += f"📍 {self.address}\n"
+
+        # Цена
+        price_mln = self.price_millions
+        price_sqm = self.price_per_sqm / 1000  # в тысячах
+        msg += f"💰 <b>{price_mln:.1f} млн ₸</b> ({price_sqm:.0f}к/м²)\n"
+
+        # Параметры
+        msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
+        if self.total_floors:
+            msg += f"/{self.total_floors}"
+        msg += "\n"
+
+        # Дополнительная информация
+        if self.description:
+            msg += f"ℹ️ {self.description[:100]}\n"
+
+        # Условия
+        conditions = []
+        if self.has_installment:
+            conditions.append("💳 Рассрочка")
+        if self.has_mortgage:
+            conditions.append("🏦 Ипотека")
+        if conditions:
+            msg += " | ".join(conditions) + "\n"
+
+        # Ссылка
+        if self.url:
+            msg += f"<a href='{self.url}'>🔗 Подробнее на сайте</a>"
+
+        return msg
+
+    def to_whatsapp_message(self) -> str:
+        """
+        Форматирует объект для отправки в WhatsApp (Markdown).
+        """
+        icon = "🏗" if self.is_new_building else "🏠"
+
+        msg = f"{icon} *{self.title}*\n"
+        msg += f"📍 {self.address}\n"
+
+        price_mln = self.price_millions
+        price_sqm = self.price_per_sqm / 1000
+        msg += f"💰 *{price_mln:.1f} млн ₸* ({price_sqm:.0f}к/м²)\n"
+
+        msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
+        if self.total_floors:
+            msg += f"/{self.total_floors}"
+        msg += "\n"
+
+        if self.description:
+            msg += f"ℹ️ {self.description[:100]}\n"
+
+        if self.url:
+            msg += f"\n🔗 Подробнее: {self.url}"
+
+        return msg
+
+    def to_dict(self) -> Dict:
+        """Конвертирует в словарь для JSON/API"""
+        return {
+            "source": self.source,
+            "title": self.title,
+            "address": self.address,
+            "price": self.price,
+            "price_millions": self.price_millions,
+            "price_per_sqm": self.price_per_sqm,
+            "rooms": self.rooms,
+            "area": self.area,
+            "floor": self.floor,
+            "total_floors": self.total_floors,
+            "description": self.description,
+            "url": self.url,
+            "image_url": self.image_url,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "district": self.district,
+            "city": self.city,
+            "is_new_building": self.is_new_building,
+            "has_installment": self.has_installment,
+            "has_mortgage": self.has_mortgage,
+            "relevance_score": self.relevance_score
+        }
+
+    def __str__(self) -> str:
+        """Строковое представление для логирования"""
+        return (f"PropertyDTO(source={self.source}, title={self.title[:30]}..., "
+                f"price={self.price_millions:.1f}M, rooms={self.rooms})")
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+
+@dataclass
+class SearchCriteria:
+    """
+    DTO для критериев поиска.
+    Унифицированное представление всех параметров поиска.
+    """
+
+    # Базовые параметры
+    rooms: Optional[int] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    min_area: Optional[float] = None
+    max_area: Optional[float] = None
+
+    # Локация
+    city: Optional[str] = None
+    district: Optional[str] = None
+    geo_center: Optional[tuple] = None  # (lat, lon)
+    geo_radius_km: Optional[float] = None
+
+    # Lifestyle и предпочтения
+    lifestyle_tags: List[str] = field(default_factory=list)
+    semantic_keywords: List[str] = field(default_factory=list)
+    exclusion_keywords: List[str] = field(default_factory=list)
+
+    # Дополнительные фильтры
+    floor_preferences: List[str] = field(default_factory=list)  # ["not_first", "not_last"]
+    property_type: Optional[str] = None  # "new_building", "secondary", "any"
+
+    # Для векторного поиска
+    embedding_text: Optional[str] = None
+
+    # Метаданные
+    query_text: str = ""  # Оригинальный запрос пользователя
+    confidence: float = 0.0
+
+    def to_dict(self) -> Dict:
+        """Конвертирует в словарь"""
+        return {
+            "rooms": self.rooms,
+            "min_price": self.min_price,
+            "max_price": self.max_price,
+            "min_area": self.min_area,
+            "max_area": self.max_area,
+            "city": self.city,
+            "district": self.district,
+            "lifestyle_tags": self.lifestyle_tags,
+            "semantic_keywords": self.semantic_keywords,
+            "property_type": self.property_type,
+            "query_text": self.query_text
+        }
+
+    def __str__(self) -> str:
+        parts = []
+        if self.city:
+            parts.append(f"city={self.city}")
+        if self.district:
+            parts.append(f"district={self.district}")
+        if self.rooms:
+            parts.append(f"rooms={self.rooms}")
+        if self.max_price:
+            parts.append(f"max_price={self.max_price / 1_000_000:.0f}M")
+        return f"SearchCriteria({', '.join(parts)})"
+
+
+@dataclass
+class SearchResult:
+    """
+    DTO для результата поиска.
+    Включает найденные объекты и метаданные о поиске.
+    """
+
+    properties: List[PropertyDTO]
+    total_found: int
+    search_criteria: SearchCriteria
+
+    # Метаданные поиска
+    search_time_ms: float = 0.0
+    sources_used: List[str] = field(default_factory=list)  # ["bi_group", "secondary"]
+
+    # Статистика
+    bi_group_count: int = 0
+    secondary_count: int = 0
+
+    # AI метаданные
+    ai_analysis_complete: bool = False
+    location_resolved: bool = False
+    lifestyle_matched: bool = False
+
+    def __post_init__(self):
+        """Автоматически подсчитывает статистику"""
+        self.bi_group_count = sum(1 for p in self.properties if p.source == 'bi_group')
+        self.secondary_count = sum(1 for p in self.properties if p.source == 'secondary')
+        self.total_found = len(self.properties)
+
+    def to_dict(self) -> Dict:
+        """Конвертирует в словарь для API"""
+        return {
+            "properties": [p.to_dict() for p in self.properties],
+            "total_found": self.total_found,
+            "search_criteria": self.search_criteria.to_dict(),
+            "search_time_ms": self.search_time_ms,
+            "sources_used": self.sources_used,
+            "bi_group_count": self.bi_group_count,
+            "secondary_count": self.secondary_count,
+            "ai_analysis_complete": self.ai_analysis_complete
+        }
+
+    def __str__(self) -> str:
+        return (f"SearchResult(total={self.total_found}, "
+                f"bi_group={self.bi_group_count}, secondary={self.secondary_count})")
+
+
+@dataclass
+class UserPreferences:
+    """
+    DTO для сохраненных предпочтений пользователя.
+    Используется для персонализации поиска.
+    """
+
+    user_id: str
+    platform: str  # "telegram" или "whatsapp"
+
+    # Сохраненные предпочтения
+    preferred_city: Optional[str] = None
+    preferred_districts: List[str] = field(default_factory=list)
+    budget_range: Optional[tuple] = None  # (min, max)
+    preferred_rooms: Optional[int] = None
+
+    # Lifestyle профиль
+    lifestyle_profile: List[str] = field(default_factory=list)
+
+    # История взаимодействий
+    viewed_properties: List[str] = field(default_factory=list)  # UUIDs
+    favorite_properties: List[str] = field(default_factory=list)
+
+    # Метаданные
+    last_search_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+    def to_dict(self) -> Dict:
+        """Конвертирует в словарь для сохранения в БД"""
+        return {
+            "user_id": self.user_id,
+            "platform": self.platform,
+            "preferred_city": self.preferred_city,
+            "preferred_districts": self.preferred_districts,
+            "budget_range": self.budget_range,
+            "preferred_rooms": self.preferred_rooms,
+            "lifestyle_profile": self.lifestyle_profile,
+            "viewed_properties": self.viewed_properties,
+            "favorite_properties": self.favorite_properties
+        }
