@@ -55,6 +55,22 @@ class DialogManager:
             # Проверяем, достаточно ли данных. Для MVP ищем сразу.
             params = session.search_params
 
+            # Доп. нормализация локации и предпочтений через AI (без ручных словарей)
+            enrichment = self.ai.resolve_location_and_prefs(text, params)
+            if enrichment:
+                confidence = enrichment.get("confidence") or 0
+                if confidence >= 0.35:
+                    city_ai = enrichment.get("city")
+                    district_ai = enrichment.get("district_normalized")
+                    if city_ai and not params.get('city'):
+                        params['city'] = city_ai
+                    if district_ai and not params.get('district'):
+                        params['district'] = district_ai
+                    params['location_keywords'] = enrichment.get("nearby_keywords") or []
+                    params['lifestyle_tags'] = enrichment.get("lifestyle_tags") or []
+                    session.search_params = params
+                    await sync_to_async(session.save)()
+
             # Если нет бюджета или комнат, AI мог бы спросить, но пока ищем "широким поиском"
             # или сообщаем, что нашли по текущим фильтрам.
 
@@ -64,6 +80,9 @@ class DialogManager:
                 max_price=params.get('max_price'),
                 city=params.get('city'),
                 district=params.get('district'),
+                query_text=text,
+                location_keywords=params.get('location_keywords'),
+                lifestyle_tags=params.get('lifestyle_tags'),
             )
 
             response_data['objects'] = results

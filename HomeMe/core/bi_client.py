@@ -2,6 +2,12 @@ import requests
 import logging
 from django.conf import settings
 from core.dto import PropertyDTO
+from core.location_resolver import (
+    resolve_location,
+    within_location,
+    text_matches_location,
+    infer_city_from_district,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +36,13 @@ class BIGroupClient:
         self.api_url = getattr(settings, 'BI_GROUP_API_URL',
                                "https://apigw.bi.group/sales-picker/microfe-v3/realEstateList")
 
-    def search_properties(self, rooms=None, max_price=None, city=None, district=None, limit=10) -> list[PropertyDTO]:
+    def search_properties(self, rooms=None, max_price=None, city=None, district=None, location=None,
+                          location_keywords=None, limit=10) -> list[PropertyDTO]:
         payload = {
             "companyIds": self.COMPANY_IDS,
             "propertyTypes": self.PROPERTY_TYPES,
             "pageNo": 1,
-            "pageSize": 50  # Берем больше, чтобы было из чего фильтровать
+            "pageSize": 200  # Берем больше, чтобы было из чего фильтровать
         }
 
         # Заголовки "под браузер"
@@ -52,14 +59,23 @@ class BIGroupClient:
             response.raise_for_status()
             data = response.json()
             # Передаем параметры фильтрации в парсер
-            return self._parse_response(data, rooms, max_price, city, district)[:limit]
+            return self._parse_response(data, rooms, max_price, city, district, location, location_keywords)[:limit]
         except Exception as e:
             logger.error(f"BI Group API Error: {e}")
             return []
 
-    def _parse_response(self, data, filter_rooms, filter_price, filter_city_name, filter_district) -> list[PropertyDTO]:
+    def _parse_response(self, data, filter_rooms, filter_price, filter_city_name, filter_district,
+                        filter_location, filter_keywords) -> list[PropertyDTO]:
         results = []
         real_estates = data.get("realEstates", [])
+
+        if not filter_city_name and filter_district:
+            inferred_city = infer_city_from_district(filter_district)
+            if inferred_city:
+                filter_city_name = inferred_city
+
+        # Если передали готовый location, используем его. Иначе пробуем вывести из district.
+        active_location = filter_location or resolve_location(filter_city_name, filter_district)
 
         # Получаем UUID города по имени (Astana -> uuid)
         target_city_uuid = self.CITY_MAP.get(filter_city_name) if filter_city_name else None
@@ -82,20 +98,49 @@ class BIGroupClient:
             if filter_rooms and filter_rooms not in rooms_list:
                 continue
 
-            # 4. Фильтр по Району (District) - Текстовый поиск
-            # Ищем ключевое слово (например "EXPO") в названии ЖК или Адресе
-            if filter_district:
-                search_text = filter_district.lower()
-                title = item.get("name", "").lower()
-                address = item.get("address", "").lower()
-                # Если слова нет ни в названии, ни в адресе - пропускаем
-                if (search_text not in title) and (search_text not in address):
+            title = item.get("name", "")
+            address = item.get("address", "")
+
+            # 4. Фильтр по Району (District) — георадиус + текст
+            if active_location:
+                item_lat = item.get("latitude")
+                item_lon = item.get("longitude")
+                in_geo = False
+                try:
+                    if item_lat is not None and item_lon is not None:
+                        in_geo = within_location(float(item_lat), float(item_lon), active_location)
+                except (TypeError, ValueError):
+                    in_geo = False
+
+                in_text = text_matches_location(title, active_location) or text_matches_location(address, active_location)
+                if filter_keywords:
+                    lowered = (title or "").lower() + " " + (address or "").lower()
+                    for kw in filter_keywords:
+                        if kw and kw.lower() in lowered:
+                            in_text = True
+                            break
+
+                if not (in_geo or in_text):
+                    continue
+            else:
+                text_match_ok = True
+                if filter_district:
+                    search_text = filter_district.lower()
+                    if (search_text not in title.lower()) and (search_text not in address.lower()):
+                        text_match_ok = False
+                if filter_keywords and text_match_ok is False:
+                    lowered = (title or "").lower() + " " + (address or "").lower()
+                    for kw in filter_keywords:
+                        if kw and kw.lower() in lowered:
+                            text_match_ok = True
+                            break
+                if not text_match_ok:
                     continue
 
             dto = PropertyDTO(
                 source="bi_group",
-                title=item.get("name", "ЖК BI Group"),
-                address=item.get("address", "Адрес не указан"),
+                title=title or "ЖК BI Group",
+                address=address or "Адрес не указан",
                 price=price,
                 rooms=rooms,
                 area=float(item.get("squareMin", 0)),
