@@ -18,7 +18,7 @@ class EnhancedAIService:
     def __init__(self):
         api_key = getattr(settings, 'GEMINI_API_KEY')
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-3-flash-preview')
 
         # Кэш для экономии запросов
         self._location_cache = {}
@@ -132,11 +132,13 @@ class EnhancedAIService:
         Второй этап: интеллектуальное геокодирование и нормализация локаций.
         AI сам понимает EXPO, Левый берег, "рядом с Mega" и т.д.
         """
+        # Контекст может быть пустым при первом сообщении, поэтому нормализуем
+        context = context or {}
         cache_key = f"{user_message[:50]}_{context.get('city', '')}"
         if cache_key in self._location_cache:
             return self._location_cache[cache_key]
 
-        context_info = json.dumps(context or {}, ensure_ascii=False)
+        context_info = json.dumps(context, ensure_ascii=False)
 
         prompt = f"""Ты — географический AI-эксперт по городам Казахстана (Астана, Алматы, Шымкент, Атырау).
 
@@ -411,6 +413,7 @@ class EnhancedAIService:
             "district": location_result.get('district'),
             "nearby_landmarks": location_result.get('nearby_landmarks', []),
             "coordinates": location_result.get('coordinates_estimate'),
+            "radius_km": location_result.get('radius_km'),
             "location_confidence": location_result.get('confidence', 0),
 
             # Parameters

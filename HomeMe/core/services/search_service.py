@@ -1,3 +1,4 @@
+import math
 from pgvector.django import CosineDistance
 from django.db.models import Q, F
 from core.bi_client import EnhancedBIGroupClient
@@ -40,7 +41,19 @@ class EnhancedSearchService:
         description_phrases = analysis_result.get('description_match_phrases', [])
         exclusion_keywords = analysis_result.get('exclusion_keywords', [])
         embedding_text = analysis_result.get('embedding_text', '')
-        coordinates = analysis_result.get('coordinates')
+
+        # Геоданные от AI (dict -> tuple для фильтрации)
+        coordinates_dict = analysis_result.get('coordinates')
+        coordinates = None
+        if isinstance(coordinates_dict, dict) and coordinates_dict.get('lat') is not None and coordinates_dict.get('lon') is not None:
+            coordinates = (coordinates_dict['lat'], coordinates_dict['lon'])
+        radius_km = analysis_result.get('radius_km')
+
+        # Добавляем локационные ключевые слова (ориентиры и т.п.)
+        location_keywords = list(semantic_keywords)
+        for landmark in analysis_result.get('nearby_landmarks', []):
+            if landmark:
+                location_keywords.append(str(landmark))
 
         results = []
 
@@ -54,8 +67,9 @@ class EnhancedSearchService:
             min_price=min_price,
             min_area=min_area,
             max_area=max_area,
-            semantic_keywords=semantic_keywords,
-            coordinates=coordinates
+            semantic_keywords=location_keywords,
+            coordinates=coordinates,
+            radius_km=radius_km
         )
         results.extend(bi_results)
         logger.info(f"✅ BI Group: {len(bi_results)} results")
@@ -71,10 +85,12 @@ class EnhancedSearchService:
             min_area=min_area,
             max_area=max_area,
             lifestyle_tags=lifestyle_tags,
-            semantic_keywords=semantic_keywords,
+            semantic_keywords=location_keywords,
             description_phrases=description_phrases,
             exclusion_keywords=exclusion_keywords,
             embedding_text=embedding_text,
+            coordinates=coordinates,
+            radius_km=radius_km,
             limit=limit
         )
         results.extend(secondary_results)
@@ -87,7 +103,7 @@ class EnhancedSearchService:
         return ranked_results[:limit]
 
     def _search_bi_group(self, city, district, rooms, max_price, min_price,
-                         min_area, max_area, semantic_keywords, coordinates) -> List[PropertyDTO]:
+                         min_area, max_area, semantic_keywords, coordinates, radius_km) -> List[PropertyDTO]:
         """Поиск в BI Group с интеллектуальными фильтрами"""
 
         # Базовый поиск через существующий клиент
@@ -96,6 +112,8 @@ class EnhancedSearchService:
             max_price=max_price,
             city=city,
             district=district,
+            geo_center=coordinates,
+            geo_radius_km=radius_km,
             location_keywords=semantic_keywords,
             limit=50  # Берем больше для пост-фильтрации
         )
@@ -120,6 +138,7 @@ class EnhancedSearchService:
     def _search_secondary_intelligent(self, city, district, rooms, max_price, min_price,
                                       min_area, max_area, lifestyle_tags, semantic_keywords,
                                       description_phrases, exclusion_keywords, embedding_text,
+                                      coordinates, radius_km,
                                       limit) -> List[PropertyDTO]:
         """
         Интеллектуальный поиск по вторичке с векторной близостью и многокритериальной фильтрацией
@@ -156,11 +175,26 @@ class EnhancedSearchService:
                     location_q |= (
                             Q(address__icontains=keyword) |
                             Q(title__icontains=keyword) |
-                            Q(description__icontains=keyword)
+                            Q(description__icontains=keyword) |
+                            Q(district__icontains=keyword) |
+                            Q(city__icontains=keyword)
                     )
 
             if location_q:
                 qs = qs.filter(location_q)
+
+        # 1.1 Географический фильтр (если есть координаты)
+        if coordinates and radius_km:
+            lat, lon = coordinates
+            lat_delta = radius_km / 111  # приблизительно км -> градусы
+            # избегаем деления на ноль на полюсах
+            lon_delta = radius_km / max(1e-6, (111 * abs(math.cos(math.radians(lat)))))
+            qs = qs.filter(
+                latitude__gte=lat - lat_delta,
+                latitude__lte=lat + lat_delta,
+                longitude__gte=lon - lon_delta,
+                longitude__lte=lon + lon_delta,
+            )
 
         # 2. Lifestyle фильтры (если есть описания в БД)
         if lifestyle_tags:

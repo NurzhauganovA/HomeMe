@@ -2,6 +2,7 @@ from typing import Dict
 
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
+from core.location_resolver import DynamicLocationResolver, create_location_filter_for_search
 from telegram_bot.models import BotUser, UserSession, Lead
 from asgiref.sync import sync_to_async
 import logging
@@ -18,6 +19,7 @@ class EnhancedDialogManager:
     def __init__(self):
         self.ai = EnhancedAIService()
         self.search = EnhancedSearchService(self.ai)
+        self.location_resolver = DynamicLocationResolver(self.ai)
 
     async def process_message(self, user_id: str, platform: str, text: str,
                               user_name: str = None) -> dict:
@@ -116,6 +118,27 @@ class EnhancedDialogManager:
         # Обновляем параметры поиска в сессии
         search_params = session.search_params
 
+        # Дополнительный AI-резолв локаций (EXPO, "левый берег" и т.д.)
+        city_hint = analysis.get('city') or search_params.get('city')
+        location_data = self.location_resolver.resolve_any_location(text, city_hint=city_hint)
+        location_filter = create_location_filter_for_search(location_data)
+
+        # Обогащаем analysis локационными данными для поиска и кэша сессии
+        if location_filter.get('city') and not analysis.get('city'):
+            analysis['city'] = location_filter['city']
+        if location_filter.get('district') and not analysis.get('district'):
+            analysis['district'] = location_filter['district']
+        if location_filter.get('coordinates'):
+            lat, lon = location_filter['coordinates']
+            analysis['coordinates'] = {'lat': lat, 'lon': lon}
+        if location_filter.get('radius_km'):
+            analysis['radius_km'] = location_filter['radius_km']
+
+        if location_filter.get('text_keywords'):
+            extra_keywords = location_filter.get('text_keywords', [])
+            merged_keywords = list({*analysis.get('semantic_keywords', []), *extra_keywords})
+            analysis['semantic_keywords'] = merged_keywords
+
         # Мерджим новые данные
         if analysis.get('city'):
             search_params['city'] = analysis['city']
@@ -136,6 +159,10 @@ class EnhancedDialogManager:
         search_params['lifestyle_tags'] = analysis.get('lifestyle_tags', [])
         search_params['semantic_keywords'] = analysis.get('semantic_keywords', [])
         search_params['embedding_text'] = analysis.get('embedding_text', text)
+        if analysis.get('coordinates'):
+            search_params['coordinates'] = analysis['coordinates']
+        if analysis.get('radius_km'):
+            search_params['radius_km'] = analysis['radius_km']
 
         session.search_params = search_params
         await sync_to_async(session.save)()
