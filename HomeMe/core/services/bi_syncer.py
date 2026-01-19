@@ -64,7 +64,7 @@ class BISyncService:
             )
 
             # === AI Обогащение (только для новых или если нет вектора) ===
-            if created or not obj.embedding is None:
+            if created or obj.embedding is None:
                 self._enrich_complex_with_ai(obj)
 
         except Exception as e:

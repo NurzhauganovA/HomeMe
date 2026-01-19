@@ -23,15 +23,15 @@ class EnhancedAIService:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
 
-        # print("🔍 Поиск доступных моделей...\n")
-        #
-        # try:
-        #     for m in genai.list_models():
-        #         # Нам нужны только те, которые умеют генерировать текст (generateContent)
-        #         if 'generateContent' in m.supported_generation_methods:
-        #             print(f"- {m.name}")
-        # except Exception as e:
-        #     print(f"Ошибка при получении списка: {e}")
+        print("🔍 Поиск доступных моделей...\n")
+
+        try:
+            for m in genai.list_models():
+                # Нам нужны только те, которые умеют генерировать текст (generateContent)
+                if 'generateContent' in m.supported_generation_methods:
+                    print(f"- {m.name}")
+        except Exception as e:
+            print(f"Ошибка при получении списка: {e}")
 
         # Кэш для экономии запросов
         self._location_cache = {}

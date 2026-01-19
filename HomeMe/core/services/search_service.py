@@ -20,54 +20,117 @@ class EnhancedSearchService:
         self.bi_client = EnhancedBIGroupClient()
         self.ai_service = ai_service
 
-    def intelligent_search(self, analysis_result: Dict, limit: int = 10):
-        """
-        Гибридный поиск:
-        1. Находим подходящие ЖК по Вектору и Локации.
-        2. Внутри этих ЖК ищем конкретные квартиры по параметрам.
-        """
+    def _map_unit_to_dto(self, unit: BIUnit, complex_obj: BIComplex) -> PropertyDTO:
+        """Конвертирует BIUnit в PropertyDTO"""
+        return PropertyDTO(
+            source="bi_group",
+            title=f"{complex_obj.name} - {unit.room_count}-комн",
+            address=complex_obj.address,
+            price=float(unit.current_price),
+            rooms=unit.room_count,
+            area=unit.area,
+            floor=unit.floor,
+            total_floors=unit.max_floor,
+            description=f"Срок сдачи: {unit.deadline or complex_obj.deadline}. Класс: {complex_obj.class_name}",
+            url=complex_obj.website,
+            image_url=complex_obj.image_url,
+            latitude=complex_obj.latitude,
+            longitude=complex_obj.longitude,
+            property_class=complex_obj.class_name,
+            deadline=unit.deadline or complex_obj.deadline
+        )
 
-        # 1. Фильтруем ЖК (Complexes)
+    def intelligent_search(self, analysis_result: Dict, limit: int = 10):
+        """Гибридный поиск с fallback"""
+        property_type = analysis_result.get('property_type', 'any')
+
+        results = []
+
+        # 1. Базовая фильтрация ЖК
         complex_qs = BIComplex.objects.all()
 
-        # Гео-фильтр (если есть координаты от AI)
-        lat, lon = analysis_result.get('coordinates', (None, None))
-        if lat and lon:
-            # Тут можно использовать Haversine формулу или PostGIS
-            # Для простоты MVP: квадрат поиска
-            radius = 0.03  # ~3km
+        # Город (через city_uuid)
+        city_name = analysis_result.get('city')
+        if city_name:
+            city_uuid = self.bi_client.CITY_MAP.get(city_name)
+            if city_uuid:
+                complex_qs = complex_qs.filter(city_uuid=city_uuid)
+
+        # Гео-фильтр
+        coords = analysis_result.get('coordinates')
+        if coords and 'lat' in coords and 'lon' in coords:
+            lat, lon = coords['lat'], coords['lon']
+            radius = analysis_result.get('radius_km', 5.0)
+            lat_delta = radius / 111
+            lon_delta = radius / max(1e-6, (111 * abs(math.cos(math.radians(lat)))))
+
             complex_qs = complex_qs.filter(
-                latitude__range=(lat - radius, lat + radius),
-                longitude__range=(lon - radius, lon + radius)
+                latitude__isnull=False,
+                longitude__isnull=False,
+                latitude__range=(lat - lat_delta, lat + lat_delta),
+                longitude__range=(lon - lon_delta, lon + lon_delta)
             )
 
-        # Векторный поиск по ЖК (если есть текстовый запрос стиля жизни)
+        # Векторная сортировка (если есть lifestyle запрос)
         query_text = analysis_result.get('embedding_text')
         if query_text:
             embedding = self.ai_service.get_embedding(query_text)
             if embedding:
-                # Сортируем ЖК по похожести (Cosine Distance)
-                complex_qs = complex_qs.order_by(CosineDistance('embedding', embedding))
+                complex_qs = complex_qs.annotate(
+                    similarity=CosineDistance('embedding', embedding)
+                ).order_by('similarity')
+            else:
+                # Fallback: сортировка по дате
+                complex_qs = complex_qs.order_by('-updated_at')
 
-        # Берем топ-5 подходящих ЖК
-        top_complexes = list(complex_qs[:5])
+        # Берем топ-10 ЖК
+        top_complexes = list(complex_qs[:10])
 
-        # 2. Ищем Квартиры (Units) в этих ЖК
+        if not top_complexes:
+            logger.warning("⚠️ No complexes found matching criteria")
+            return []
+
+        # 2. Ищем квартиры в этих ЖК
         results = []
+        rooms = analysis_result.get('rooms')
+        max_price = analysis_result.get('max_price', 999999999999)
+        min_area = analysis_result.get('min_area')
+        max_area = analysis_result.get('max_area')
+
         for comp in top_complexes:
-            units = BIUnit.objects.filter(
+            units_qs = BIUnit.objects.filter(
                 complex=comp,
                 is_active=True,
-                price_discount__lte=analysis_result.get('max_price', 9999999999),
-                room_count=analysis_result.get('rooms', 0) if analysis_result.get('rooms') else None
-                # Добавьте area фильтры и т.д.
-            ).order_by('price_discount')[:2]  # Берем по 2 лучших варианта из каждого ЖК
+                price_discount__lte=max_price
+            )
+
+            # Фильтр комнат (только если указано)
+            if rooms:
+                units_qs = units_qs.filter(room_count=rooms)
+
+            floor_prefs = analysis_result.get('floor_preferences', [])
+            if 'not_first' in floor_prefs:
+                units_qs = units_qs.exclude(floor=1)
+            if 'not_last' in floor_prefs:
+                units_qs = units_qs.exclude(floor=F('max_floor'))
+            if 'high' in floor_prefs:
+                units_qs = units_qs.annotate(
+                    floor_ratio=F('floor') * 1.0 / F('max_floor')
+                ).filter(floor_ratio__gte=0.6)
+
+            # Фильтр площади
+            if min_area:
+                units_qs = units_qs.filter(area__gte=min_area)
+            if max_area:
+                units_qs = units_qs.filter(area__lte=max_area)
+
+            units = units_qs.order_by('price_discount')[:3]  # Топ-3 из каждого ЖК
 
             for u in units:
-                # Конвертируем в ваш DTO для ответа пользователю
                 results.append(self._map_unit_to_dto(u, comp))
 
-        return results
+        # Ограничиваем общий результат
+        return results[:limit]
 
     def _search_bi_group(self, city, district, rooms, max_price, min_price,
                          min_area, max_area, semantic_keywords, coordinates, radius_km) -> List[PropertyDTO]:
