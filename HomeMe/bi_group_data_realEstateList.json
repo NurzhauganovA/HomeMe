@@ -1,0 +1,1391 @@
+{
+    "realEstates": [
+        {
+            "uuid": "1a8988ee-b3b6-11ef-a830-001dd8b72708",
+            "name": "Jetisu Kerbez Comfort",
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Астана, вдоль проспекта Улы Дала",
+            "addressKaz": "Астана қ., Ұлы Дала даңғылы бойында",
+            "placementCount": 67,
+            "minTotalPrice": 25709400,
+            "latitude": 51.0864,
+            "longitude": 71.46416,
+            "website": "https://bi.group/ru/landing/kerbez-comfort",
+            "bigVille": {
+                "id": "9b0d965c-685d-11ec-a81f-001dd8b72708",
+                "name": "Jetisu",
+                "logoUrl": "https://s3.bi.group/biclick/content-manager/zhetysu_a89747ae23.svg",
+                "cityId": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+                "pictureUrl": "",
+                "website": "https://jetisu.bi.group"
+            },
+            "minSquarePrice": 554400,
+            "maxSquarePrice": 776000,
+            "roomCounts": [
+                3,
+                2,
+                1,
+                4
+            ],
+            "floorMin": 2,
+            "floorMax": 14,
+            "squareMin": 35.24,
+            "squareMax": 111.29,
+            "cityUUID": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 68280600,
+            "deadline": "2026-07-25",
+            "docDate": "2026-10-25",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "f8f87e2f-459f-11e9-80d9-00155d101f25",
+                    "name": "Jetisu Kerbez Comfort  - 1",
+                    "deadline": "2026-07-25",
+                    "dduDate": "2025-03-04",
+                    "docDate": "2026-10-25",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 67,
+                    "minSum": 25709400,
+                    "maxSum": 68280600
+                }
+            ],
+            "haveStock": false,
+            "propertyClass": [
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 35.24,
+                    "minPrice": 25709400
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 45.99,
+                    "minPrice": 29433600
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 67.83,
+                    "minPrice": 37604952
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 109.97,
+                    "minPrice": 64770780
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/1a8988ee-b3b6-11ef-a830-001dd8b72708/1a8988ee-b3b6-11ef-a830-001dd8b72708_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/1a8988ee-b3b6-11ef-a830-001dd8b72708/1a8988ee-b3b6-11ef-a830-001dd8b72708_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/1a8988ee-b3b6-11ef-a830-001dd8b72708/1a8988ee-b3b6-11ef-a830-001dd8b72708_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/1a8988ee-b3b6-11ef-a830-001dd8b72708/1a8988ee-b3b6-11ef-a830-001dd8b72708_foto.jpg"
+        },
+        {
+            "uuid": "957b5227-faa9-45e7-acbf-328470772a7d",
+            "name": "Hyde Park Shymkent",
+            "propertyClassName": [
+                "Премиум"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                }
+            ],
+            "address": "г. Шымкент, ул. Толеметова, 68",
+            "addressKaz": "Шымкент қ., Толеметов көш, 68",
+            "placementCount": 43,
+            "minTotalPrice": 70355440,
+            "latitude": 42.3761,
+            "longitude": 69.61005,
+            "website": "https://bi.group/ru/landing/hydepark-shymkent",
+            "bigVille": null,
+            "minSquarePrice": 873000,
+            "maxSquarePrice": 1089000,
+            "roomCounts": [
+                3,
+                2,
+                4,
+                5
+            ],
+            "floorMin": 2,
+            "floorMax": 7,
+            "squareMin": 68.13,
+            "squareMax": 283.47,
+            "cityUUID": "cf5ad35a-9bc1-11e8-80d7-00155da7893d",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 255123000,
+            "deadline": "2026-02-15",
+            "docDate": "2026-05-30",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "af585392-6272-11ee-a82a-001dd8b72708",
+                    "name": "Hyde Park Shymkent",
+                    "deadline": "2026-02-15",
+                    "dduDate": "2024-10-29",
+                    "docDate": "2026-05-30",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 43,
+                    "minSum": 70355440,
+                    "maxSum": 255123000
+                }
+            ],
+            "haveStock": true,
+            "propertyClass": [
+                "8ca06bfd-6eed-11e3-a09c-0025906b4dd5"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 2,
+                    "minSquare": 68.12,
+                    "minPrice": 70355440
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 98.27,
+                    "minPrice": 98435350
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 130.22,
+                    "minPrice": 123988480
+                },
+                {
+                    "rooms": 5,
+                    "minSquare": 200.86,
+                    "minPrice": 184800400
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/957b5227-faa9-45e7-acbf-328470772a7d/957b5227-faa9-45e7-acbf-328470772a7d_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/957b5227-faa9-45e7-acbf-328470772a7d/957b5227-faa9-45e7-acbf-328470772a7d_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/957b5227-faa9-45e7-acbf-328470772a7d/957b5227-faa9-45e7-acbf-328470772a7d_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/957b5227-faa9-45e7-acbf-328470772a7d/957b5227-faa9-45e7-acbf-328470772a7d_foto.jpg"
+        },
+        {
+            "uuid": "f729e301-f0f0-11ee-a82d-001dd8b72708",
+            "name": "Arena City. Sport Almaty",
+            "propertyClassName": [
+                "Комфорт lite",
+                "Комфорт+",
+                "Комфорт"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                }
+            ],
+            "address": "г. Алматы, ул. Момышулы, 11/14а",
+            "addressKaz": "Алматы қ., Момышұлы көш, 11/14 а",
+            "placementCount": 240,
+            "minTotalPrice": 22100850,
+            "latitude": 43.27395,
+            "longitude": 76.81511,
+            "website": "https://bi.group/ru/landing/arenacity-sport",
+            "bigVille": {
+                "id": "c6abfa96-dcdb-11ed-a82c-001dd8b726aa",
+                "name": "Arena City Almaty",
+                "logoUrl": "https://s3.bi.group/biclick/content-manager/Arena_city_logo_b570b623d0.svg",
+                "cityId": "6ba77338-4db7-11e8-80cf-bb580b2abfef",
+                "pictureUrl": "",
+                "website": "https://arenacity-almaty.bi.group"
+            },
+            "minSquarePrice": 557000,
+            "maxSquarePrice": 931000,
+            "roomCounts": [
+                2,
+                3,
+                4,
+                1
+            ],
+            "floorMin": 1,
+            "floorMax": 6,
+            "squareMin": 28.38,
+            "squareMax": 112.96,
+            "cityUUID": "6ba77338-4db7-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 81145020,
+            "deadline": "2026-11-28",
+            "docDate": "2027-02-27",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "761c7163-3759-4957-a0ba-eb49028d7736",
+                    "name": "Arena City Sport - G",
+                    "deadline": "2026-11-28",
+                    "dduDate": "2025-10-31",
+                    "docDate": "2027-02-27",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 109,
+                    "minSum": 22100850,
+                    "maxSum": 77493600
+                },
+                {
+                    "id": "72654d23-f5f3-4e43-a61a-c0eb58fa689d",
+                    "name": "Arena City Sport - F",
+                    "deadline": "2026-10-31",
+                    "dduDate": "2025-07-23",
+                    "docDate": "2027-01-30",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 44,
+                    "minSum": 26137800,
+                    "maxSum": 67776000
+                },
+                {
+                    "id": "98994631-617a-11eb-a824-001dd8b726aa",
+                    "name": "Arena City Sport - E",
+                    "deadline": "2026-08-29",
+                    "dduDate": "2025-07-23",
+                    "docDate": "2026-11-28",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 34,
+                    "minSum": 25564000,
+                    "maxSum": 67596000
+                },
+                {
+                    "id": "4c5abddd-5d1c-11ee-a82a-001dd8b72708",
+                    "name": "Arena City Sport - D",
+                    "deadline": "2026-05-30",
+                    "dduDate": "2025-03-04",
+                    "docDate": "2026-08-29",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 28,
+                    "minSum": 23839200,
+                    "maxSum": 77486400
+                },
+                {
+                    "id": "6a444a0f-dafc-4519-a642-04b01297d730",
+                    "name": "Arena City Sport - E BIG+Light Classic",
+                    "deadline": "2026-08-29",
+                    "dduDate": "2025-08-19",
+                    "docDate": "2026-11-28",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 19,
+                    "minSum": 37237200,
+                    "maxSum": 81145020
+                },
+                {
+                    "id": "6171c4c8-fe03-4fbe-82d7-d16631490cd2",
+                    "name": "Arena City Sport - F BIG+LIGHT Modern",
+                    "deadline": "2026-10-31",
+                    "dduDate": "2025-07-23",
+                    "docDate": "2027-01-30",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 3,
+                    "minSum": 26059200,
+                    "maxSum": 50432270
+                },
+                {
+                    "id": "9fc3f936-4526-11eb-a83c-00155d101d82",
+                    "name": "Arena City Sport C (Comfort P-) - C",
+                    "deadline": "2026-01-29",
+                    "dduDate": "2025-03-04",
+                    "docDate": "2026-05-02",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 2,
+                    "minSum": 35422500,
+                    "maxSum": 74942000
+                },
+                {
+                    "id": "c8e2ce08-4522-11eb-a83c-00155d101d82",
+                    "name": "Arena City Sport - A",
+                    "deadline": "2025-09-13",
+                    "dduDate": "2025-02-12",
+                    "docDate": "2025-11-10",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 1,
+                    "minSum": 26076000,
+                    "maxSum": 26076000
+                }
+            ],
+            "haveStock": true,
+            "propertyClass": [
+                "43571bb0-d8f0-4f2f-9478-f5c7d07b712e",
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa",
+                "747ed03f-825f-11e3-a09c-0025906b4dd5"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 28.37,
+                    "minPrice": 22100850
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 41.91,
+                    "minPrice": 27809650
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 52.81,
+                    "minPrice": 34227360
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 106.90,
+                    "minPrice": 60384370
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/f729e301-f0f0-11ee-a82d-001dd8b72708/f729e301-f0f0-11ee-a82d-001dd8b72708_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/f729e301-f0f0-11ee-a82d-001dd8b72708/f729e301-f0f0-11ee-a82d-001dd8b72708_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/f729e301-f0f0-11ee-a82d-001dd8b72708/f729e301-f0f0-11ee-a82d-001dd8b72708_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/f729e301-f0f0-11ee-a82d-001dd8b72708/f729e301-f0f0-11ee-a82d-001dd8b72708_foto.jpg"
+        },
+        {
+            "uuid": "2cb3a873-b620-4b49-970b-5bc8db3b479d",
+            "name": "Avenue 32",
+            "propertyClassName": [
+                "Бизнес+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Шымкент, пр. Кунаева 32А",
+            "addressKaz": "Шымкент қ., Қонаев даңғылы 32А",
+            "placementCount": 64,
+            "minTotalPrice": 65995440,
+            "latitude": 42.32625,
+            "longitude": 69.59907,
+            "website": "https://bi.group/ru/landing/avenue32",
+            "bigVille": null,
+            "minSquarePrice": 846000,
+            "maxSquarePrice": 1153000,
+            "roomCounts": [
+                2,
+                4,
+                3
+            ],
+            "floorMin": 3,
+            "floorMax": 25,
+            "squareMin": 67.48,
+            "squareMax": 161.35,
+            "cityUUID": "cf5ad35a-9bc1-11e8-80d7-00155da7893d",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 169901550,
+            "deadline": "2026-12-27",
+            "docDate": "2027-03-27",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "a1d5a2ea-6268-11ee-a82a-001dd8b72708",
+                    "name": "Avenue 32",
+                    "deadline": "2026-12-27",
+                    "dduDate": "2024-12-19",
+                    "docDate": "2027-03-27",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 64,
+                    "minSum": 65995440,
+                    "maxSum": 169901550
+                }
+            ],
+            "haveStock": true,
+            "propertyClass": [
+                "5c1ac995-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 2,
+                    "minSquare": 67.48,
+                    "minPrice": 65995440
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 93.23,
+                    "minPrice": 96474290
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 133.44,
+                    "minPrice": 116646480
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/2cb3a873-b620-4b49-970b-5bc8db3b479d/2cb3a873-b620-4b49-970b-5bc8db3b479d_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/2cb3a873-b620-4b49-970b-5bc8db3b479d/2cb3a873-b620-4b49-970b-5bc8db3b479d_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/2cb3a873-b620-4b49-970b-5bc8db3b479d/2cb3a873-b620-4b49-970b-5bc8db3b479d_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/2cb3a873-b620-4b49-970b-5bc8db3b479d/2cb3a873-b620-4b49-970b-5bc8db3b479d_foto.jpg"
+        },
+        {
+            "uuid": "8139bae9-2852-4a3e-9279-4f25a04cc651",
+            "name": "Darmen",
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                }
+            ],
+            "address": "г. Астана, пересечение ул. Кенесары и ул. Асан Кайгы",
+            "addressKaz": "Астана қ., Кенесары көшесі мен Асан Қайғы көшесінің қиылысы",
+            "placementCount": 105,
+            "minTotalPrice": 24850000,
+            "latitude": 51.167,
+            "longitude": 71.44568,
+            "website": "https://bi.group/ru/landing/darmen",
+            "bigVille": null,
+            "minSquarePrice": 533000,
+            "maxSquarePrice": 721000,
+            "roomCounts": [
+                3,
+                2,
+                4,
+                1
+            ],
+            "floorMin": 2,
+            "floorMax": 17,
+            "squareMin": 35.5,
+            "squareMax": 113.61,
+            "cityUUID": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 76118700,
+            "deadline": "2026-11-15",
+            "docDate": "2027-02-15",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "580c3d66-ea64-40bd-951a-79b3017a3eb1",
+                    "name": "Darmen 2",
+                    "deadline": "2026-11-15",
+                    "dduDate": "2025-12-17",
+                    "docDate": "2027-02-15",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 90,
+                    "minSum": 24850000,
+                    "maxSum": 76118700
+                },
+                {
+                    "id": "9c74da83-a8d2-451f-9081-a304c45e986d",
+                    "name": "Darmen - 1",
+                    "deadline": "2026-09-30",
+                    "dduDate": "2025-11-11",
+                    "docDate": "2026-12-30",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 15,
+                    "minSum": 26235500,
+                    "maxSum": 67431150
+                }
+            ],
+            "haveStock": false,
+            "propertyClass": [
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 35.50,
+                    "minPrice": 24850000
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 45.29,
+                    "minPrice": 31276050
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 67.56,
+                    "minPrice": 38998960
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 112.94,
+                    "minPrice": 62009220
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/8139bae9-2852-4a3e-9279-4f25a04cc651/8139bae9-2852-4a3e-9279-4f25a04cc651_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/8139bae9-2852-4a3e-9279-4f25a04cc651/8139bae9-2852-4a3e-9279-4f25a04cc651_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/8139bae9-2852-4a3e-9279-4f25a04cc651/8139bae9-2852-4a3e-9279-4f25a04cc651_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/8139bae9-2852-4a3e-9279-4f25a04cc651/8139bae9-2852-4a3e-9279-4f25a04cc651_foto.jpg"
+        },
+        {
+            "uuid": "557e1c18-b57d-4b4b-8d9c-9d520fec8bdf",
+            "name": "DÄSTÜR",
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                }
+            ],
+            "address": "г. Алматы, Мкр-н 4, Акжар, выше пр. Абая",
+            "addressKaz": "г. Алматы, Мкр-н 4, Акжар, выше пр. Абая",
+            "placementCount": 350,
+            "minTotalPrice": 24851840,
+            "latitude": 43.19968,
+            "longitude": 76.79881,
+            "website": "https://bi.group/ru/landing/dastur",
+            "bigVille": null,
+            "minSquarePrice": 651000,
+            "maxSquarePrice": 929000,
+            "roomCounts": [
+                3,
+                2,
+                1,
+                4
+            ],
+            "floorMin": 1,
+            "floorMax": 12,
+            "squareMin": 29.7,
+            "squareMax": 130.51,
+            "cityUUID": "6ba77338-4db7-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 108192790,
+            "deadline": "2027-03-27",
+            "docDate": "2027-06-26",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "e823be5f-860a-43a5-b8a3-727914fa44ba",
+                    "name": "Dastur - 4",
+                    "deadline": "2027-03-27",
+                    "dduDate": "2025-09-09",
+                    "docDate": "2027-06-26",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 217,
+                    "minSum": 24851840,
+                    "maxSum": 108192790
+                },
+                {
+                    "id": "19868ab4-673f-487e-91fd-90d2657e84fd",
+                    "name": "Dastur - 1",
+                    "deadline": "2026-07-18",
+                    "dduDate": "2025-02-24",
+                    "docDate": "2026-10-17",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 79,
+                    "minSum": 28873320,
+                    "maxSum": 105779240
+                },
+                {
+                    "id": "cb55c7d0-f8d1-43bc-901e-99007c70f9cd",
+                    "name": "Dastur - 3",
+                    "deadline": "2026-12-19",
+                    "dduDate": "2025-08-21",
+                    "docDate": "2027-03-20",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 41,
+                    "minSum": 26284500,
+                    "maxSum": 69077120
+                },
+                {
+                    "id": "82338681-a431-4957-b1a0-c865544ceddf",
+                    "name": "Dastur - 2",
+                    "deadline": "2026-09-26",
+                    "dduDate": "2025-02-24",
+                    "docDate": "2026-12-26",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 13,
+                    "minSum": 27692140,
+                    "maxSum": 64965000
+                }
+            ],
+            "haveStock": false,
+            "propertyClass": [
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 29.70,
+                    "minPrice": 24851840
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 44.77,
+                    "minPrice": 34740277
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 65.54,
+                    "minPrice": 46140160
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 126.95,
+                    "minPrice": 92201400
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf/557e1c18-b57d-4b4b-8d9c-9d520fec8bdf_foto.jpg"
+        },
+        {
+            "uuid": "3907d63c-d9e8-4999-8056-c65d182c1a53",
+            "name": "BAIZAMAN",
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Астана, вблизи пересечения ул. Айтматова и Сыганак",
+            "addressKaz": "Астана қ., Айматов және Сығанақ көш. қиылысының жанында",
+            "placementCount": 131,
+            "minTotalPrice": 25969500,
+            "latitude": 51.12773,
+            "longitude": 71.36111,
+            "website": "https://bi.group/ru/landing/baizaman",
+            "bigVille": null,
+            "minSquarePrice": 523000,
+            "maxSquarePrice": 725000,
+            "roomCounts": [
+                2,
+                3,
+                4,
+                1
+            ],
+            "floorMin": 2,
+            "floorMax": 12,
+            "squareMin": 35.82,
+            "squareMax": 126.58,
+            "cityUUID": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 70378480,
+            "deadline": "2026-08-29",
+            "docDate": "2026-11-29",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "ffd0bfb3-f913-481f-ae12-e792b48537ab",
+                    "name": "BAIZAMAN",
+                    "deadline": "2026-08-29",
+                    "dduDate": "2025-11-13",
+                    "docDate": "2026-11-29",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 131,
+                    "minSum": 25969500,
+                    "maxSum": 70378480
+                }
+            ],
+            "haveStock": false,
+            "propertyClass": [
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 35.81,
+                    "minPrice": 25969500
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 48.43,
+                    "minPrice": 31765200
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 68.90,
+                    "minPrice": 44922800
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 100.43,
+                    "minPrice": 58751550
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/3907d63c-d9e8-4999-8056-c65d182c1a53/3907d63c-d9e8-4999-8056-c65d182c1a53_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/3907d63c-d9e8-4999-8056-c65d182c1a53/3907d63c-d9e8-4999-8056-c65d182c1a53_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/3907d63c-d9e8-4999-8056-c65d182c1a53/3907d63c-d9e8-4999-8056-c65d182c1a53_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/3907d63c-d9e8-4999-8056-c65d182c1a53/3907d63c-d9e8-4999-8056-c65d182c1a53_foto.jpg"
+        },
+        {
+            "uuid": "e79e76bc-d8dd-4618-98c1-e2d540cce272",
+            "name": "Sapa 4Life",
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Атырау, мкр-н Ак-Шагала, рядом с парком Победы",
+            "addressKaz": "Атырау қ., Ақ Шағала шағын ауданы, Жеңіс саябағының жанында",
+            "placementCount": 116,
+            "minTotalPrice": 21125280,
+            "latitude": 47.09023,
+            "longitude": 51.89046,
+            "website": "https://bi.group/ru/landing/sapa-4life",
+            "bigVille": {
+                "id": "4cc3715f-daab-11ee-a82d-001dd8b72708",
+                "name": "Sapa",
+                "logoUrl": "https://s3.bi.group/biclick/content-manager/Sapa_Sapa_bigvill_blue_1_034f1731d4.svg",
+                "cityId": "ed9bc954-8e26-11e8-80d0-00155da78938",
+                "pictureUrl": "",
+                "website": "https://sapa.bi.group/"
+            },
+            "minSquarePrice": 450000,
+            "maxSquarePrice": 582000,
+            "roomCounts": [
+                2,
+                3,
+                4,
+                1
+            ],
+            "floorMin": 2,
+            "floorMax": 12,
+            "squareMin": 40.01,
+            "squareMax": 120.65,
+            "cityUUID": "ed9bc954-8e26-11e8-80d0-00155da78938",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 63379030,
+            "deadline": "2026-08-29",
+            "docDate": "2026-11-27",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "2efdefd6-635d-11ee-a82a-001dd8b72708",
+                    "name": "Sapa 4Life Comfort 1-2",
+                    "deadline": "2026-08-29",
+                    "dduDate": "2025-01-09",
+                    "docDate": "2026-11-27",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 85,
+                    "minSum": 21125280,
+                    "maxSum": 63379030
+                },
+                {
+                    "id": "cd72d05c-635c-11ee-a82a-001dd8b72708",
+                    "name": "Sapa 4Life Comfort 1-1",
+                    "deadline": "2025-12-29",
+                    "dduDate": "2025-01-09",
+                    "docDate": "2026-03-20",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 31,
+                    "minSum": 35330610,
+                    "maxSum": 61738200
+                }
+            ],
+            "haveStock": true,
+            "propertyClass": [
+                "54f3b5b8-e393-11eb-a829-001dd8b726aa"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 40.00,
+                    "minPrice": 21125280
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 49.27,
+                    "minPrice": 26611200
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 69.93,
+                    "minPrice": 35944020
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 107.26,
+                    "minPrice": 53509500
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/e79e76bc-d8dd-4618-98c1-e2d540cce272/e79e76bc-d8dd-4618-98c1-e2d540cce272_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/e79e76bc-d8dd-4618-98c1-e2d540cce272/e79e76bc-d8dd-4618-98c1-e2d540cce272_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/e79e76bc-d8dd-4618-98c1-e2d540cce272/e79e76bc-d8dd-4618-98c1-e2d540cce272_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/e79e76bc-d8dd-4618-98c1-e2d540cce272/e79e76bc-d8dd-4618-98c1-e2d540cce272_foto.jpg"
+        },
+        {
+            "uuid": "e196a8fc-d7da-11ef-a834-001dd8b726aa",
+            "name": "GreenLine. Garden",
+            "propertyClassName": [
+                "Бизнес"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.test.bi.group/biclick/content-manager/logo_bi_finance_FINAL_abac058ef0.svg",
+                    "bankCode": "BIFINANCE",
+                    "bankName": "МФО BI Finance"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Астана, бигвилль GreenLine",
+            "addressKaz": "Астана қ., GreenLine бигвиллі",
+            "placementCount": 365,
+            "minTotalPrice": 34534320,
+            "latitude": 51.13819,
+            "longitude": 71.3911,
+            "website": "https://bi.group/ru/landing/greenline-garden",
+            "bigVille": {
+                "id": "94dec67e-6857-11ec-a81f-001dd8b72708",
+                "name": "GreenLine",
+                "logoUrl": "https://s3.bi.group/biclick/content-manager/greenline_dee87cee1e.svg",
+                "cityId": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+                "pictureUrl": "",
+                "website": "https://greenline.bi.group/"
+            },
+            "minSquarePrice": 733000,
+            "maxSquarePrice": 954000,
+            "roomCounts": [
+                3,
+                2,
+                4,
+                1
+            ],
+            "floorMin": 2,
+            "floorMax": 16,
+            "squareMin": 37.99,
+            "squareMax": 137.02,
+            "cityUUID": "4c0fe725-4b6f-11e8-80cf-bb580b2abfef",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 115964660,
+            "deadline": "2027-05-22",
+            "docDate": "2027-08-22",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "bc225568-ff55-4b58-8542-30fd53cecad5",
+                    "name": "GreenLine.Garden-2 - 2",
+                    "deadline": "2027-05-22",
+                    "dduDate": "2025-09-25",
+                    "docDate": "2027-08-22",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 266,
+                    "minSum": 34534320,
+                    "maxSum": 115964660
+                },
+                {
+                    "id": "55286368-c73f-4194-b535-482167eccef6",
+                    "name": "GreenLine.Garden 1-2",
+                    "deadline": "2026-08-29",
+                    "dduDate": "2025-07-08",
+                    "docDate": "2026-11-29",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 81,
+                    "minSum": 37380400,
+                    "maxSum": 108245800
+                },
+                {
+                    "id": "58695d84-ddf4-4820-8743-571d34cfb900",
+                    "name": "GreenLine.Garden 1 - 1",
+                    "deadline": "2026-10-24",
+                    "dduDate": "2025-04-28",
+                    "docDate": "2027-01-24",
+                    "squareUnit": "00000000-0000-0000-0000-000000000000",
+                    "count": 18,
+                    "minSum": 41773840,
+                    "maxSum": 105259680
+                }
+            ],
+            "haveStock": false,
+            "propertyClass": [
+                "8ca06bfc-6eed-11e3-a09c-0025906b4dd5"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 1,
+                    "minSquare": 37.99,
+                    "minPrice": 34534320
+                },
+                {
+                    "rooms": 2,
+                    "minSquare": 45.27,
+                    "minPrice": 37142400
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 68.51,
+                    "minPrice": 57964860
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 123.93,
+                    "minPrice": 95010120
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/e196a8fc-d7da-11ef-a834-001dd8b726aa/e196a8fc-d7da-11ef-a834-001dd8b726aa_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/e196a8fc-d7da-11ef-a834-001dd8b726aa/e196a8fc-d7da-11ef-a834-001dd8b726aa_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/e196a8fc-d7da-11ef-a834-001dd8b726aa/e196a8fc-d7da-11ef-a834-001dd8b726aa_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/e196a8fc-d7da-11ef-a834-001dd8b726aa/e196a8fc-d7da-11ef-a834-001dd8b726aa_foto.jpg"
+        },
+        {
+            "uuid": "c369113b-ffd5-11ef-a832-001dd8b72708",
+            "name": " Atamura. Urpaq",
+            "propertyClassName": [
+                "Бизнес"
+            ],
+            "propertyTypes": [
+                {
+                    "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+                    "name": "Квартира"
+                }
+            ],
+            "mortgageBanks": [
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/altynbank_5bafb5545a.svg",
+                    "bankCode": "ALTYNBANK",
+                    "bankName": "Altyn Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/bcc_121da89a79.svg",
+                    "bankCode": "BCC",
+                    "bankName": "Банк ЦентрКредит"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/ffc_logo_bf02fe24c9.svg",
+                    "bankCode": "FREEDOM",
+                    "bankName": "Freedom Bank"
+                },
+                {
+                    "bankLogoUrl": "https://s3.bi.group/biclick/content-manager/halykbank_e7986237e2.svg",
+                    "bankCode": "HALYKBANK",
+                    "bankName": "Халык банк"
+                }
+            ],
+            "address": "г. Шымкент, вдоль пр. Байдибек би",
+            "addressKaz": "г. Шымкент, вдоль пр. Байдибек би",
+            "placementCount": 91,
+            "minTotalPrice": 28975390,
+            "latitude": 42.3827,
+            "longitude": 69.62359,
+            "website": "https://bi.group/ru/landing/atamura-urpaq",
+            "bigVille": {
+                "id": "8c0d04e1-ba3f-11ec-a82a-001dd8b726aa",
+                "name": "Атамұра",
+                "logoUrl": "https://s3.bi.group/biclick/content-manager/atamura_removebg_preview_c148822fd2.png",
+                "cityId": "cf5ad35a-9bc1-11e8-80d7-00155da7893d",
+                "pictureUrl": "",
+                "website": "http://atamura.bi.group/"
+            },
+            "minSquarePrice": 547000,
+            "maxSquarePrice": 701000,
+            "roomCounts": [
+                2,
+                3,
+                4,
+                5
+            ],
+            "floorMin": 2,
+            "floorMax": 12,
+            "squareMin": 46.61,
+            "squareMax": 162.0,
+            "cityUUID": "cf5ad35a-9bc1-11e8-80d7-00155da7893d",
+            "salePriority": false,
+            "fgjs": 0,
+            "onlineIpoteka": true,
+            "maxTotalPrice": 104652000,
+            "deadline": "2026-03-28",
+            "docDate": "2026-06-27",
+            "hasBooklet": true,
+            "installment": false,
+            "blocks": [
+                {
+                    "id": "ea1668b4-f81a-11ea-a837-00155d101d74",
+                    "name": "Atamura Business 2 - 2 Ұрпақ",
+                    "deadline": "2026-03-28",
+                    "dduDate": "2024-12-06",
+                    "docDate": "2026-06-27",
+                    "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+                    "count": 91,
+                    "minSum": 28975390,
+                    "maxSum": 104652000
+                }
+            ],
+            "haveStock": true,
+            "propertyClass": [
+                "8ca06bfc-6eed-11e3-a09c-0025906b4dd5"
+            ],
+            "roomBuckets": [
+                {
+                    "rooms": 2,
+                    "minSquare": 46.61,
+                    "minPrice": 28975390
+                },
+                {
+                    "rooms": 3,
+                    "minSquare": 73.23,
+                    "minPrice": 46319905
+                },
+                {
+                    "rooms": 4,
+                    "minSquare": 127.47,
+                    "minPrice": 73051850
+                },
+                {
+                    "rooms": 5,
+                    "minSquare": 162.00,
+                    "minPrice": 99792000
+                }
+            ],
+            "photoURL200": "https://s3.bi.group/biclick/c369113b-ffd5-11ef-a832-001dd8b72708/c369113b-ffd5-11ef-a832-001dd8b72708_foto_200.jpg",
+            "photoURL400": "https://s3.bi.group/biclick/c369113b-ffd5-11ef-a832-001dd8b72708/c369113b-ffd5-11ef-a832-001dd8b72708_foto_400.jpg",
+            "photoURL1600": "https://s3.bi.group/biclick/c369113b-ffd5-11ef-a832-001dd8b72708/c369113b-ffd5-11ef-a832-001dd8b72708_foto_1600.jpg",
+            "photoURL": "https://s3.bi.group/biclick/c369113b-ffd5-11ef-a832-001dd8b72708/c369113b-ffd5-11ef-a832-001dd8b72708_foto.jpg"
+        }
+    ]
+}

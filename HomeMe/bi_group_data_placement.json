@@ -1,0 +1,143 @@
+{
+    "realEstateUUID": "32453f14-664f-11ed-a82b-001dd8b726aa",
+    "placementUUID": "1862f7ed-f579-11ee-a82d-001dd8b72708",
+    "realEstateName": "Aisar",
+    "block": "Aisar - 2",
+    "blockId": "7d598041-69d8-11eb-a824-001dd8b726aa",
+    "roomCount": 1,
+    "floor": 2,
+    "square": 39.43,
+    "deadLine": "2025-10-30",
+    "heightOfWall": "Не менее 3,0 м",
+    "ceilingHeight": "Не менее 3,0 м",
+    "totalPrice": 26378670,
+    "repairPrice": 0,
+    "repairSum": 0,
+    "squarePrice": 669000,
+    "placementName": "225",
+    "realEstateLogoURL": "https://360.bi-group.org/filesforwebsite/logos/empty.png",
+    "propertyTypeId": "5990a172-812a-4fee-b4f5-c860cca824d7",
+    "groupTypeId": 1,
+    "entrance": 6,
+    "isRepaired": false,
+    "isCorner": false,
+    "orientation": "",
+    "numberSides": "",
+    "power": "",
+    "isFavorite": null,
+    "isSale": true,
+    "isInvest": false,
+    "placementStatusName": "Снятие брони",
+    "isOtauGroup": false,
+    "apartmentSheetExist": true,
+    "individualBooking": null,
+    "bookingTimestamp": "2026-01-14T06:07:26.000+00:00",
+    "fgjs": 0,
+    "propertyClassName": "Комфорт+",
+    "propertyClassId": "54f3b5b8-e393-11eb-a829-001dd8b726aa",
+    "propertyClassCode": "COMFORTPLUS",
+    "propertyType": {
+        "uuid": "5990a172-812a-4fee-b4f5-c860cca824d7",
+        "name": "Квартира"
+    },
+    "reasonType": {
+        "uuid": "ccd71eac-d9b4-4814-b2dc-5c03e03374fe",
+        "name": "Договор/Предварительный договор купли-продажи недвижимости (ЗУ, квартиры, коттеджи, паркинги,оф.пом)"
+    },
+    "maxFloor": 9,
+    "totalPriceWithDiscount": 26378670,
+    "squarePriceWithDiscount": 669000,
+    "discountPercent": null,
+    "balconyCoefSquare": 1.43,
+    "balconySquare": 2.86,
+    "canBuy": false,
+    "tradeIn": true,
+    "innerSquare": 38.0,
+    "placementStatusUUID": "1a85b7aa-7adc-11e9-a831-00155d10652c",
+    "totalSquare": 40.86,
+    "isValidate": null,
+    "discount": {
+        "stock": {
+            "type": "biClub",
+            "data": [
+                {
+                    "percent": 11.0,
+                    "priceWithDiscount": 23477016,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 2901654,
+                    "type": "Platinum"
+                },
+                {
+                    "percent": 10.0,
+                    "priceWithDiscount": 23740803,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 2637867,
+                    "type": "Gold +"
+                },
+                {
+                    "percent": 9.0,
+                    "priceWithDiscount": 24004589,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 2374081,
+                    "type": "Gold"
+                },
+                {
+                    "percent": 8.0,
+                    "priceWithDiscount": 24268376,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 2110294,
+                    "type": "Silver +"
+                },
+                {
+                    "percent": 7.0,
+                    "priceWithDiscount": 24532163,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 1846507,
+                    "type": "Silver"
+                },
+                {
+                    "percent": 6.0,
+                    "priceWithDiscount": 24795949,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 1582721,
+                    "type": "Bronze +"
+                },
+                {
+                    "percent": 5.0,
+                    "priceWithDiscount": 25059736,
+                    "limit": null,
+                    "roomLimit": null,
+                    "name": "BIG Bastau. 100% оплата (+1% к bi club)",
+                    "discountSum": 1318934,
+                    "type": "Bronze"
+                }
+            ]
+        }
+    },
+    "smartRemont": null,
+    "liquidityId": null,
+    "placement3dTour": null,
+    "blockAddress": "РК, Астана г., район Есиль, ул. Е 321, участок № 6",
+    "website": "https://bi.group/ru/landing/aisar",
+    "countBathrooms": "0",
+    "den": false,
+    "isStudio": false,
+    "squareUnit": "00000000-0000-0000-0000-000000000000",
+    "apartmentSheetURLPage1": "https://s3.bi.group/crm-clients-e1csales/placementsheets/7d598041-69d8-11eb-a824-001dd8b726aa/1862f7ed-f579-11ee-a82d-001dd8b72708/225_1600.jpg",
+    "photoURL200": "https://s3.bi.group/crm-clients-e1csales/layouts/7d598041-69d8-11eb-a824-001dd8b726aa/1862f7ed-f579-11ee-a82d-001dd8b72708/225_200.png",
+    "photoURL400": "https://s3.bi.group/crm-clients-e1csales/layouts/7d598041-69d8-11eb-a824-001dd8b726aa/1862f7ed-f579-11ee-a82d-001dd8b72708/225_400.png",
+    "photoURL1600": "https://s3.bi.group/crm-clients-e1csales/layouts/7d598041-69d8-11eb-a824-001dd8b726aa/1862f7ed-f579-11ee-a82d-001dd8b72708/225.png",
+    "apartmentSheetURLPage2": "https://s3.bi.group/crm-clients-e1csales/placementsheets/7d598041-69d8-11eb-a824-001dd8b726aa/1862f7ed-f579-11ee-a82d-001dd8b72708/225+_1600.jpg"
+}
