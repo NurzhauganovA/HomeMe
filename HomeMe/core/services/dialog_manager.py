@@ -1,5 +1,7 @@
 import logging
 from asgiref.sync import sync_to_async
+
+from core.location_resolver import DynamicLocationResolver
 from telegram_bot.models import BotUser, UserSession, Lead
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
@@ -11,6 +13,7 @@ class EnhancedDialogManager:
     def __init__(self):
         self.ai = EnhancedAIService()
         self.search = EnhancedSearchService(self.ai)
+        self.location_resolver = DynamicLocationResolver(self.ai)
 
     async def process_message(self, user_id, platform, text, user_name=None):
         user, _ = await sync_to_async(BotUser.objects.get_or_create)(
@@ -90,6 +93,16 @@ class EnhancedDialogManager:
         elif state == 'SETTING_LOCATION':
             if 'не важно' not in text.lower():
                 params['embedding_text'] = text
+
+                location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+
+                if location_data and location_data.get('coordinates_estimate'):
+                    params['coordinates'] = location_data['coordinates_estimate']
+                    params['radius_km'] = location_data.get('radius_km', 2.5)
+                    logger.info(f"📍 Coordinates found for '{text}': {params['coordinates']}")
+                else:
+                    # Если координаты не найдены (например, "тихий район"), удаляем старые, чтобы не мешали
+                    params.pop('coordinates', None)
 
             # Сброс пагинации перед новым поиском
             params['offset'] = 0
@@ -180,7 +193,7 @@ class EnhancedDialogManager:
 
     def _scenario_start(self, name):
         return {
-            'text': f"Привет, {name}! Я HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\nЧто хочешь сделать?",
+            'text': f"Привет, {name}!\nЯ HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?",
             'buttons': ['1. Подобрать объект', '2. Узнать про районы', '3. Связаться с экспертом']
         }
 

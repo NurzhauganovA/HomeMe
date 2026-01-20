@@ -10,8 +10,8 @@ urlpatterns = [
 
     # Лиды (CRM)
     path('leads/', views.LeadListView.as_view(), name='lead_list'),
-    path('leads/<uuid:pk>/update/', views.LeadUpdateView.as_view(), name='lead_update'),
-    path('leads/<uuid:pk>/status/', views.LeadStatusUpdateView.as_view(), name='lead_status_update'),
+    path('leads/<int:pk>/update/', views.LeadUpdateView.as_view(), name='lead_update'),
+    path('leads/<int:pk>/status/', views.LeadStatusUpdateView.as_view(), name='lead_status_update'),
 
     # Вторичная недвижимость
     path('secondary/', views.SecondaryPropertyListView.as_view(), name='secondary_list'),

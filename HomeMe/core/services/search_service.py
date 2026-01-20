@@ -1,4 +1,6 @@
 import logging
+import math
+
 from typing import List, Dict
 from django.db.models import Q
 from pgvector.django import CosineDistance
@@ -23,6 +25,10 @@ class EnhancedSearchService:
         source = params.get('source', 'mixed')
         embedding_text = params.get('embedding_text', '').lower()
 
+        # Получаем координаты из параметров (их туда положил DialogManager)
+        coords = params.get('coordinates')
+        radius_km = params.get('radius_km', 3.0)
+
         # Вектор для ранжирования по смыслу
         query_vector = self.ai_service.get_embedding(embedding_text) if embedding_text else None
 
@@ -30,6 +36,23 @@ class EnhancedSearchService:
         # Анализируем текст запроса на наличие жестких критериев
 
         complex_filters = Q()
+
+        # ГЕО-ФИЛЬТР (RADIUS SEARCH) - "Убийца" нерелевантных результатов
+        if coords and coords.get('lat') and coords.get('lon'):
+            lat = coords['lat']
+            lon = coords['lon']
+
+            # 1 градус широты ~= 111 км
+            lat_delta = radius_km / 111.0
+            # 1 градус долготы зависит от широты (косинус)
+            lon_delta = radius_km / (111.0 * math.cos(math.radians(lat)))
+
+            # Жестко отсекаем всё, что не попадает в квадрат координат
+            complex_filters &= Q(
+                latitude__range=(lat - lat_delta, lat + lat_delta),
+                longitude__range=(lon - lon_delta, lon + lon_delta)
+            )
+            logger.info(f"📍 GEO FILTER ACTIVE: {lat}, {lon} (+/- {radius_km}km)")
 
         # Фильтр по берегу (используем данные из features, которые заполнил AI при синхронизации)
         if 'левый' in embedding_text or 'left' in embedding_text:
@@ -42,8 +65,6 @@ class EnhancedSearchService:
             city_uuid = self.city_map.get(params['city'])
             if city_uuid:
                 complex_filters &= Q(city_uuid=city_uuid)
-
-        query_vector = self.ai_service.get_embedding(embedding_text) if embedding_text else None
 
         # --- 2. ПОИСК BI GROUP ---
         if source in ['bi', 'mixed']:
@@ -58,9 +79,12 @@ class EnhancedSearchService:
 
             # Для пагинации с группировкой нужно взять ЖК с запасом
             # (Offset применяем к списку ЖК, а не квартир)
-            complexes_list = list(target_complexes[offset: offset + limit + 3])
+            complexes_list = list(target_complexes[offset: offset + limit + 5])
 
             for comp in complexes_list:
+                if query_vector and not coords:
+                    pass
+
                 # Внутри каждого ЖК ищем подходящую квартиру
                 units = BIUnit.objects.filter(complex=comp, is_active=True)
 
@@ -70,7 +94,6 @@ class EnhancedSearchService:
 
                 # Берем ОДНУ лучшую (самую дешевую) квартиру из этого ЖК для разнообразия
                 best_unit = units.order_by('price').first()
-
                 if best_unit:
                     results.append(self._map_bi_to_dto(best_unit, comp))
 
@@ -81,6 +104,12 @@ class EnhancedSearchService:
         # --- 3. ПОИСК ВТОРИЧКИ ---
         if source in ['secondary', 'mixed'] and len(results) < limit:
             sec_props = SecondaryProperty.objects.filter(is_active=True)
+
+            if coords:
+                sec_props = sec_props.filter(
+                    latitude__range=(lat - lat_delta, lat + lat_delta),
+                    longitude__range=(lon - lon_delta, lon + lon_delta)
+                )
 
             if params.get('min_price'): sec_props = sec_props.filter(price__gte=params['min_price'])
             if params.get('max_price'): sec_props = sec_props.filter(price__lte=params['max_price'])
@@ -109,7 +138,8 @@ class EnhancedSearchService:
         # Формируем богатое описание из тегов AI
         side = "Левый" if comp.features.get('side') == 'Left' else "Правый"
         district = comp.features.get('district_name', '')
-        tags = ", ".join(comp.features.get('tags', [])[:3])
+        tags_list = comp.features.get('tags', [])
+        tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
 
         desc = f"📍 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
 
@@ -125,7 +155,6 @@ class EnhancedSearchService:
             description=desc,
             url=comp.url,
             image_url=comp.image_url,
-            is_new_building=True
         )
 
     def _map_secondary_to_dto(self, item: SecondaryProperty) -> PropertyDTO:
@@ -140,5 +169,4 @@ class EnhancedSearchService:
             total_floors=item.total_floors,
             description=item.description,
             image_url=item.image.url if item.image else "",
-            is_new_building=False
         )
