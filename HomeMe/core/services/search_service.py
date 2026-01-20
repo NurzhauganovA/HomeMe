@@ -38,9 +38,8 @@ class EnhancedSearchService:
         complex_filters = Q()
 
         # ГЕО-ФИЛЬТР (RADIUS SEARCH) - "Убийца" нерелевантных результатов
-        if coords and coords.get('lat') and coords.get('lon'):
-            lat = coords['lat']
-            lon = coords['lon']
+        lat, lon = self._normalize_coords(coords)
+        if lat is not None and lon is not None:
 
             # 1 градус широты ~= 111 км
             lat_delta = radius_km / 111.0
@@ -105,7 +104,7 @@ class EnhancedSearchService:
         if source in ['secondary', 'mixed'] and len(results) < limit:
             sec_props = SecondaryProperty.objects.filter(is_active=True)
 
-            if coords:
+            if lat is not None and lon is not None:
                 sec_props = sec_props.filter(
                     latitude__range=(lat - lat_delta, lat + lat_delta),
                     longitude__range=(lon - lon_delta, lon + lon_delta)
@@ -133,6 +132,18 @@ class EnhancedSearchService:
             results.sort(key=lambda x: (0 if x.source == 'bi_group' else 1, x.price))
 
         return results
+
+    @staticmethod
+    def _normalize_coords(coords):
+        if not coords:
+            return None, None
+        if isinstance(coords, dict):
+            lat = coords.get('lat')
+            lon = coords.get('lon')
+            return lat, lon
+        if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+            return coords[0], coords[1]
+        return None, None
 
     def _map_bi_to_dto(self, unit: BIUnit, comp: BIComplex) -> PropertyDTO:
         # Формируем богатое описание из тегов AI

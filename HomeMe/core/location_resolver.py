@@ -7,6 +7,7 @@ import math
 import logging
 from typing import Dict, List, Optional, Tuple
 import json
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class DynamicLocationResolver:
         """
         self.ai = ai_service
         self._cache = {}  # Кэш для частых запросов
+        self._geocode_cache = {}
 
     def resolve_any_location(self, user_query: str, city_hint: Optional[str] = None) -> Optional[Dict]:
         """
@@ -83,15 +85,23 @@ class DynamicLocationResolver:
         if coords_estimate and coords_estimate.get('lat'):
             center = (coords_estimate['lat'], coords_estimate['lon'])
             radius = ai_data.get('radius_km', self.DEFAULT_SEARCH_RADIUS['landmark'])
-        elif district and city:
-            center = self.CITY_COORDINATES.get(city)
-            radius = self.DEFAULT_SEARCH_RADIUS['district']
-        elif city:
-            center = self.CITY_COORDINATES.get(city)
-            radius = self.DEFAULT_SEARCH_RADIUS['city']
         else:
-            center = None
-            radius = None
+            # Пытаемся геокодировать ориентир/район, если AI не дал координаты
+            geocode_query = self._build_geocode_query(landmarks, district, city)
+            geocoded = self._geocode_with_nominatim(geocode_query) if geocode_query else None
+
+            if geocoded:
+                center = geocoded
+                radius = self.DEFAULT_SEARCH_RADIUS['landmark']
+            elif district and city:
+                center = self.CITY_COORDINATES.get(city)
+                radius = self.DEFAULT_SEARCH_RADIUS['district']
+            elif city:
+                center = self.CITY_COORDINATES.get(city)
+                radius = self.DEFAULT_SEARCH_RADIUS['city']
+            else:
+                center = None
+                radius = None
 
         return {
             **ai_data,
@@ -100,6 +110,48 @@ class DynamicLocationResolver:
             'search_type': self._determine_search_type(ai_data),
             'keywords_for_text_search': self._extract_search_keywords(ai_data)
         }
+
+    def _build_geocode_query(self, landmarks: List[str], district: Optional[str], city: Optional[str]) -> Optional[str]:
+        if landmarks:
+            landmark = landmarks[0]
+            return self._format_geocode_query(landmark, city)
+        if district and city:
+            return self._format_geocode_query(district, city)
+        if city:
+            return self._format_geocode_query(city, city)
+        return None
+
+    @staticmethod
+    def _format_geocode_query(place: str, city: Optional[str]) -> str:
+        if city and city.lower() != place.lower():
+            return f"{place}, {city}, Kazakhstan"
+        return f"{place}, Kazakhstan"
+
+    def _geocode_with_nominatim(self, query: str) -> Optional[Tuple[float, float]]:
+        if query in self._geocode_cache:
+            return self._geocode_cache[query]
+
+        try:
+            response = requests.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"q": query, "format": "json", "limit": 1},
+                headers={"User-Agent": "HomeMeBot/1.0 (location resolver)"},
+                timeout=4
+            )
+            response.raise_for_status()
+            data = response.json()
+            if data:
+                lat = float(data[0]["lat"])
+                lon = float(data[0]["lon"])
+                result = (lat, lon)
+                self._geocode_cache[query] = result
+                logger.info(f"📍 Geocoded '{query}' -> {lat}, {lon}")
+                return result
+        except Exception as exc:
+            logger.warning(f"⚠️ Geocoding failed for '{query}': {exc}")
+
+        self._geocode_cache[query] = None
+        return None
 
     def _determine_search_type(self, data: Dict) -> str:
         """Определяет тип локационного поиска"""

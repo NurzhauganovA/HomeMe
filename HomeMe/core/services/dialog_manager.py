@@ -96,10 +96,15 @@ class EnhancedDialogManager:
 
                 location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
 
-                if location_data and location_data.get('coordinates_estimate'):
-                    params['coordinates'] = location_data['coordinates_estimate']
-                    params['radius_km'] = location_data.get('radius_km', 2.5)
-                    logger.info(f"📍 Coordinates found for '{text}': {params['coordinates']}")
+                if location_data:
+                    center = location_data.get('center_coordinates')
+                    radius_km = location_data.get('search_radius_km')
+                    if center:
+                        params['coordinates'] = {'lat': center[0], 'lon': center[1]}
+                        params['radius_km'] = radius_km or 3.0
+                        logger.info(f"📍 Coordinates found for '{text}': {params['coordinates']}")
+                    else:
+                        params.pop('coordinates', None)
                 else:
                     # Если координаты не найдены (например, "тихий район"), удаляем старые, чтобы не мешали
                     params.pop('coordinates', None)
