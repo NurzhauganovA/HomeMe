@@ -1,0 +1,187 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Главная{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="stat-value">{{ stats.new_leads }}</div>
+            <div class="stat-label">Новые лиды</div>
+            <a href="{% url 'dashboard:lead_list' %}?status=new" class="btn btn-sm btn-outline-primary mt-3">
+                <i class="fas fa-arrow-right me-1"></i> Посмотреть
+            </a>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-value">{{ stats.active_properties }}</div>
+            <div class="stat-label">Активные объекты</div>
+            <a href="{% url 'dashboard:secondary_list' %}" class="btn btn-sm btn-outline-danger mt-3">
+                <i class="fas fa-arrow-right me-1"></i> Посмотреть
+            </a>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <i class="fas fa-user-friends"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Пользователи бота</div>
+            <a href="{% url 'dashboard:user_list' %}" class="btn btn-sm btn-outline-info mt-3">
+                <i class="fas fa-arrow-right me-1"></i> Посмотреть
+            </a>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                <i class="fas fa-city"></i>
+            </div>
+            <div class="stat-value">{{ stats.bi_complexes }}</div>
+            <div class="stat-label">ЖК BI Group</div>
+            <a href="{% url 'dashboard:bi_complex_list' %}" class="btn btn-sm btn-outline-success mt-3">
+                <i class="fas fa-arrow-right me-1"></i> Посмотреть
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Recent Activity -->
+<div class="row g-4">
+    <!-- Chart -->
+    <div class="col-lg-8">
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area text-primary me-2"></i>
+                    Лиды за последние 7 дней
+                </h5>
+            </div>
+            <div class="p-4">
+                <canvas id="leadsChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leads -->
+    <div class="col-lg-4">
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock text-warning me-2"></i>
+                    Последние лиды
+                </h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for lead in recent_leads %}
+                    <a href="{% url 'dashboard:lead_update' lead.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ lead.user.name|default:"Без имени" }}</div>
+                                <div class="text-muted small">
+                                    {{ lead.request_text|truncatewords:8 }}
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ lead.created_at|timesince }} назад
+                                </div>
+                            </div>
+                            <span class="badge
+                                {% if lead.status == 'new' %}bg-primary
+                                {% elif lead.status == 'in_progress' %}bg-warning
+                                {% elif lead.status == 'contacted' %}bg-info
+                                {% else %}bg-success{% endif %}">
+                                {{ lead.get_status_display }}
+                            </span>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                        <p>Пока нет лидов</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Leads Chart
+    const ctx = document.getElementById('leadsChart').getContext('2d');
+    const chartData = {{ chart_data|safe }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(d => d.date),
+            datasets: [{
+                label: 'Лиды',
+                data: chartData.map(d => d.count),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: { size: 12 }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 12 }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

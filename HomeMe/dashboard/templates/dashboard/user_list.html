@@ -1,0 +1,295 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Пользователи бота{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="table-card mb-4">
+    <div class="table-header">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>
+            Фильтры
+        </h5>
+    </div>
+    <div class="p-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Платформа</label>
+                <select name="platform" class="form-select" onchange="this.form.submit()">
+                    <option value="">Все платформы</option>
+                    {% for value, label in platform_choices %}
+                        <option value="{{ value }}" {% if request.GET.platform == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">Поиск</label>
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Имя или ID пользователя..."
+                           value="{{ request.GET.search }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <a href="{% url 'dashboard:user_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="fab fa-telegram"></i>
+            </div>
+            <div class="stat-value">
+                {{ users|length }}
+            </div>
+            <div class="stat-label">Всего пользователей</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="fab fa-telegram-plane"></i>
+            </div>
+            <div class="stat-value">
+                {{ users|selectattr:'platform'|selectattr:'telegram'|list|length|default:0 }}
+            </div>
+            <div class="stat-label">Telegram</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <div class="stat-value">
+                {{ users|selectattr:'platform'|selectattr:'whatsapp'|list|length|default:0 }}
+            </div>
+            <div class="stat-label">WhatsApp</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value">
+                {% widthratio users|length 1 1 %}
+            </div>
+            <div class="stat-label">Активных сегодня</div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="table-card">
+    <div class="table-header">
+        <h5 class="mb-0">
+            <i class="fas fa-users me-2"></i>
+            Список пользователей ({{ page_obj.paginator.count }})
+        </h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Пользователь</th>
+                    <th>Платформа</th>
+                    <th style="width: 150px;">ID / Телефон</th>
+                    <th style="width: 100px;">Поисков</th>
+                    <th style="width: 100px;">Сообщений</th>
+                    <th style="width: 120px;">Язык</th>
+                    <th style="width: 150px;">Регистрация</th>
+                    <th style="width: 150px;">Последняя активность</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {{ forloop.counter }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar" style="width: 40px; height: 40px;">
+                                    {{ user.name.0|upper|default:"?" }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ user.name|default:"Без имени" }}</div>
+                                    {% if not user.is_active %}
+                                        <span class="badge bg-danger small">Неактивен</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if user.platform == 'telegram' %}
+                                <span class="badge bg-info">
+                                    <i class="fab fa-telegram me-1"></i>
+                                    Telegram
+                                </span>
+                            {% elif user.platform == 'whatsapp' %}
+                                <span class="badge bg-success">
+                                    <i class="fab fa-whatsapp me-1"></i>
+                                    WhatsApp
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.platform == 'whatsapp' %}
+                                <a href="https://wa.me/{{ user.user_id }}"
+                                   target="_blank"
+                                   class="text-decoration-none">
+                                    <i class="fab fa-whatsapp text-success me-1"></i>
+                                    {{ user.user_id }}
+                                </a>
+                            {% else %}
+                                <code class="small">{{ user.user_id }}</code>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-search text-primary"></i>
+                                <span class="fw-semibold">{{ user.total_searches }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-comment text-info"></i>
+                                <span class="fw-semibold">{{ user.total_messages }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {% if user.language == 'ru' %}
+                                    🇷🇺 Русский
+                                {% elif user.language == 'kk' %}
+                                    🇰🇿 Қазақ
+                                {% elif user.language == 'en' %}
+                                    🇬🇧 English
+                                {% else %}
+                                    {{ user.language|upper }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="small">{{ user.created_at|date:"d.m.Y" }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                {{ user.created_at|time:"H:i" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">{{ user.last_active_at|date:"d.m.Y" }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                {{ user.last_active_at|time:"H:i" }}
+                            </div>
+                            <div class="mt-1">
+                                {% now "U" as current_time %}
+                                {% if user.last_active_at|timesince|slice:":1" == "0" %}
+                                    <span class="badge bg-success small">Онлайн</span>
+                                {% elif user.last_active_at|timesince|slice:":1" == "1" %}
+                                    <span class="badge bg-warning text-dark small">Недавно</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-user-friends fa-3x mb-3 text-muted opacity-25"></i>
+                            <p class="text-muted">Пользователи не найдены</p>
+                            <a href="{% url 'dashboard:user_list' %}" class="btn btn-sm btn-outline-primary">
+                                Сбросить фильтры
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="p-3 border-top">
+            <nav>
+                <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.platform %}&platform={{ request.GET.platform }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                Первая
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.platform %}&platform={{ request.GET.platform }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                &laquo;
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.platform %}&platform={{ request.GET.platform }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                &raquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.platform %}&platform={{ request.GET.platform }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                Последняя
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Export Section -->
+<div class="mt-4">
+    <div class="alert alert-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="alert-heading mb-1">
+                    <i class="fas fa-download me-2"></i>
+                    Экспорт данных
+                </h6>
+                <p class="mb-0 small text-muted">
+                    Выгрузите список пользователей для анализа или рассылки
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-outline-success" onclick="alert('Функция экспорта в разработке')">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Экспорт в Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

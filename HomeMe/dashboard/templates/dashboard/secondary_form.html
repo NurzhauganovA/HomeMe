@@ -1,0 +1,258 @@
+{% extends 'dashboard/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}
+    {% if object %}Редактирование объекта{% else %}Добавление объекта{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if object %}edit{% else %}plus-circle{% endif %} me-2"></i>
+                    {% if object %}
+                        Редактирование объекта: {{ object.title }}
+                    {% else %}
+                        Добавление нового объекта
+                    {% endif %}
+                </h5>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Основная информация
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.city|as_crispy_field }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        <div class="col-md-8">
+                            {{ form.address|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.district|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Parameters -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-ruler-combined me-2"></i>
+                        Параметры объекта
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            {{ form.price|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.rooms|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.area|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.floor|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.total_floors|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.latitude|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.longitude|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner Information -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-user me-2"></i>
+                        Контактная информация владельца
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.owner_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.owner_phone|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        Особенности
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                {{ form.has_parking }}
+                                <label class="form-check-label" for="{{ form.has_parking.id_for_label }}">
+                                    <i class="fas fa-car me-2 text-primary"></i>
+                                    Парковка
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                {{ form.has_balcony }}
+                                <label class="form-check-label" for="{{ form.has_balcony.id_for_label }}">
+                                    <i class="fas fa-home me-2 text-primary"></i>
+                                    Балкон
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                {{ form.has_renovation }}
+                                <label class="form-check-label" for="{{ form.has_renovation.id_for_label }}">
+                                    <i class="fas fa-paint-roller me-2 text-primary"></i>
+                                    Ремонт
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-toggle-on me-2"></i>
+                        Статус
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    <i class="fas fa-eye me-2 text-success"></i>
+                                    Активный объект
+                                </label>
+                                <div class="form-text">Объект будет виден пользователям бота</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                {{ form.is_verified }}
+                                <label class="form-check-label" for="{{ form.is_verified.id_for_label }}">
+                                    <i class="fas fa-check-circle me-2 text-info"></i>
+                                    Проверено
+                                </label>
+                                <div class="form-text">Объект прошел проверку модератором</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="p-4 border-bottom">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-image me-2"></i>
+                        Фотография объекта
+                    </h6>
+
+                    {% if object and object.image %}
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <img src="{{ object.image.url }}" class="card-img-top" alt="Текущее фото">
+                                    <div class="card-body">
+                                        <p class="card-text small text-muted">Текущее фото</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {{ form.image|as_crispy_field }}
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Рекомендуемый размер: 800x600px. Максимум 5MB.
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="p-4 d-flex justify-content-between align-items-center">
+                    <a href="{% url 'dashboard:secondary_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Отмена
+                    </a>
+
+                    <div>
+                        {% if object %}
+                            <button type="submit" name="save_and_continue" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-save me-2"></i>
+                                Сохранить и продолжить
+                            </button>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {% if object %}Сохранить изменения{% else %}Добавить объект{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Card -->
+        <div class="alert alert-info mt-4">
+            <h6 class="alert-heading">
+                <i class="fas fa-lightbulb me-2"></i>
+                Полезные советы
+            </h6>
+            <ul class="mb-0">
+                <li>Заполните все обязательные поля для корректной работы AI-поиска</li>
+                <li>Координаты можно получить на <a href="https://www.google.com/maps" target="_blank">Google Maps</a></li>
+                <li>Подробное описание улучшает качество подбора объектов ботом</li>
+                <li>После добавления объект будет автоматически индексирован AI-системой</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preview image before upload
+    document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // You can add image preview here if needed
+                console.log('Image selected:', e.target.files[0].name);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // Auto-format phone number
+    const phoneInput = document.querySelector('input[name="owner_phone"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('7')) {
+                value = '7' + value;
+            }
+            e.target.value = value;
+        });
+    }
+</script>
+{% endblock %}

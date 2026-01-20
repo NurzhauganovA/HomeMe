@@ -23,18 +23,22 @@ class BISyncService:
         logger.info(f"🏢 Found {len(complexes_data)} complexes via API")
 
         synced_count = 0
+        skipped_ai_count = 0
         for item in complexes_data:
-            if self._sync_complex_and_units(item):
-                synced_count += 1
+            ai_status = self._sync_complex_and_units(item)
+            synced_count += 1
+            if ai_status == 0:
+                skipped_ai_count += 1
 
-        logger.info(f"✅ Smart Sync Complete! Synced {synced_count} complexes in Astana.")
+
+        logger.info(f"✅ Smart Sync Complete! Synced {synced_count}. AI Skipped (Saved tokens): {skipped_ai_count}")
 
     def _sync_complex_and_units(self, item: dict):
         """Синхронизация одного ЖК, AI-анализ локации и обновление квартир"""
         try:
             item_city_uuid = item.get("cityUUID")
             if item_city_uuid != self.ASTANA_UUID:
-                return False
+                return None
 
             bi_uuid = item.get("uuid")
             name = item.get("name")
@@ -58,15 +62,26 @@ class BISyncService:
                 defaults=defaults
             )
 
-            if created:
-                logger.info(f"✨ New Complex Created: {name}")
-            else:
-                pass
+            status = 0
 
-            # --- AI ОБОГАЩЕНИЕ (Feedback Loop) ---
-            # Запускаем анализ, если ЖК новый ИЛИ у него пустые features ИЛИ нет вектора
-            if created or not complex_obj.features or complex_obj.embedding is None:
+            # --- УМНАЯ ЛОГИКА AI (С ЭКОНОМИЕЙ) ---
+
+            # Сценарий 1: Нет тегов (features) -> Полный анализ (Дорого)
+            if not complex_obj.features:
+                logger.info(f"🤖 AI Analysis needed for {name} (No features)...")
                 self._enrich_complex_with_deep_analysis(complex_obj)
+                status = 1
+
+            # Сценарий 2: Теги есть, но нет вектора -> Только вектор (Дешево)
+            elif complex_obj.embedding is None:
+                logger.info(f"🧬 Generating Embedding only for {name} (Features exist)...")
+                self._regenerate_embedding_from_features(complex_obj)
+                status = 2
+
+            # Сценарий 3: Всё есть -> Пропуск
+            else:
+                logger.info(f"⏭️ SKIPPING AI for {name} (All data present)")
+                status = 0
 
             # Синхронизация квартир
             placements = self.client.get_placements_for_complex(bi_uuid)
@@ -123,6 +138,7 @@ class BISyncService:
             if analysis:
                 # 1. Сохраняем жесткие теги в JSONField
                 complex_obj.features = analysis
+                self._regenerate_embedding_from_features(complex_obj)
 
                 # 2. Генерируем "умный" текст для вектора
                 # Включаем туда результаты анализа, чтобы векторный поиск тоже понимал берег
@@ -147,6 +163,33 @@ class BISyncService:
 
         except Exception as e:
             logger.error(f"❌ AI Enrichment failed: {e}")
+
+    def _regenerate_embedding_from_features(self, complex_obj: BIComplex):
+        """Генерация вектора из уже существующих features (без запроса классификации)"""
+        if not complex_obj.features:
+            return
+
+        features = complex_obj.features
+
+        # Формируем текст для вектора
+        side_str = "Левый берег" if features.get('side') == 'Left' else "Правый берег"
+        atm_str = ", ".join(features.get('atmosphere', []))
+        tags_str = ", ".join(features.get('tags', []))
+
+        rich_text = (
+            f"ЖК {complex_obj.name}. Город Астана. "
+            f"Район: {features.get('district_name')}. {side_str}. "
+            f"Атмосфера: {atm_str}. "
+            f"Инфраструктура рядом: {tags_str}. "
+            f"Адрес: {complex_obj.address}."
+        )
+
+        # Запрос только на эмбеддинг (это дешевле)
+        embedding = self.ai.get_embedding(rich_text)
+        if embedding:
+            complex_obj.embedding = embedding
+            complex_obj.save()
+            logger.info(f"✅ Embedding saved for {complex_obj.name}")
 
     def _sync_units_batch(self, complex_obj: BIComplex, units_data: list):
         """Массовое сохранение квартир"""
