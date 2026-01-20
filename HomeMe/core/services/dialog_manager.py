@@ -127,10 +127,18 @@ class EnhancedDialogManager:
             else:
                 # Если 0 результатов
                 await self._update_state(session, 'NO_RESULTS', params)
-                response['text'] = (
-                    f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
-                    "Варианты действий:"
-                )
+                if params.get('coordinates'):
+                    location_label = params.get('embedding_text', 'указанной локации')
+                    response['text'] = (
+                        f"Не удалось найти объекты рядом с \"{location_label}\" "
+                        f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                else:
+                    response['text'] = (
+                        f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                        "Варианты действий:"
+                    )
                 response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
         elif state == 'BROWSING':

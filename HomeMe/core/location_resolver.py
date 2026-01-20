@@ -8,6 +8,7 @@ import logging
 from typing import Dict, List, Optional, Tuple
 import json
 import requests
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,11 @@ class DynamicLocationResolver:
         if not location_data or location_data.get('confidence', 0) < 0.35:
             logger.warning(f"⚠️ Could not resolve location: {user_query}")
             return None
+
+        # Если пользователь указал расстояние — считаем это жестким радиусом
+        radius_override = self._extract_radius_from_query(user_query)
+        if radius_override:
+            location_data['radius_km'] = radius_override
 
         # Обогащаем данные координатами и радиусом
         enriched = self._enrich_location_data(location_data)
@@ -151,6 +157,28 @@ class DynamicLocationResolver:
             logger.warning(f"⚠️ Geocoding failed for '{query}': {exc}")
 
         self._geocode_cache[query] = None
+        return None
+
+    @staticmethod
+    def _extract_radius_from_query(text: str) -> Optional[float]:
+        """
+        Извлекает радиус поиска из текста. Поддержка метров и км.
+        Примеры: "500 метров" -> 0.5, "1.5 км" -> 1.5
+        """
+        if not text:
+            return None
+
+        lowered = text.lower()
+        meter_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(м|метр|метра|метров)\b', lowered)
+        if meter_match:
+            value = float(meter_match.group(1).replace(',', '.'))
+            return max(value / 1000.0, 0.1)
+
+        km_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(км|километр|километра|километров)\b', lowered)
+        if km_match:
+            value = float(km_match.group(1).replace(',', '.'))
+            return max(value, 0.1)
+
         return None
 
     def _determine_search_type(self, data: Dict) -> str:
