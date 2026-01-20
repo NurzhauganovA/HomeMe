@@ -28,6 +28,10 @@ INSTALLED_APPS = [
 
     'whatsapp_bot',
     'telegram_bot',
+
+    'dashboard',
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
