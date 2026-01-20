@@ -1,7 +1,8 @@
 import logging
-from django.utils import timezone
-from core.bi_client import EnhancedBIGroupClient
+import json
+from django.conf import settings
 from telegram_bot.models import BIComplex, BIUnit
+from core.bi_client import EnhancedBIGroupClient
 from core.services.ai_service import EnhancedAIService
 
 logger = logging.getLogger(__name__)
@@ -11,79 +12,157 @@ class BISyncService:
     def __init__(self):
         self.client = EnhancedBIGroupClient()
         self.ai = EnhancedAIService()
+        self.ASTANA_UUID = self.client.CITY_MAP.get("Astana", "4c0fe725-4b6f-11e8-80cf-bb580b2abfef")
 
     def run_full_sync(self):
-        """Основной метод запуска"""
-        logger.info("🚀 Starting Full BI Group Sync...")
+        """Полная синхронизация ЖК и квартир с умным обогащением данных"""
+        logger.info("🚀 Starting Smart Full Sync...")
 
-        # 1. Синхронизируем ЖК (RealEstates)
+        # 1. Получаем все ЖК
         complexes_data = self.client.get_all_real_estates()
         logger.info(f"🏢 Found {len(complexes_data)} complexes via API")
 
+        synced_count = 0
         for item in complexes_data:
-            self._sync_complex(item)
+            if self._sync_complex_and_units(item):
+                synced_count += 1
 
-        logger.info("✅ Complexes synced. Starting Units sync...")
+        logger.info(f"✅ Smart Sync Complete! Synced {synced_count} complexes in Astana.")
 
-        # 2. Синхронизируем Квартиры (Units) для каждого активного ЖК
-        # Можно оптимизировать и обновлять не все сразу, если их очень много
-        active_complexes = BIComplex.objects.all()
-
-        total_units = 0
-        for comp in active_complexes:
-            units = self.client.get_placements_for_complex(comp.bi_uuid)
-            if units:
-                self._sync_units_batch(comp, units)
-                total_units += len(units)
-
-        logger.info(f"🎉 Full Sync Complete! Total units available: {total_units}")
-
-    def _sync_complex(self, item: dict):
-        """Сохранение/Обновление ЖК"""
+    def _sync_complex_and_units(self, item: dict):
+        """Синхронизация одного ЖК, AI-анализ локации и обновление квартир"""
         try:
-            bi_uuid = item.get("uuid")
+            item_city_uuid = item.get("cityUUID")
+            if item_city_uuid != self.ASTANA_UUID:
+                return False
 
-            # Маппинг полей из вашего JSON
+            bi_uuid = item.get("uuid")
+            name = item.get("name")
+            address = item.get("address", "")
+
+            # Сохраняем базовые данные
             defaults = {
-                "name": item.get("name"),
-                "address": item.get("address", ""),
+                "name": name,
+                "address": address,
                 "city_uuid": item.get("cityUUID", ""),
                 "latitude": item.get("latitude"),
                 "longitude": item.get("longitude"),
-                "min_price": item.get("minTotalPrice"),
-                "deadline": item.get("deadline", ""),
-                "image_url": item.get("photoURL400", ""),
-                "website": item.get("website", ""),
-                # Берем первый класс из списка, если есть
-                "class_name": item.get("propertyClassName", [""])[0] if item.get("propertyClassName") else ""
+                "url": item.get("website", ""),
+                "image_url": item.get("photoURL400") or item.get("photoURL", ""),
+                "class_name": item.get('propertyClassName', [''])[0] if item.get('propertyClassName') else "",
+                "description": f"ЖК {name}. Адрес: {address}"
             }
 
-            obj, created = BIComplex.objects.update_or_create(
+            complex_obj, created = BIComplex.objects.update_or_create(
                 bi_uuid=bi_uuid,
                 defaults=defaults
             )
 
-            # === AI Обогащение (только для новых или если нет вектора) ===
-            if created or obj.embedding is None:
-                self._enrich_complex_with_ai(obj)
+            if created:
+                logger.info(f"✨ New Complex Created: {name}")
+            else:
+                pass
+
+            # --- AI ОБОГАЩЕНИЕ (Feedback Loop) ---
+            # Запускаем анализ, если ЖК новый ИЛИ у него пустые features ИЛИ нет вектора
+            if created or not complex_obj.features or complex_obj.embedding is None:
+                self._enrich_complex_with_deep_analysis(complex_obj)
+
+            # Синхронизация квартир
+            placements = self.client.get_placements_for_complex(bi_uuid)
+            if placements:
+                self._sync_units_batch(complex_obj, placements)
 
         except Exception as e:
             logger.error(f"⚠️ Error syncing complex {item.get('name')}: {e}")
 
-    def _sync_units_batch(self, complex_obj: BIComplex, units_data: list):
-        """Массовое сохранение квартир одного ЖК"""
+    def _enrich_complex_with_deep_analysis(self, complex_obj: BIComplex):
+        """
+        AI-агент, который классифицирует локацию для жестких фильтров.
+        Определяет берег (Левый/Правый) и атмосферу.
+        """
+        logger.info(f"🧠 Deep Analyzing Location: {complex_obj.name}...")
 
-        # Сначала пометим все старые как неактивные (или удалим)
-        # Стратегия soft-delete: ставим is_active=False, потом обновляем найденные в True
-        BIUnit.objects.filter(complex=complex_obj).update(is_active=False)
+        prompt = f"""
+        Ты — эксперт по недвижимости Астаны и Алматы.
+
+        Объект: ЖК "{complex_obj.name}"
+        Адрес: "{complex_obj.address}"
+
+        Твоя задача — классифицировать этот объект для фильтров поиска.
+
+        1. ОПРЕДЕЛИ БЕРЕГ (Только для Астаны): 
+           - "Left": Есильский район, Нура, район EXPO, Ботанический сад.
+           - "Right": Сарыарка, Байконур, Алматинский район.
+
+        2. АТМОСФЕРА:
+           - Опиши атмосферу района СТРОГО НА РУССКОМ ЯЗЫКЕ.
+           - Используй прилагательные: "тихий", "шумный", "семейный", "деловой", "молодежный", "зеленый", "ветреный", "элитный".
+           - Добавь детали: "широкие дороги", "красивый вид", "чистый воздух", "пробки".
+           - Здесь, по атмосферам тоже нужно самому дополнить. Тут тоже может быть много вариантов, например, такие как, (тихо, шумно, красиво, улицы чистые, дороги хорошие, вид красивый и т.д.). Нужно максимально много слов, которые соответствуют на характеристику адреса.
+
+        3. ТЕГИ: Добавь список тегов (парк рядом, школа рядом, экспо рядом, вокзал). В дальнейшем мы будем искать по тегам ЖК, так что, чтобы мы нашли из БД определенных объектов без проблем,
+        нужно максимально добавить много тегов. Много, как можно максимально. Любая мелочь, такие как, рядом супермаркет, аптека и т.д. Или определенные большие ТЦ, ФудКорты и т.д.
+        Если возможно, можно сделать рядом есть рынок, или где дешево больше части, допустим продукты дешевле чем в других местах. Как понял, нужно максимально много тегов добавить, чтобы было проще искать.
+        
+        Верни ответ СТРОГО в формате JSON:
+        {{
+            "side": "Right" (или "Left"),
+            "district_name": "Алматинский",
+            "atmosphere": ["тихий", "спальный", "зеленый двор", "старый центр", ...]
+            "tags": ["park", "school", "station", ...]
+        }}
+        """
+
+        try:
+            # Вызов AI с повторами
+            response = self.ai._generate_with_retry(prompt, json_mode=True)
+            text = self.ai._extract_text(response)
+            analysis = self.ai._parse_json_response(text)
+
+            if analysis:
+                # 1. Сохраняем жесткие теги в JSONField
+                complex_obj.features = analysis
+
+                # 2. Генерируем "умный" текст для вектора
+                # Включаем туда результаты анализа, чтобы векторный поиск тоже понимал берег
+                side_str = "Левый берег" if analysis.get('side') == 'Left' else "Правый берег"
+
+                rich_text = (
+                    f"ЖК {complex_obj.name}. Город {complex_obj.city_uuid}. "
+                    f"Район: {analysis.get('district_name')}. {side_str}. "
+                    f"Атмосфера: {analysis.get('atmosphere')}. "
+                    f"Рядом: {', '.join(analysis.get('tags', []))}. "
+                    f"Адрес: {complex_obj.address}."
+                )
+
+                embedding = self.ai.get_embedding(rich_text)
+                if embedding:
+                    complex_obj.embedding = embedding
+
+                complex_obj.save()
+                logger.info(f"✅ Enriched {complex_obj.name}: {side_str}, {analysis.get('atmosphere')}")
+            else:
+                logger.warning(f"⚠️ Empty analysis for {complex_obj.name}")
+
+        except Exception as e:
+            logger.error(f"❌ AI Enrichment failed: {e}")
+
+    def _sync_units_batch(self, complex_obj: BIComplex, units_data: list):
+        """Массовое сохранение квартир"""
+        current_uuids = []
 
         for u in units_data:
             try:
-                # Цена: приоритет на цену со скидкой
+                # Цена: берем цену со скидкой, если есть
                 price = u.get("totalPrice", 0)
                 price_disc = u.get("totalPriceWithDiscount")
+                final_price = price_disc if price_disc else price
 
-                BIUnit.objects.update_or_create(
+                if not final_price:
+                    continue
+
+                unit, _ = BIUnit.objects.update_or_create(
                     bi_uuid=u.get("uuid"),
                     defaults={
                         "complex": complex_obj,
@@ -91,41 +170,16 @@ class BISyncService:
                         "floor": u.get("floor", 0),
                         "max_floor": u.get("maxFloor", 0),
                         "area": u.get("square", 0.0),
-                        "price": price,
-                        "price_discount": price_disc if price_disc else price,
-                        "block_name": u.get("blockName", ""),
+                        "price": final_price,
+                        "price_discount": price_disc,
                         "deadline": u.get("deadLine", ""),
                         "is_active": True
                     }
                 )
-            except Exception as e:
+                current_uuids.append(u.get("uuid"))
+            except Exception:
                 continue
 
-    def _enrich_complex_with_ai(self, complex_obj: BIComplex):
-        """
-        Генерирует вектор и теги для ЖК.
-        """
-        logger.info(f"🧠 AI Processing for {complex_obj.name}...")
-
-        # 1. Извлекаем теги (тихо, парк, школа) через Gemini
-        # Формируем промпт на основе адреса и названия
-        description_text = f"{complex_obj.name} {complex_obj.address} {complex_obj.class_name}"
-
-        # Используем существующий метод
-        lifestyle = self.ai.extract_lifestyle_preferences(description_text)
-        tags_list = lifestyle.get('lifestyle_tags', [])
-
-        # Если пришел None или не список, делаем пустой список
-        if not isinstance(tags_list, list):
-            tags_list = []
-
-        # Превращаем ['quiet', 'park'] -> {'quiet': True, 'park': True}
-        complex_obj.features = {tag: True for tag in tags_list}
-
-        # 2. Генерируем вектор (Embeddings)
-        full_text = complex_obj.get_text_for_embedding()
-        embedding = self.ai.get_embedding(full_text)
-
-        if embedding is not None:
-            complex_obj.embedding = embedding
-            complex_obj.save()
+        # Помечаем проданные как неактивные
+        if current_uuids:
+            BIUnit.objects.filter(complex=complex_obj).exclude(bi_uuid__in=current_uuids).update(is_active=False)

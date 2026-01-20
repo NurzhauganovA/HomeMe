@@ -1,341 +1,188 @@
-from typing import Dict
-
+import logging
+from asgiref.sync import sync_to_async
+from telegram_bot.models import BotUser, UserSession, Lead
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
-from core.location_resolver import DynamicLocationResolver, create_location_filter_for_search
-from telegram_bot.models import BotUser, UserSession, Lead
-from asgiref.sync import sync_to_async
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class EnhancedDialogManager:
-    """
-    Профессиональный менеджер диалогов с многоступенчатым AI-анализом.
-    Обеспечивает естественное общение и точный поиск недвижимости.
-    """
-
     def __init__(self):
         self.ai = EnhancedAIService()
         self.search = EnhancedSearchService(self.ai)
-        self.location_resolver = DynamicLocationResolver(self.ai)
 
-    async def process_message(self, user_id: str, platform: str, text: str,
-                              user_name: str = None) -> dict:
-        """
-        Главный метод обработки сообщений.
-
-        Returns:
-            dict: {
-                'text': str,
-                'buttons': list,
-                'objects': list[PropertyDTO],
-                'show_typing': bool
-            }
-        """
-        logger.info(f"📨 Processing message from {user_id}: {text[:50]}...")
-
-        # ========== ИНИЦИАЛИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ==========
-        user, created = await sync_to_async(BotUser.objects.get_or_create)(
+    async def process_message(self, user_id, platform, text, user_name=None):
+        user, _ = await sync_to_async(BotUser.objects.get_or_create)(
             user_id=str(user_id),
             platform=platform,
             defaults={'name': user_name}
         )
-
-        if created:
-            logger.info(f"👤 New user registered: {user_name}")
-
         session, _ = await sync_to_async(UserSession.objects.get_or_create)(user=user)
 
-        # ========== COMPREHENSIVE AI ANALYSIS ==========
-        # Передаем текущую сессию как контекст
-        context = {
-            'previous_params': session.search_params,
-            'current_intent': session.current_intent,
-            'city': session.search_params.get('city'),
-            'district': session.search_params.get('district')
-        }
+        state = session.current_intent or 'START'
+        params = session.search_params or {}
 
-        logger.info("🧠 Running comprehensive AI analysis...")
-        analysis = await sync_to_async(self.ai.analyze_query_comprehensive)(text, context)
+        response = {'text': '', 'buttons': [], 'objects': []}
 
-        intent = analysis.get('intent', 'greeting')
-        logger.info(f"🎯 Detected intent: {intent}")
+        # Глобальные команды
+        if text.lower() in ['/start', 'привет', 'меню', 'start', 'reset']:
+            await self._update_state(session, 'START', {})
+            return self._scenario_start(user.name or 'друг')
 
-        # Обновляем сессию
-        session.current_intent = intent
-        await sync_to_async(session.save)()
+        # --- МАШИНА СОСТОЯНИЙ ---
 
-        # ========== СЦЕНАРИИ ==========
+        if state == 'START':
+            if text == '1' or 'подобрать' in text.lower():
+                await self._update_state(session, 'CHOOSING_TYPE')
+                response[
+                    'text'] = "Отлично! Что будем смотреть?\n\n1. Новостройки BI Group 🏗\n2. Вторичка 🏠\n3. Смешанный поиск ⭐"
+                response['buttons'] = ['1. BI Group', '2. Вторичка', '3. Смешанный']
 
-        if intent == 'greeting':
-            return await self._handle_greeting(user, text)
+            elif text == '2' or 'район' in text.lower():
+                await self._update_state(session, 'CONSULTATION_TOPIC')
+                response['text'] = "Про какой район рассказать? (Например: 'Есильский', 'EXPO')"
+                response['buttons'] = ['Левый берег', 'Есильский', 'EXPO']
 
-        elif intent in ['search_objects', 'refine_search']:
-            return await self._handle_search(user, session, text, analysis)
+            elif text == '3' or 'эксперт' in text.lower():
+                await self._update_state(session, 'LEAD_NAME')
+                response['text'] = "Я соединю тебя с экспертом. Как к тебе обращаться?"
 
-        elif intent == 'consult_location':
-            return await self._handle_consultation(text, analysis)
+            else:
+                return self._scenario_start(user.name)
 
-        elif intent == 'contact_expert':
-            return await self._handle_expert_contact(user, text)
+        elif state == 'CHOOSING_TYPE':
+            if '1' in text or 'bi' in text.lower():
+                params['source'] = 'bi'
+            elif '2' in text or 'вторич' in text.lower():
+                params['source'] = 'secondary'
+            else:
+                params['source'] = 'mixed'
 
-        else:
-            return await self._handle_fallback(text)
+            await self._update_state(session, 'SETTING_BUDGET', params)
+            response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
+            response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
 
-    async def _handle_greeting(self, user: BotUser, text: str) -> dict:
-        """Обработка приветствия"""
-        name = user.name or 'друг'
+        elif state == 'SETTING_BUDGET':
+            extracted = await sync_to_async(self.ai.extract_search_parameters)(text)
+            if extracted.get('max_price') or extracted.get('min_price'):
+                params.update(extracted)
+                await self._update_state(session, 'SETTING_ROOMS', params)
+                response['text'] = "Сколько комнат? 🛏"
+                response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
+            else:
+                response['text'] = "Не понял сумму. Напиши просто цифрами, например '50 млн'."
 
-        greeting_text = (
-            f"Привет, {name}! 👋\n\n"
-            f"Я HomeMe — ваш умный помощник по недвижимости в Казахстане.\n\n"
-            f"🔍 Я могу найти идеальную квартиру, учитывая все ваши пожелания:\n"
-            f"• Местоположение (даже если вы скажете 'рядом с EXPO')\n"
-            f"• Lifestyle-предпочтения ('тихо', 'для семьи', 'рядом с парком')\n"
-            f"• Бюджет и параметры\n\n"
-            f"🏢 Расскажу о любом районе\n"
-            f"👨‍💼 Свяжу с экспертом при необходимости\n\n"
-            f"Просто напишите, что вы ищете — я понимаю естественный язык!"
-        )
+        elif state == 'SETTING_ROOMS':
+            if '1' in text:
+                params['rooms'] = 1
+            elif '2' in text:
+                params['rooms'] = 2
+            elif '3' in text:
+                params['rooms'] = 3
+            elif '4' in text:
+                params['rooms'] = 4
 
-        return {
-            'text': greeting_text,
-            'buttons': [
-                '🔍 Найти квартиру',
-                '🏢 Узнать о районах',
-                '👨‍💼 Связаться с экспертом'
-            ],
-            'objects': [],
-            'show_typing': False
-        }
+            await self._update_state(session, 'SETTING_LOCATION', params)
+            response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
+            response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
 
-    async def _handle_search(self, user: BotUser, session: UserSession,
-                             text: str, analysis: Dict) -> dict:
-        """Обработка поиска недвижимости"""
+        elif state == 'SETTING_LOCATION':
+            if 'не важно' not in text.lower():
+                params['embedding_text'] = text
 
-        # Обновляем параметры поиска в сессии
-        search_params = session.search_params
+            # Сброс пагинации перед новым поиском
+            params['offset'] = 0
+            params['city'] = 'Astana'  # Hardcode MVP
 
-        # Дополнительный AI-резолв локаций (EXPO, "левый берег" и т.д.)
-        city_hint = analysis.get('city') or search_params.get('city')
-        location_data = self.location_resolver.resolve_any_location(text, city_hint=city_hint)
-        location_filter = create_location_filter_for_search(location_data)
+            # ЗАПУСК ПОИСКА
+            results = await sync_to_async(self.search.intelligent_search)(params, offset=0)
 
-        # Обогащаем analysis локационными данными для поиска и кэша сессии
-        if location_filter.get('city') and not analysis.get('city'):
-            analysis['city'] = location_filter['city']
-        if location_filter.get('district') and not analysis.get('district'):
-            analysis['district'] = location_filter['district']
-        if location_filter.get('coordinates'):
-            lat, lon = location_filter['coordinates']
-            analysis['coordinates'] = {'lat': lat, 'lon': lon}
-        if location_filter.get('radius_km'):
-            analysis['radius_km'] = location_filter['radius_km']
+            if results:
+                # Увеличиваем offset на длину полученных результатов
+                params['offset'] = len(results)
+                await self._update_state(session, 'BROWSING', params)
 
-        if location_filter.get('text_keywords'):
-            extra_keywords = location_filter.get('text_keywords', [])
-            merged_keywords = list({*analysis.get('semantic_keywords', []), *extra_keywords})
-            analysis['semantic_keywords'] = merged_keywords
+                response['text'] = self._format_intro(results, params)
+                response['objects'] = results
+                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+            else:
+                # Если 0 результатов
+                await self._update_state(session, 'NO_RESULTS', params)
+                response['text'] = (
+                    f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                    "Варианты действий:"
+                )
+                response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
-        # Мерджим новые данные
-        if analysis.get('city'):
-            search_params['city'] = analysis['city']
-        if analysis.get('district'):
-            search_params['district'] = analysis['district']
-        if analysis.get('rooms'):
-            search_params['rooms'] = analysis['rooms']
-        if analysis.get('max_price'):
-            search_params['max_price'] = analysis['max_price']
-        if analysis.get('min_price'):
-            search_params['min_price'] = analysis['min_price']
-        if analysis.get('min_area'):
-            search_params['min_area'] = analysis['min_area']
-        if analysis.get('max_area'):
-            search_params['max_area'] = analysis['max_area']
+        elif state == 'BROWSING':
+            if text.lower() in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
+                current_offset = params.get('offset', 0)
 
-        # Сохраняем lifestyle и semantic данные
-        search_params['lifestyle_tags'] = analysis.get('lifestyle_tags', [])
-        search_params['semantic_keywords'] = analysis.get('semantic_keywords', [])
-        search_params['embedding_text'] = analysis.get('embedding_text', text)
-        if analysis.get('coordinates'):
-            search_params['coordinates'] = analysis['coordinates']
-        if analysis.get('radius_km'):
-            search_params['radius_km'] = analysis['radius_km']
+                # Поиск следующей страницы
+                results = await sync_to_async(self.search.intelligent_search)(params, offset=current_offset)
 
-        session.search_params = search_params
-        await sync_to_async(session.save)()
+                if results:
+                    params['offset'] = current_offset + len(results)
+                    await self._update_state(session, 'BROWSING', params)
 
-        # ========== ВЫПОЛНЯЕМ ПОИСК ==========
-        logger.info("🔍 Executing intelligent search...")
+                    response['text'] = "Вот еще варианты: 👇"
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                else:
+                    response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
+                    response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
 
-        results = await sync_to_async(self.search.intelligent_search)(
-            analysis_result=analysis,
-            limit=7
-        )
+            elif 'бюджет' in text.lower() or 'параметр' in text.lower():
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Напиши новый бюджет:"
 
-        # ========== ФОРМИРУЕМ ОТВЕТ ==========
-        if results:
-            # Формируем описание параметров поиска
-            params_desc = self._format_search_params(analysis)
+            elif 'эксперт' in text.lower():
+                await self._update_state(session, 'LEAD_NAME')
+                response['text'] = "Как к тебе обращаться?"
+            else:
+                return self._scenario_start(user.name)
 
-            response_text = (
-                f"Нашел {len(results)} {'вариант' if len(results) == 1 else 'варианта' if len(results) < 5 else 'вариантов'} "
-                f"по вашему запросу:\n\n{params_desc}\n\n"
-                f"Объекты отсортированы по релевантности 👇"
+        elif state == 'NO_RESULTS':
+            if 'бюджет' in text.lower():
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Какой новый бюджет?"
+            elif 'комнат' in text.lower():
+                await self._update_state(session, 'SETTING_ROOMS', params)
+                response['text'] = "Сколько комнат?"
+            elif 'эксперт' in text.lower():
+                await self._update_state(session, 'LEAD_NAME')
+                response['text'] = "Как тебя зовут?"
+
+        elif state == 'LEAD_NAME':
+            await sync_to_async(Lead.objects.create)(
+                user=user,
+                request_text=f"Заявка на эксперта. Контекст поиска: {session.search_params}",
+                status='new'
             )
+            response['text'] = f"Спасибо, {text}! Менеджер скоро свяжется. 📞"
+            response['buttons'] = ['В главное меню']
+            await self._update_state(session, 'START', {})
 
-            buttons = [
-                '🔍 Показать ещё',
-                '🔄 Изменить параметры',
-                '👨‍💼 Связаться с экспертом'
-            ]
-        else:
-            response_text = self._generate_no_results_message(analysis)
-            buttons = [
-                '🔄 Изменить параметры',
-                '🏢 Узнать о районах',
-                '👨‍💼 Связаться с экспертом'
-            ]
+        elif state == 'CONSULTATION_TOPIC':
+            consultation = await sync_to_async(self.ai.generate_consultation)(text)
+            response['text'] = consultation
+            response['buttons'] = ['Искать здесь', 'В меню']
+            await self._update_state(session, 'START', {})
 
+        return response
+
+    async def _update_state(self, session, new_state, params=None):
+        session.current_intent = new_state
+        if params is not None:
+            session.search_params = params
+        await sync_to_async(session.save)()
+
+    def _scenario_start(self, name):
         return {
-            'text': response_text,
-            'buttons': buttons,
-            'objects': results,
-            'show_typing': True
+            'text': f"Привет, {name}! Я HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\nЧто хочешь сделать?",
+            'buttons': ['1. Подобрать объект', '2. Узнать про районы', '3. Связаться с экспертом']
         }
 
-    async def _handle_consultation(self, text: str, analysis: Dict) -> dict:
-        """Обработка консультации по районам"""
-
-        location_info = {
-            'city': analysis.get('city'),
-            'district': analysis.get('district'),
-            'nearby_landmarks': analysis.get('nearby_landmarks', [])
-        }
-
-        logger.info("💬 Generating consultation...")
-        consultation = await sync_to_async(self.ai.generate_consultation)(text, location_info)
-
-        return {
-            'text': consultation,
-            'buttons': [
-                '🔍 Искать здесь жилье',
-                '🏢 Другой район',
-                '👨‍💼 Связаться с экспертом'
-            ],
-            'objects': [],
-            'show_typing': True
-        }
-
-    async def _handle_expert_contact(self, user: BotUser, text: str) -> dict:
-        """Обработка запроса на связь с экспертом"""
-
-        # Создаем лид в базе
-        await sync_to_async(Lead.objects.create)(
-            user=user,
-            request_text=text
-        )
-
-        logger.info(f"📋 Lead created for user {user.name}")
-
-        return {
-            'text': (
-                "✅ Заявка принята!\n\n"
-                "Наш менеджер свяжется с вами в ближайшее время.\n"
-                "Обычно это занимает 10-15 минут в рабочее время.\n\n"
-                "Пока ждете, можете продолжить поиск или узнать о районах 👇"
-            ),
-            'buttons': [
-                '🔍 Продолжить поиск',
-                '🏢 Узнать о районах'
-            ],
-            'objects': [],
-            'show_typing': False
-        }
-
-    async def _handle_fallback(self, text: str) -> dict:
-        """Обработка непонятных запросов"""
-        return {
-            'text': (
-                "Извините, я не совсем понял ваш запрос 🤔\n\n"
-                "Я могу помочь вам:\n"
-                "• Найти квартиру (просто опишите, что вы хотите)\n"
-                "• Рассказать о районах\n"
-                "• Связать с экспертом\n\n"
-                "Попробуйте переформулировать или выберите действие ниже:"
-            ),
-            'buttons': [
-                '🔍 Найти квартиру',
-                '🏢 О районах',
-                '👨‍💼 Эксперт'
-            ],
-            'objects': [],
-            'show_typing': False
-        }
-
-    def _format_search_params(self, analysis: Dict) -> str:
-        """Форматирование параметров поиска для отображения пользователю"""
-        parts = []
-
-        if analysis.get('city'):
-            parts.append(f"📍 {analysis['city']}")
-
-        if analysis.get('district'):
-            parts.append(f"🏘 {analysis['district']}")
-
-        if analysis.get('rooms'):
-            parts.append(f"🛏 {analysis['rooms']}-комн")
-
-        if analysis.get('max_price'):
-            price_mln = analysis['max_price'] / 1_000_000
-            parts.append(f"💰 до {price_mln:.0f} млн ₸")
-
-        if analysis.get('min_area') or analysis.get('max_area'):
-            area_str = f"📐 "
-            if analysis.get('min_area'):
-                area_str += f"от {analysis['min_area']}"
-            if analysis.get('max_area'):
-                area_str += f" до {analysis['max_area']}"
-            area_str += " м²"
-            parts.append(area_str)
-
-        lifestyle = analysis.get('lifestyle_tags', [])
-        if lifestyle:
-            tags_emoji = {
-                'quiet': '🤫',
-                'family': '👨‍👩‍👧',
-                'park': '🌳',
-                'metro': '🚇',
-                'view': '🌆'
-            }
-            lifestyle_str = " ".join([tags_emoji.get(tag, '✨') for tag in lifestyle[:3]])
-            parts.append(lifestyle_str)
-
-        return " • ".join(parts) if parts else "Все параметры"
-
-    def _generate_no_results_message(self, analysis: Dict) -> str:
-        """Генерация сообщения когда ничего не найдено"""
-        suggestions = []
-
-        if analysis.get('max_price'):
-            price_mln = analysis['max_price'] / 1_000_000
-            new_price = int(price_mln * 1.3)
-            suggestions.append(f"• Увеличить бюджет до {new_price} млн ₸")
-
-        if analysis.get('district'):
-            suggestions.append("• Рассмотреть соседние районы")
-
-        if analysis.get('rooms'):
-            suggestions.append(
-                f"• Посмотреть {analysis['rooms'] - 1 if analysis['rooms'] > 1 else analysis['rooms'] + 1}-комнатные")
-
-        suggestions_text = "\n".join(suggestions) if suggestions else ""
-
-        return (
-            "К сожалению, по вашим параметрам пока ничего не нашлось 😔\n\n"
-            "Попробуйте:\n"
-            f"{suggestions_text}\n\n"
-            "Или свяжитесь с нашим экспертом — он найдет варианты вручную!"
-        )
+    def _format_intro(self, results, params):
+        return f"Нашел {len(results)} вариантов (сгруппировано по ЖК): 👇"

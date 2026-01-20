@@ -21,7 +21,7 @@ class EnhancedAIService:
     def __init__(self):
         api_key = getattr(settings, 'GEMINI_API_KEY')
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-3-flash-preview')
 
         print("🔍 Поиск доступных моделей...\n")
 

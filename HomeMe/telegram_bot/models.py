@@ -114,6 +114,7 @@ class UserSession(models.Model):
         blank=True,
         help_text="Время истечения сессии (опционально)"
     )
+    state = models.CharField(max_length=50, default='START')
 
     class Meta:
         verbose_name = "Сессия пользователя"
@@ -469,11 +470,12 @@ class BIComplex(models.Model):
     # Основные данные
     name = models.CharField("Название ЖК", max_length=255)
     address = models.CharField("Адрес", max_length=500, blank=True)
-    city_uuid = models.CharField("UUID Города", max_length=100, db_index=True)
+    description = models.TextField(blank=True)
 
     # Геолокация (из API realEstateList)
     latitude = models.FloatField("Широта", null=True, blank=True)
     longitude = models.FloatField("Долгота", null=True, blank=True)
+    city_uuid = models.CharField("UUID Города", max_length=100, db_index=True)
 
     # Характеристики ЖК
     class_name = models.CharField("Класс жилья", max_length=100, blank=True)  # Комфорт, Бизнес...
@@ -481,7 +483,7 @@ class BIComplex(models.Model):
     min_price = models.DecimalField("Цена от", max_digits=15, decimal_places=2, null=True)
 
     # Медиа
-    website = models.URLField(blank=True)
+    url = models.URLField(blank=True)
     image_url = models.URLField("Фото 400px", blank=True)
 
     # === AI Brain ===
@@ -513,8 +515,6 @@ class BIUnit(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bi_uuid = models.CharField("UUID Квартиры", max_length=100, unique=True, db_index=True)
-
-    # Связь с ЖК
     complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
 
     # Параметры квартиры
