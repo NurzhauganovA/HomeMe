@@ -35,6 +35,30 @@ class Command(BaseCommand):
         super().__init__()
         self.dialog_manager = None
 
+    async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик голосовых сообщений"""
+        user = update.effective_user
+        voice = update.message.voice
+
+        # Получаем файл от телеграма (это еще не байты, это ссылка на файл)
+        voice_file = await context.bot.get_file(voice.file_id)
+
+        # Передаем в DialogManager
+        # Обрати внимание: мы передаем объект файла, скачивание будет внутри менеджера
+        response = await self.dialog_manager.process_voice(
+            user_id=user.id,
+            platform='telegram',
+            voice_file_object=voice_file,
+            user_name=user.first_name
+        )
+
+        await self.send_response(update, response)
+
+    async def send_response(self, update: Update, response: dict):
+        """Унифицированная отправка ответа"""
+        await self._send_text_response(update, response)
+        await self._send_property_cards(update, response)
+
     def handle(self, *args, **options):
         """Главная точка входа"""
         token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -45,6 +69,10 @@ class Command(BaseCommand):
 
         # Инициализация
         application = ApplicationBuilder().token(token).build()
+
+        application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
+
         self.dialog_manager = EnhancedDialogManager()
 
         # Регистрация хэндлеров

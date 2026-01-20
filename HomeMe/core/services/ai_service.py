@@ -21,7 +21,7 @@ class EnhancedAIService:
     def __init__(self):
         api_key = getattr(settings, 'GEMINI_API_KEY')
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-3-flash-preview')
 
         print("🔍 Поиск доступных моделей...\n")
 
@@ -133,6 +133,61 @@ class EnhancedAIService:
         except Exception as e:
             logger.error(f"❌ Unexpected Error in JSON parser: {e}")
             return None
+
+    def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/mp3") -> str:
+        """
+        Превращает аудио-файл (байты) в текст.
+        """
+        try:
+            logger.info("🎤 Sending audio to Gemini for transcription...")
+
+            # Gemini принимает аудио как часть контента
+            # Промпт должен быть строгим, чтобы AI не добавлял от себя "Вот расшифровка:"
+            prompt = "Listen to this audio and transcribe it exactly into Russian text. Do not add any commentary. Just the text."
+
+            # Формируем запрос (Gemini умеет понимать MIME types)
+            if not isinstance(audio_bytes, (bytes, bytearray)):
+                audio_bytes = bytes(audio_bytes)
+
+            response = self.model.generate_content([
+                prompt,
+                {
+                    "mime_type": mime_type,
+                    "data": audio_bytes
+                }
+            ])
+
+            try:
+                text = response.text.strip()
+            except Exception:
+                text = ""
+
+            if not text:
+                # Fallback: пытаемся вытащить текст из кандидатов/part
+                try:
+                    if response.candidates:
+                        parts = response.candidates[0].content.parts or []
+                        text = "".join(
+                            getattr(part, "text", "") for part in parts if getattr(part, "text", "")
+                        ).strip()
+                except Exception:
+                    text = ""
+
+            if not text:
+                logger.warning("⚠️ Transcription returned empty content")
+                return ""
+
+            logger.info(f"📝 Transcription result: '{text}'")
+            return text
+
+        except Exception as e:
+            error_text = str(e)
+            logger.error(f"❌ Transcription failed: {e}")
+
+            if "429" in error_text or "quota" in error_text.lower():
+                return "__QUOTA_EXCEEDED__"
+
+            return ""
 
     # ======================== STAGE 1: INTENT CLASSIFICATION ========================
 

@@ -1,5 +1,8 @@
+import io
 import logging
 from asgiref.sync import sync_to_async
+from shutil import which
+from pydub import AudioSegment
 
 from core.location_resolver import DynamicLocationResolver
 from telegram_bot.models import BotUser, UserSession, Lead
@@ -36,20 +39,50 @@ class EnhancedDialogManager:
         # --- МАШИНА СОСТОЯНИЙ ---
 
         if state == 'START':
-            if text == '1' or 'подобрать' in text.lower():
+            lowered_text = text.lower()
+            if text == '1' or 'подобрать' in lowered_text:
                 await self._update_state(session, 'CHOOSING_TYPE')
                 response[
                     'text'] = "Отлично! Что будем смотреть?\n\n1. Новостройки BI Group 🏗\n2. Вторичка 🏠\n3. Смешанный поиск ⭐"
                 response['buttons'] = ['1. BI Group', '2. Вторичка', '3. Смешанный']
 
-            elif text == '2' or 'район' in text.lower():
+            elif text == '2' or 'район' in lowered_text:
                 await self._update_state(session, 'CONSULTATION_TOPIC')
                 response['text'] = "Про какой район рассказать? (Например: 'Есильский', 'EXPO')"
                 response['buttons'] = ['Левый берег', 'Есильский', 'EXPO']
 
-            elif text == '3' or 'эксперт' in text.lower():
+            elif text == '3' or 'эксперт' in lowered_text:
                 await self._update_state(session, 'LEAD_NAME')
                 response['text'] = "Я соединю тебя с экспертом. Как к тебе обращаться?"
+
+            elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир']):
+                # Быстрый старт без кнопок: извлекаем параметры и сразу ищем
+                params = await sync_to_async(self.ai.extract_search_parameters)(text)
+                params['embedding_text'] = text
+                params['source'] = params.get('source', 'mixed')
+
+                location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+                if location_data:
+                    center = location_data.get('center_coordinates')
+                    radius_km = location_data.get('search_radius_km')
+                    if center:
+                        params['coordinates'] = {'lat': center[0], 'lon': center[1]}
+                        params['radius_km'] = radius_km or 3.0
+
+                params['offset'] = 0
+                params['city'] = 'Astana'
+
+                results = await sync_to_async(self.search.intelligent_search)(params, offset=0)
+                if results:
+                    params['offset'] = len(results)
+                    await self._update_state(session, 'BROWSING', params)
+                    response['text'] = self._format_intro(results, params)
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                else:
+                    await self._update_state(session, 'NO_RESULTS', params)
+                    response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
+                    response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
             else:
                 return self._scenario_start(user.name)
@@ -198,11 +231,117 @@ class EnhancedDialogManager:
 
         return response
 
+    async def process_voice(self, user_id, platform, voice_file_object, user_name=None):
+        """
+        Обрабатывает голосовое сообщение:
+        1. Скачивает байты.
+        2. Конвертирует OGG -> MP3 (для совместимости).
+        3. Транскрибирует через AI.
+        4. Вызывает process_message с полученным текстом.
+        """
+        try:
+            # 1. Читаем файл в память (voice_file_object - это уже скачанный файл Telegram)
+            voice_bytes = await voice_file_object.download_as_bytearray()
+
+            audio_bytes = bytes(voice_bytes)
+            mime_type = "audio/ogg"
+
+            # 2. Конвертация OGG -> MP3 (если доступен ffmpeg/ffprobe)
+            # Telegram шлет OGG Opus. Gemini лучше понимает MP3/WAV.
+            if which("ffprobe") and which("ffmpeg"):
+                try:
+                    logger.info("🔄 Converting OGG to MP3...")
+                    audio = AudioSegment.from_file(io.BytesIO(voice_bytes), format="ogg")
+
+                    # Экспортируем в MP3 в буфер памяти
+                    mp3_io = io.BytesIO()
+                    audio.export(mp3_io, format="mp3")
+                    audio_bytes = mp3_io.getvalue()
+                    mime_type = "audio/mp3"
+                except Exception as exc:
+                    logger.warning(f"⚠️ OGG->MP3 conversion failed, using OGG: {exc}")
+            else:
+                logger.warning("⚠️ ffmpeg/ffprobe not found, using OGG directly")
+
+            # 3. Транскрибация
+            text = await sync_to_async(self.ai.transcribe_audio)(audio_bytes, mime_type)
+
+            if text == "__QUOTA_EXCEEDED__":
+                return {
+                    'text': "Лимит на распознавание аудио исчерпан. 😔 Попробуйте позже или напишите текстом."
+                }
+
+            if not text:
+                return {'text': "Не удалось разобрать голосовое сообщение. 😔 Попробуйте текстом."}
+
+            normalized_text = self._normalize_voice_text(text)
+
+            # 4. 🔥 ГЛАВНЫЙ ТРЮК: Рекурсия
+            # Мы просто скармливаем полученный текст в наш основной метод
+            logger.info(f"🗣 Voice recognized as: '{text}' -> '{normalized_text}' -> Delegating to process_message")
+
+            # Добавляем пометку (🎤), чтобы юзер видел, как мы его поняли
+            response = await self.process_message(user_id, platform, normalized_text, user_name)
+
+            # Модифицируем ответ, добавляя расшифровку
+            original_text = response.get('text', '')
+            if normalized_text != text:
+                response['text'] = f"🎤 *Вы сказали:* \"{text}\"\n*Интерпретация:* \"{normalized_text}\"\n\n{original_text}"
+            else:
+                response['text'] = f"🎤 *Вы сказали:* \"{text}\"\n\n{original_text}"
+
+            return response
+
+        except Exception as e:
+            logger.error(f"❌ Error processing voice: {e}")
+            return {'text': "Ошибка обработки аудио. Пожалуйста, напишите текстом."}
+
     async def _update_state(self, session, new_state, params=None):
         session.current_intent = new_state
         if params is not None:
             session.search_params = params
         await sync_to_async(session.save)()
+
+    @staticmethod
+    def _normalize_voice_text(text: str) -> str:
+        """
+        Нормализует типичные голосовые ответы в команды/варианты.
+        """
+        if not text:
+            return text
+
+        lowered = text.strip().lower()
+        is_short = len(lowered) <= 25
+        has_choice_words = any(word in lowered for word in ['вариант', 'пункт', 'кнопк', 'номер'])
+
+        # Простые порядковые числительные
+        ordinals = {
+            'первый': '1',
+            'первая': '1',
+            'первое': '1',
+            'второй': '2',
+            'вторая': '2',
+            'второе': '2',
+            'третий': '3',
+            'третья': '3',
+            'третье': '3',
+        }
+
+        if is_short or has_choice_words:
+            for word, number in ordinals.items():
+                if word in lowered:
+                    return number
+
+        # Типичные фразы выбора
+        if is_short or has_choice_words:
+            if 'подобрал объект' in lowered or 'подобрать объект' in lowered or lowered == 'подобрать':
+                return '1'
+            if 'узнать про район' in lowered or 'узнать про районы' in lowered or lowered == 'район':
+                return '2'
+            if 'связаться с экспертом' in lowered or lowered == 'эксперт':
+                return '3'
+
+        return text
 
     def _scenario_start(self, name):
         return {
