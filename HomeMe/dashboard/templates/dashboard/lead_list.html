@@ -107,7 +107,10 @@
                                     {{ lead.user.user_id }}
                                 </a>
                             {% else %}
-                                <span class="text-muted">{{ lead.user.user_id }}</span>
+                                <span class="text-muted">
+                                    <i class="fab fa-telegram me-1"></i>
+                                    @{{ lead.user.user_id }}
+                                </span>
                             {% endif %}
                         </td>
                         <td>
@@ -167,6 +170,11 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
+                                <a href="{% url 'dashboard:lead_detail' lead.id %}"
+                                   class="btn btn-outline-secondary"
+                                   title="Просмотр">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{% url 'dashboard:lead_update' lead.id %}"
                                    class="btn btn-outline-primary"
                                    title="Редактировать">

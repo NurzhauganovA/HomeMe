@@ -145,7 +145,7 @@ class Command(BaseCommand):
             from telegram_bot.models import UserSession
 
             bot_user = await sync_to_async(BotUser.objects.get)(
-                user_id=str(user.id),
+                user_id=str(user.username),
                 platform='telegram'
             )
             session = await sync_to_async(lambda: bot_user.session)()
@@ -167,7 +167,7 @@ class Command(BaseCommand):
             from asgiref.sync import sync_to_async
 
             bot_user = await sync_to_async(BotUser.objects.get)(
-                user_id=str(user.id),
+                user_id=str(user.username),
                 platform='telegram'
             )
 

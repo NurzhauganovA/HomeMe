@@ -66,7 +66,7 @@
                 <i class="fab fa-telegram-plane"></i>
             </div>
             <div class="stat-value">
-                {{ users|selectattr:'platform'|selectattr:'telegram'|list|length|default:0 }}
+                {{ telegram_users_count|default:0 }}
             </div>
             <div class="stat-label">Telegram</div>
         </div>
@@ -78,7 +78,7 @@
                 <i class="fab fa-whatsapp"></i>
             </div>
             <div class="stat-value">
-                {{ users|selectattr:'platform'|selectattr:'whatsapp'|list|length|default:0 }}
+                {{ whatsapp_users_count|default:0 }}
             </div>
             <div class="stat-label">WhatsApp</div>
         </div>
@@ -90,7 +90,7 @@
                 <i class="fas fa-chart-line"></i>
             </div>
             <div class="stat-value">
-                {% widthratio users|length 1 1 %}
+                {{ active_today_count|default:0 }}
             </div>
             <div class="stat-label">Активных сегодня</div>
         </div>
@@ -135,7 +135,9 @@
                                     {{ user.name.0|upper|default:"?" }}
                                 </div>
                                 <div>
-                                    <div class="fw-semibold">{{ user.name|default:"Без имени" }}</div>
+                                    <a href="{% url 'dashboard:user_detail' user.id %}" class="fw-semibold text-decoration-none">
+                                        {{ user.name|default:"Без имени" }}
+                                    </a>
                                     {% if not user.is_active %}
                                         <span class="badge bg-danger small">Неактивен</span>
                                     {% endif %}
@@ -164,7 +166,10 @@
                                     {{ user.user_id }}
                                 </a>
                             {% else %}
-                                <code class="small">{{ user.user_id }}</code>
+                                <span class="text-muted">
+                                    <i class="fab fa-telegram me-1"></i>
+                                    @{{ user.user_id }}
+                                </span>
                             {% endif %}
                         </td>
                         <td>

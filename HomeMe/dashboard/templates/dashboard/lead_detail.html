@@ -1,0 +1,321 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Лид #{{ lead.id|slice:":8" }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'dashboard:lead_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Назад к списку
+    </a>
+    <a href="{% url 'dashboard:lead_update' lead.id %}" class="btn btn-primary ms-2">
+        <i class="fas fa-edit me-2"></i>Редактировать
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Main Info -->
+    <div class="col-lg-8">
+        <!-- User & Contact Card -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Информация о пользователе
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="user-avatar" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                                {{ lead.user.name.0|upper|default:"?" }}
+                            </div>
+                            <div>
+                                <h4 class="mb-1">{{ lead.user.name|default:"Без имени" }}</h4>
+                                <div class="text-muted">
+                                    {% if lead.user.platform == 'telegram' %}
+                                        <i class="fab fa-telegram me-1"></i>Telegram
+                                    {% else %}
+                                        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Контакт</div>
+                            {% if lead.user.platform == 'whatsapp' %}
+                                <a href="https://wa.me/{{ lead.user.user_id }}"
+                                   target="_blank"
+                                   class="btn btn-success btn-sm">
+                                    <i class="fab fa-whatsapp me-2"></i>
+                                    {{ lead.user.user_id }}
+                                </a>
+                            {% else %}
+                                <div class="fw-semibold">@{{ lead.user.user_id }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Статистика пользователя</div>
+                            <div class="d-flex gap-3 mt-2">
+                                <div>
+                                    <div class="h5 mb-0">{{ lead.user.total_searches }}</div>
+                                    <div class="text-muted small">Поисков</div>
+                                </div>
+                                <div>
+                                    <div class="h5 mb-0">{{ lead.user.total_messages }}</div>
+                                    <div class="text-muted small">Сообщений</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Язык</div>
+                            <div class="fw-semibold">
+                                {% if lead.user.language == 'ru' %}
+                                    🇷🇺 Русский
+                                {% elif lead.user.language == 'kk' %}
+                                    🇰🇿 Қазақ
+                                {% else %}
+                                    🇬🇧 English
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Text Card -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-comment-dots me-2"></i>
+                    Запрос пользователя
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="alert alert-light mb-0" style="border-left: 4px solid var(--primary-color);">
+                    <p class="mb-0" style="font-size: 1.05rem; line-height: 1.6;">
+                        "{{ lead.request_text }}"
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Parameters Card -->
+        {% if lead.search_params %}
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>
+                    Параметры поиска
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    {% if lead.search_params.city %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-map-marker-alt me-1"></i>Город
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.city }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if lead.search_params.rooms %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-door-open me-1"></i>Комнат
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.rooms }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if lead.search_params.max_price %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-money-bill-wave me-1"></i>Максимальная цена
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.max_price|floatformat:0 }} ₸</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if lead.search_params.min_price %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-money-bill-wave me-1"></i>Минимальная цена
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.min_price|floatformat:0 }} ₸</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if lead.search_params.district %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-building me-1"></i>Район
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.district }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if lead.search_params.embedding_text %}
+                    <div class="col-12">
+                        <div class="p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-search me-1"></i>Текст поиска
+                            </div>
+                            <div class="fw-semibold">{{ lead.search_params.embedding_text }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Статус лида
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Текущий статус</div>
+                    <span class="badge
+                        {% if lead.status == 'new' %}bg-primary
+                        {% elif lead.status == 'in_progress' %}bg-warning
+                        {% elif lead.status == 'contacted' %}bg-info
+                        {% else %}bg-success{% endif %}"
+                        style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                        {{ lead.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Приоритет</div>
+                    <div class="d-flex gap-1">
+                        {% for i in "12345" %}
+                            <i class="fa{% if forloop.counter <= lead.priority %}s{% else %}r{% endif %} fa-star
+                               {% if forloop.counter <= lead.priority %}text-warning{% else %}text-muted{% endif %}"
+                               style="font-size: 1.25rem;"></i>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if lead.assigned_to %}
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Менеджер</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                            {{ lead.assigned_to.0|upper }}
+                        </div>
+                        <div class="fw-semibold">{{ lead.assigned_to }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Timeline Card -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Временная шкала
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-4">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="min-width: 50px;">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; background: var(--gray-100);">
+                                <i class="fas fa-plus text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-1">Создан</div>
+                            <div class="text-muted small">
+                                {{ lead.created_at|date:"d.m.Y в H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if lead.contacted_at %}
+                <div class="mb-4">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="min-width: 50px;">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; background: var(--gray-100);">
+                                <i class="fas fa-phone text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-1">Контакт установлен</div>
+                            <div class="text-muted small">
+                                {{ lead.contacted_at|date:"d.m.Y в H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if lead.closed_at %}
+                <div class="mb-0">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="min-width: 50px;">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; background: var(--gray-100);">
+                                <i class="fas fa-check text-secondary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-1">Закрыт</div>
+                            <div class="text-muted small">
+                                {{ lead.closed_at|date:"d.m.Y в H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if lead.manager_notes %}
+        <!-- Notes Card -->
+        <div class="table-card mt-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    Заметки менеджера
+                </h5>
+            </div>
+            <div class="p-4">
+                <p class="mb-0" style="white-space: pre-line;">{{ lead.manager_notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

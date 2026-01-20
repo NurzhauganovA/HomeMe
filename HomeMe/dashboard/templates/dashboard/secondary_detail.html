@@ -1,0 +1,224 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}{{ property.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'dashboard:secondary_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Назад к списку
+    </a>
+    <a href="{% url 'dashboard:secondary_update' property.id %}" class="btn btn-primary ms-2">
+        <i class="fas fa-edit me-2"></i>Редактировать
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Image Gallery -->
+        {% if property.image %}
+        <div class="table-card mb-4">
+            <img src="{{ property.image.url }}"
+                 class="w-100"
+                 style="max-height: 500px; object-fit: cover; border-radius: 0.75rem;"
+                 alt="{{ property.title }}">
+        </div>
+        {% endif %}
+
+        <!-- Title & Description -->
+        <div class="table-card mb-4">
+            <div class="p-4">
+                <h2 class="mb-3">{{ property.title }}</h2>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="h3 mb-0 text-primary">
+                        {{ property.price|floatformat:0 }} ₸
+                    </div>
+                    <div class="text-muted">
+                        {{ property.price_per_sqm|floatformat:0 }} ₸/м²
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-muted mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ property.address }}
+                    </div>
+                    {% if property.city %}
+                    <div class="text-muted">
+                        <i class="fas fa-city me-2"></i>{{ property.city }}{% if property.district %}, {{ property.district }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if property.description %}
+                <div class="border-top pt-4">
+                    <h5 class="mb-3">Описание</h5>
+                    <p style="white-space: pre-line; line-height: 1.6;">{{ property.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Характеристики
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="h1 mb-2">{{ property.rooms }}</div>
+                            <div class="text-muted small">Комнат</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="h1 mb-2">{{ property.area|floatformat:0 }}</div>
+                            <div class="text-muted small">м²</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 rounded" style="background: var(--gray-50); border: 1px solid var(--gray-200);">
+                            <div class="h1 mb-2">{{ property.floor }}/{{ property.total_floors }}</div>
+                            <div class="text-muted small">Этаж</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="border-top mt-4 pt-4">
+                    <h6 class="mb-3">Особенности</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-car fa-lg {% if property.has_parking %}text-success{% else %}text-muted{% endif %}"></i>
+                            <span class="{% if not property.has_parking %}text-muted{% endif %}">Парковка</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-home fa-lg {% if property.has_balcony %}text-success{% else %}text-muted{% endif %}"></i>
+                            <span class="{% if not property.has_balcony %}text-muted{% endif %}">Балкон</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-paint-roller fa-lg {% if property.has_renovation %}text-success{% else %}text-muted{% endif %}"></i>
+                            <span class="{% if not property.has_renovation %}text-muted{% endif %}">Ремонт</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                {% if property.latitude and property.longitude %}
+                <div class="border-top mt-4 pt-4">
+                    <h6 class="mb-3">Расположение на карте</h6>
+                    <a href="https://www.google.com/maps?q={{ property.latitude }},{{ property.longitude }}"
+                       target="_blank"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-map-marked-alt me-2"></i>
+                        Открыть на Google Maps
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Owner Info -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Владелец
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Имя</div>
+                    <div class="fw-semibold">{{ property.owner_name }}</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-muted small mb-2">Телефон</div>
+                    <a href="tel:{{ property.owner_phone }}" class="btn btn-success w-100">
+                        <i class="fas fa-phone me-2"></i>
+                        {{ property.owner_phone }}
+                    </a>
+                </div>
+
+                <a href="https://wa.me/{{ property.owner_phone }}"
+                   target="_blank"
+                   class="btn btn-outline-success w-100">
+                    <i class="fab fa-whatsapp me-2"></i>
+                    Написать в WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Статус
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Активность</div>
+                    {% if property.is_active %}
+                        <span class="badge bg-success" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-check-circle me-1"></i>Активен
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-times-circle me-1"></i>Неактивен
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted small mb-2">Верификация</div>
+                    {% if property.is_verified %}
+                        <span class="badge bg-info" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-shield-alt me-1"></i>Проверено
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-clock me-1"></i>На проверке
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Статистика
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Просмотров</div>
+                    <div class="h4 mb-0">{{ property.views_count }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Дата создания</div>
+                    <div class="fw-semibold">{{ property.created_at|date:"d.m.Y" }}</div>
+                </div>
+
+                <div>
+                    <div class="text-muted small mb-1">Последнее обновление</div>
+                    <div class="fw-semibold">{{ property.updated_at|date:"d.m.Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

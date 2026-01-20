@@ -1,9 +1,9 @@
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, View, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Min, Max
 from django.http import JsonResponse
 from datetime import timedelta
 from django.utils import timezone
@@ -87,6 +87,13 @@ class LeadListView(StaffRequiredMixin, ListView):
         context['current_status'] = self.request.GET.get('status', '')
         context['search_query'] = self.request.GET.get('search', '')
         return context
+
+
+class LeadDetailView(StaffRequiredMixin, DetailView):
+    """Детальная страница лида"""
+    model = Lead
+    template_name = 'dashboard/lead_detail.html'
+    context_object_name = 'lead'
 
 
 class LeadUpdateView(StaffRequiredMixin, UpdateView):
@@ -193,6 +200,13 @@ class SecondaryPropertyDeleteView(StaffRequiredMixin, DeleteView):
         return redirect(self.success_url)
 
 
+class SecondaryPropertyDetailView(StaffRequiredMixin, DetailView):
+    """Детальная страница объекта вторички"""
+    model = SecondaryProperty
+    template_name = 'dashboard/secondary_detail.html'
+    context_object_name = 'property'
+
+
 class BIComplexListView(StaffRequiredMixin, ListView):
     """Список ЖК BI Group"""
     model = BIComplex
@@ -208,6 +222,27 @@ class BIComplexListView(StaffRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_units'] = BIUnit.objects.filter(is_active=True).count()
+        return context
+
+
+class BIComplexDetailView(StaffRequiredMixin, DetailView):
+    """Детальная страница ЖК BI Group"""
+    model = BIComplex
+    template_name = 'dashboard/bi_complex_detail.html'
+    context_object_name = 'complex'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        units = BIUnit.objects.filter(complex=self.object, is_active=True).order_by('price')
+        aggregates = units.aggregate(
+            min_price=Min('price'),
+            max_price=Max('price'),
+            min_area=Min('area'),
+            max_area=Max('area')
+        )
+        context['units'] = units
+        context['units_count'] = units.count()
+        context.update(aggregates)
         return context
 
 
@@ -247,5 +282,27 @@ class BotUserListView(StaffRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['telegram_users_count'] = BotUser.objects.filter(platform='telegram').count()
+        context['whatsapp_users_count'] = BotUser.objects.filter(platform='whatsapp').count()
+        context['active_today_count'] = BotUser.objects.filter(
+            last_active_at__date=timezone.now().date()
+        ).count()
+        return context
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['platform_choices'] = BotUser.PLATFORM_CHOICES
+        return context
+
+
+class BotUserDetailView(StaffRequiredMixin, DetailView):
+    """Детальная страница пользователя"""
+    model = BotUser
+    template_name = 'dashboard/user_detail.html'
+    context_object_name = 'bot_user'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем статистику пользователя
+        context['user_leads'] = Lead.objects.filter(user=self.object).order_by('-created_at')[:10]
         return context

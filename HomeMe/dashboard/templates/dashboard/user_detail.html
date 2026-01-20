@@ -1,0 +1,269 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}{{ bot_user.name|default:"Пользователь" }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'dashboard:user_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Назад к списку
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Main Info -->
+    <div class="col-lg-8">
+        <!-- User Profile Card -->
+        <div class="table-card mb-4">
+            <div class="p-4">
+                <div class="d-flex align-items-center gap-4 mb-4">
+                    <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ bot_user.name.0|upper|default:"?" }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="mb-2">{{ bot_user.name|default:"Без имени" }}</h2>
+                        <div class="d-flex gap-3 text-muted">
+                            <div>
+                                {% if bot_user.platform == 'telegram' %}
+                                    <i class="fab fa-telegram me-1"></i>Telegram
+                                {% else %}
+                                    <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if bot_user.language == 'ru' %}
+                                    🇷🇺 Русский
+                                {% elif bot_user.language == 'kk' %}
+                                    🇰🇿 Қазақ
+                                {% else %}
+                                    🇬🇧 English
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Контакт</div>
+                        {% if bot_user.platform == 'whatsapp' %}
+                            <a href="https://wa.me/{{ bot_user.user_id }}"
+                               target="_blank"
+                               class="btn btn-success btn-sm">
+                                <i class="fab fa-whatsapp me-2"></i>
+                                {{ bot_user.user_id }}
+                            </a>
+                        {% else %}
+                            <div class="fw-semibold">@{{ bot_user.user_id }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Статус</div>
+                        {% if bot_user.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Активен
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-ban me-1"></i>Неактивен
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); color: white;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="stat-value">{{ bot_user.total_searches }}</div>
+                    <div class="stat-label">Всего поисков</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white;">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="stat-value">{{ bot_user.total_messages }}</div>
+                    <div class="stat-label">Сообщений</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="stat-value">{{ user_leads|length }}</div>
+                    <div class="stat-label">Лидов создано</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Leads -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    История лидов
+                </h5>
+            </div>
+
+            {% if user_leads %}
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Запрос</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in user_leads %}
+                        <tr>
+                            <td>
+                                <div class="small">{{ lead.created_at|date:"d.m.Y" }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    {{ lead.created_at|time:"H:i" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 400px;">
+                                    {{ lead.request_text }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if lead.status == 'new' %}bg-primary
+                                    {% elif lead.status == 'in_progress' %}bg-warning
+                                    {% elif lead.status == 'contacted' %}bg-info
+                                    {% else %}bg-success{% endif %}">
+                                    {{ lead.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'dashboard:lead_detail' lead.id %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                <p class="mb-0">Пользователь еще не создавал лидов</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Timeline -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Активность
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-4">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="min-width: 50px;">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; background: var(--gray-100);">
+                                <i class="fas fa-user-plus text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-1">Регистрация</div>
+                            <div class="text-muted small">
+                                {{ bot_user.created_at|date:"d.m.Y в H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-0">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="min-width: 50px;">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; background: var(--gray-100);">
+                                <i class="fas fa-clock text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-1">Последняя активность</div>
+                            <div class="text-muted small">
+                                {{ bot_user.last_active_at|date:"d.m.Y в H:i" }}
+                            </div>
+                            <div class="mt-1">
+                                <span class="badge bg-light text-dark small">
+                                    {{ bot_user.last_active_at|timesince }} назад
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Info -->
+        {% if bot_user.session %}
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Текущая сессия
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Состояние</div>
+                    <div class="fw-semibold">{{ bot_user.session.current_intent|default:"—" }}</div>
+                </div>
+
+                {% if bot_user.session.search_params %}
+                <div class="mb-0">
+                    <div class="text-muted small mb-2">Параметры поиска</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if bot_user.session.search_params.city %}
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {{ bot_user.session.search_params.city }}
+                            </span>
+                        {% endif %}
+                        {% if bot_user.session.search_params.rooms %}
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-door-open me-1"></i>
+                                {{ bot_user.session.search_params.rooms }}-комн
+                            </span>
+                        {% endif %}
+                        {% if bot_user.session.search_params.max_price %}
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-money-bill-wave me-1"></i>
+                                до {{ bot_user.session.search_params.max_price|floatformat:0 }} ₸
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

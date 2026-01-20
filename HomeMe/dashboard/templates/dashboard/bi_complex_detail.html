@@ -1,0 +1,268 @@
+{% extends 'dashboard/base.html' %}
+{% load humanize %}
+
+{% block page_title %}{{ complex.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'dashboard:bi_complex_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Назад к списку
+    </a>
+    {% if complex.url %}
+        <a href="{{ complex.url }}" target="_blank" class="btn btn-primary ms-2">
+            <i class="fas fa-external-link-alt me-2"></i>Открыть на BI Group
+        </a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Image -->
+        {% if complex.image_url %}
+        <div class="table-card mb-4">
+            <img src="{{ complex.image_url }}"
+                 class="w-100"
+                 style="max-height: 500px; object-fit: cover; border-radius: 0.75rem;"
+                 alt="{{ complex.name }}">
+        </div>
+        {% endif %}
+
+        <!-- Title & Info -->
+        <div class="table-card mb-4">
+            <div class="p-4">
+                <h2 class="mb-3">ЖК {{ complex.name }}</h2>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    {% if min_price %}
+                        <div class="h3 mb-0 text-primary">
+                            от {{ min_price|floatformat:0|intcomma }} ₸
+                        </div>
+                    {% endif %}
+                    {% if max_price %}
+                        <div class="text-muted">
+                            до {{ max_price|floatformat:0|intcomma }} ₸
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-muted mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ complex.address|default:"Адрес не указан" }}
+                    </div>
+                    {% if complex.class_name %}
+                        <div class="text-muted">
+                            <i class="fas fa-tag me-2"></i>{{ complex.class_name }}
+                        </div>
+                    {% endif %}
+                    {% if complex.deadline %}
+                        <div class="text-muted">
+                            <i class="far fa-calendar-alt me-2"></i>Срок сдачи: {{ complex.deadline }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if complex.description %}
+                <div class="border-top pt-4">
+                    <h5 class="mb-3">Описание</h5>
+                    <p style="white-space: pre-line; line-height: 1.6;">{{ complex.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- AI Tags -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    AI Аналитика
+                </h5>
+            </div>
+            <div class="p-4">
+                {% if complex.features.side %}
+                    <div class="mb-3">
+                        {% if complex.features.side == 'Left' %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-arrow-left me-1"></i>Левый берег
+                            </span>
+                        {% elif complex.features.side == 'Right' %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-arrow-right me-1"></i>Правый берег
+                            </span>
+                        {% endif %}
+                        {% if complex.features.district_name %}
+                            <span class="badge bg-light text-dark ms-2">
+                                {{ complex.features.district_name }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if complex.features.tags %}
+                    <div class="mb-3">
+                        <div class="text-muted small mb-2">Теги</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in complex.features.tags %}
+                                <span class="badge bg-light text-dark">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if complex.features.atmosphere %}
+                    <div>
+                        <div class="text-muted small mb-2">Атмосфера</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in complex.features.atmosphere %}
+                                <span class="badge bg-info text-dark">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if not complex.features.side and not complex.features.tags and not complex.features.atmosphere %}
+                    <span class="text-muted small">
+                        <i class="fas fa-robot me-1"></i>AI не обработан
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Units -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>
+                    Квартиры ({{ units_count }})
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px;">Комнат</th>
+                            <th style="width: 120px;">Площадь</th>
+                            <th style="width: 120px;">Этаж</th>
+                            <th>Блок</th>
+                            <th style="width: 160px;">Цена</th>
+                            <th style="width: 150px;">Сдача</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for unit in units %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ unit.room_count }}</span>
+                                </td>
+                                <td>{{ unit.area|floatformat:0 }} м²</td>
+                                <td>{{ unit.floor }}{% if unit.max_floor %}/{{ unit.max_floor }}{% endif %}</td>
+                                <td>{{ unit.block_name|default:"—" }}</td>
+                                <td>
+                                    {% if unit.price_discount %}
+                                        <div class="fw-semibold text-success">
+                                            {{ unit.price_discount|floatformat:0|intcomma }} ₸
+                                        </div>
+                                        <div class="text-muted small text-decoration-line-through">
+                                            {{ unit.price|floatformat:0|intcomma }} ₸
+                                        </div>
+                                    {% else %}
+                                        <div class="fw-semibold">{{ unit.price|floatformat:0|intcomma }} ₸</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ unit.deadline|default:complex.deadline|default:"—" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-home fa-3x mb-3 text-muted opacity-25"></i>
+                                    <p class="text-muted">Активные квартиры не найдены</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Stats -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Статистика
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Квартир</div>
+                    <div class="h4 mb-0">{{ units_count }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Диапазон цен</div>
+                    <div class="fw-semibold">
+                        {% if min_price %}{{ min_price|floatformat:0|intcomma }}{% else %}—{% endif %}
+                        —
+                        {% if max_price %}{{ max_price|floatformat:0|intcomma }}{% else %}—{% endif %}
+                        ₸
+                    </div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Площади</div>
+                    <div class="fw-semibold">
+                        {% if min_area %}{{ min_area|floatformat:0 }}{% else %}—{% endif %}
+                        —
+                        {% if max_area %}{{ max_area|floatformat:0 }}{% else %}—{% endif %}
+                        м²
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Локация
+                </h5>
+            </div>
+            <div class="p-4">
+                {% if complex.latitude and complex.longitude %}
+                    <a href="https://www.google.com/maps?q={{ complex.latitude }},{{ complex.longitude }}"
+                       target="_blank"
+                       class="btn btn-outline-primary w-100">
+                        <i class="fas fa-map-marked-alt me-2"></i>
+                        Открыть на Google Maps
+                    </a>
+                {% else %}
+                    <span class="text-muted">Координаты не указаны</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Meta -->
+        <div class="table-card">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Метаданные
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">UUID (BI Group)</div>
+                    <div class="fw-semibold">{{ complex.bi_uuid }}</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Последнее обновление</div>
+                    <div class="fw-semibold">{{ complex.updated_at|date:"d.m.Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
