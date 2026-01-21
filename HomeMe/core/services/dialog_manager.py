@@ -32,7 +32,7 @@ class EnhancedDialogManager:
         response = {'text': '', 'buttons': [], 'objects': []}
 
         # Глобальные команды
-        if text.lower() in ['/start', 'привет', 'меню', 'start', 'reset']:
+        if text.lower() in ['/start', 'привет', 'меню', 'start', 'reset', 'в главное меню']:
             await self._update_state(session, 'START', {})
             return self._scenario_start(user.name or 'друг')
 
