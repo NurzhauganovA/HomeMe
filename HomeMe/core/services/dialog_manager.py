@@ -239,7 +239,7 @@ class EnhancedDialogManager:
             response['buttons'] = ['Искать здесь', 'В меню']
             await self._update_state(session, 'START', {})
 
-        return response
+        return self._ensure_main_menu_button(response, state)
 
     async def process_voice(self, user_id, platform, voice_file_object, user_name=None):
         """
@@ -367,3 +367,17 @@ class EnhancedDialogManager:
 
     def _format_intro(self, results, params):
         return f"Нашел {len(results)} вариантов (сгруппировано по ЖК): 👇"
+
+    @staticmethod
+    def _ensure_main_menu_button(response: dict, state: str) -> dict:
+        if not response:
+            return response
+        if state == 'START':
+            return response
+
+        buttons = response.get('buttons') or []
+        if 'В главное меню' not in buttons:
+            buttons = list(buttons)
+            buttons.append('В главное меню')
+            response['buttons'] = buttons
+        return response
