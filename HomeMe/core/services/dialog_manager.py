@@ -58,10 +58,14 @@ class EnhancedDialogManager:
             elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир']):
                 # Быстрый старт без кнопок: извлекаем параметры и сразу ищем
                 params = await sync_to_async(self.ai.extract_search_parameters)(text)
+                if self.ai.consume_quota_error():
+                    return self._quota_response()
                 params['embedding_text'] = text
                 params['source'] = params.get('source', 'mixed')
 
                 location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+                if self.ai.consume_quota_error():
+                    return self._quota_response()
                 if location_data:
                     center = location_data.get('center_coordinates')
                     radius_km = location_data.get('search_radius_km')
@@ -101,6 +105,8 @@ class EnhancedDialogManager:
 
         elif state == 'SETTING_BUDGET':
             extracted = await sync_to_async(self.ai.extract_search_parameters)(text)
+            if self.ai.consume_quota_error():
+                return self._quota_response()
             if extracted.get('max_price') or extracted.get('min_price'):
                 params.update(extracted)
                 await self._update_state(session, 'SETTING_ROOMS', params)
@@ -128,6 +134,8 @@ class EnhancedDialogManager:
                 params['embedding_text'] = text
 
                 location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+                if self.ai.consume_quota_error():
+                    return self._quota_response()
 
                 if location_data:
                     center = location_data.get('center_coordinates')
@@ -225,6 +233,8 @@ class EnhancedDialogManager:
 
         elif state == 'CONSULTATION_TOPIC':
             consultation = await sync_to_async(self.ai.generate_consultation)(text)
+            if self.ai.consume_quota_error():
+                return self._quota_response()
             response['text'] = consultation
             response['buttons'] = ['Искать здесь', 'В меню']
             await self._update_state(session, 'START', {})
@@ -347,6 +357,12 @@ class EnhancedDialogManager:
         return {
             'text': f"Привет, {name}!\nЯ HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?",
             'buttons': ['1. Подобрать объект', '2. Узнать про районы', '3. Связаться с экспертом']
+        }
+
+    @staticmethod
+    def _quota_response():
+        return {
+            'text': "Лимит запросов к AI исчерпан. 😔 Попробуйте позже или напишите текстом."
         }
 
     def _format_intro(self, results, params):

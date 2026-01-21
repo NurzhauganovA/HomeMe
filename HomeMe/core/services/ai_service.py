@@ -36,6 +36,7 @@ class EnhancedAIService:
         # Кэш для экономии запросов
         self._location_cache = {}
         self._query_enrichment_cache = {}
+        self._quota_exceeded = False
 
     def _generate_with_retry(self, prompt: str, retries=3, temperature=0.3, json_mode=False):
         """Умная генерация с retry логикой и настраиваемой температурой"""
@@ -55,12 +56,22 @@ class EnhancedAIService:
             except exceptions.ResourceExhausted as e:
                 wait_time = 10 * (attempt + 1)
                 logger.warning(f"Gemini quota exceeded. Retry {attempt + 1}/{retries} after {wait_time}s")
+                if attempt == retries - 1:
+                    self._quota_exceeded = True
+                    return None
                 time.sleep(wait_time)
             except Exception as e:
                 logger.error(f"Gemini error: {e}")
                 if attempt == retries - 1:
                     return None
         return None
+
+    def consume_quota_error(self) -> bool:
+        """Возвращает True, если quota была превышена, и сбрасывает флаг."""
+        if self._quota_exceeded:
+            self._quota_exceeded = False
+            return True
+        return False
 
     @staticmethod
     def _extract_text(response) -> str:
