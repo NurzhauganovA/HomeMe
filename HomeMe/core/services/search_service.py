@@ -166,6 +166,8 @@ class EnhancedSearchService:
             description=desc,
             url=comp.url,
             image_url=comp.image_url,
+            latitude=comp.latitude,
+            longitude=comp.longitude,
         )
 
     def _map_secondary_to_dto(self, item: SecondaryProperty) -> PropertyDTO:
@@ -180,4 +182,6 @@ class EnhancedSearchService:
             total_floors=item.total_floors,
             description=item.description,
             image_url=item.image.url if item.image else "",
+            latitude=item.latitude,
+            longitude=item.longitude,
         )

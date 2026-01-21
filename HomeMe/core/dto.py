@@ -7,6 +7,7 @@ Enhanced Data Transfer Objects (DTO)
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
 from datetime import datetime
+from urllib.parse import quote
 
 
 @dataclass
@@ -113,6 +114,16 @@ class PropertyDTO:
         # Ссылка
         if self.url:
             msg += f"<a href='{self.url}'>🔗 Подробнее на сайте</a>"
+
+        if self.address:
+            query = quote(f"{self.title}, {self.address}")
+            link = f"https://2gis.kz/astana/search/{query}"
+            prefix = "\n" if self.url else ""
+            msg += f"{prefix}<a href='{link}'>🗺 2GIS</a>"
+        elif self.latitude is not None and self.longitude is not None:
+            link = f"https://2gis.kz/astana/geo/{self.latitude},{self.longitude}"
+            prefix = "\n" if self.url else ""
+            msg += f"{prefix}<a href='{link}'>🗺 2GIS</a>"
 
         return msg
 
