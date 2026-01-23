@@ -57,13 +57,19 @@ class EnhancedDialogManager:
 
             elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир']):
                 # Быстрый старт без кнопок: извлекаем параметры и сразу ищем
-                params = await sync_to_async(self.ai.extract_search_parameters)(text)
+                params = await sync_to_async(
+                    self.ai.extract_search_parameters,
+                    thread_sensitive=False
+                )(text)
                 if self.ai.consume_quota_error():
                     return self._quota_response()
                 params['embedding_text'] = text
                 params['source'] = params.get('source', 'mixed')
 
-                location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+                location_data = await sync_to_async(
+                    self.location_resolver.resolve_any_location,
+                    thread_sensitive=False
+                )(text, city_hint="Astana")
                 if self.ai.consume_quota_error():
                     return self._quota_response()
                 if location_data:
@@ -76,7 +82,10 @@ class EnhancedDialogManager:
                 params['offset'] = 0
                 params['city'] = 'Astana'
 
-                results = await sync_to_async(self.search.intelligent_search)(params, offset=0)
+                results = await sync_to_async(
+                    self.search.intelligent_search,
+                    thread_sensitive=False
+                )(params, offset=0)
                 if results:
                     params['offset'] = len(results)
                     await self._update_state(session, 'BROWSING', params)
@@ -104,7 +113,10 @@ class EnhancedDialogManager:
             response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
 
         elif state == 'SETTING_BUDGET':
-            extracted = await sync_to_async(self.ai.extract_search_parameters)(text)
+            extracted = await sync_to_async(
+                self.ai.extract_search_parameters,
+                thread_sensitive=False
+            )(text)
             if self.ai.consume_quota_error():
                 return self._quota_response()
             if extracted.get('max_price') or extracted.get('min_price'):
@@ -133,7 +145,10 @@ class EnhancedDialogManager:
             if 'не важно' not in text.lower():
                 params['embedding_text'] = text
 
-                location_data = self.location_resolver.resolve_any_location(text, city_hint="Astana")
+                location_data = await sync_to_async(
+                    self.location_resolver.resolve_any_location,
+                    thread_sensitive=False
+                )(text, city_hint="Astana")
                 if self.ai.consume_quota_error():
                     return self._quota_response()
 
@@ -155,7 +170,10 @@ class EnhancedDialogManager:
             params['city'] = 'Astana'  # Hardcode MVP
 
             # ЗАПУСК ПОИСКА
-            results = await sync_to_async(self.search.intelligent_search)(params, offset=0)
+            results = await sync_to_async(
+                self.search.intelligent_search,
+                thread_sensitive=False
+            )(params, offset=0)
 
             if results:
                 # Увеличиваем offset на длину полученных результатов
@@ -187,7 +205,10 @@ class EnhancedDialogManager:
                 current_offset = params.get('offset', 0)
 
                 # Поиск следующей страницы
-                results = await sync_to_async(self.search.intelligent_search)(params, offset=current_offset)
+                results = await sync_to_async(
+                    self.search.intelligent_search,
+                    thread_sensitive=False
+                )(params, offset=current_offset)
 
                 if results:
                     params['offset'] = current_offset + len(results)
@@ -232,7 +253,10 @@ class EnhancedDialogManager:
             await self._update_state(session, 'START', {})
 
         elif state == 'CONSULTATION_TOPIC':
-            consultation = await sync_to_async(self.ai.generate_consultation)(text)
+            consultation = await sync_to_async(
+                self.ai.generate_consultation,
+                thread_sensitive=False
+            )(text)
             if self.ai.consume_quota_error():
                 return self._quota_response()
             response['text'] = consultation
@@ -274,7 +298,10 @@ class EnhancedDialogManager:
                 logger.warning("⚠️ ffmpeg/ffprobe not found, using OGG directly")
 
             # 3. Транскрибация
-            text = await sync_to_async(self.ai.transcribe_audio)(audio_bytes, mime_type)
+            text = await sync_to_async(
+                self.ai.transcribe_audio,
+                thread_sensitive=False
+            )(audio_bytes, mime_type)
 
             if text == "__QUOTA_EXCEEDED__":
                 return {

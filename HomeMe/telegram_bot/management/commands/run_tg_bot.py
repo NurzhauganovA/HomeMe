@@ -68,7 +68,7 @@ class Command(BaseCommand):
             return
 
         # Инициализация
-        application = ApplicationBuilder().token(token).build()
+        application = ApplicationBuilder().token(token).concurrent_updates(16).build()
 
         application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
