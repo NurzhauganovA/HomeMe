@@ -1,0 +1,509 @@
+{
+    "placements": [
+        {
+            "realEstateUUID": "32453f14-664f-11ed-a82b-001dd8b726aa",
+            "uuid": "13889b6d-6092-466a-971c-ab3d9b7a5fbf",
+            "roomCount": 1,
+            "name": "2",
+            "square": 71.66,
+            "floor": 1,
+            "entrance": 4,
+            "priceBySquare": 855000,
+            "maxFloor": 9,
+            "deadLine": "2026-10-30",
+            "blockName": "Aisar - 4",
+            "blockId": "4bd49572-ad9a-11eb-a824-001dd8b726aa",
+            "totalPrice": 61269300,
+            "repairPrice": null,
+            "repairSum": 0,
+            "totalPriceWithDiscount": 61269300,
+            "discountPercent": null,
+            "groupTypeId": 1,
+            "isFavorite": null,
+            "fgjs": 0,
+            "isRepaired": false,
+            "propertyType": {
+                "uuid": "f25589d6-e6f4-43b9-beac-d6698f86b0a3",
+                "name": "Офис"
+            },
+            "discount": {
+                "stock": {
+                    "type": "biClub",
+                    "data": [
+                        {
+                            "percent": 11.0,
+                            "priceWithDiscount": 54529677,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 6739623,
+                            "type": "Platinum"
+                        },
+                        {
+                            "percent": 10.0,
+                            "priceWithDiscount": 55142370,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 6126930,
+                            "type": "Gold +"
+                        },
+                        {
+                            "percent": 9.0,
+                            "priceWithDiscount": 55755063,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 5514237,
+                            "type": "Gold"
+                        },
+                        {
+                            "percent": 8.0,
+                            "priceWithDiscount": 56367756,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 4901544,
+                            "type": "Silver +"
+                        },
+                        {
+                            "percent": 7.0,
+                            "priceWithDiscount": 56980449,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 4288851,
+                            "type": "Silver"
+                        },
+                        {
+                            "percent": 6.0,
+                            "priceWithDiscount": 57593142,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 3676158,
+                            "type": "Bronze +"
+                        },
+                        {
+                            "percent": 5.0,
+                            "priceWithDiscount": 58205835,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 3063465,
+                            "type": "Bronze"
+                        }
+                    ]
+                }
+            },
+            "placementStatusName": "Снятие резерва",
+            "placementStatusId": "1a85b7ab-7adc-11e9-a831-00155d10652c",
+            "individualBooking": null,
+            "liquidityId": null,
+            "placement3dTour": null,
+            "realEstateName": "Aisar",
+            "kitchenSquare": null,
+            "balconySquare": 0.0,
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "heightOfWall": "Не менее 3,0 м",
+            "window": null,
+            "isCorner": false,
+            "masterBedroom": null,
+            "wardrobe": null,
+            "isStudio": false,
+            "isSale": true,
+            "blockAddress": "РК, Астана г., район Есиль, улица Е321, участок №4",
+            "numberSides": "",
+            "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+            "stock": {
+                "stockId": "0db03842-1e42-4cfb-a8c9-23876d76a6f7",
+                "stockName": "BI Club офисы",
+                "stockDeadline": "2027-01-01T17:59:59.000+00:00"
+            },
+            "photoURL1600": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/13889b6d-6092-466a-971c-ab3d9b7a5fbf/2_1600.png",
+            "photoURL200": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/13889b6d-6092-466a-971c-ab3d9b7a5fbf/2_200.png",
+            "photoURL400": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/13889b6d-6092-466a-971c-ab3d9b7a5fbf/2_400.png"
+        },
+        {
+            "realEstateUUID": "32453f14-664f-11ed-a82b-001dd8b726aa",
+            "uuid": "5fb039c6-1825-4c93-ade2-1e13a733d552",
+            "roomCount": 1,
+            "name": "3",
+            "square": 88.0,
+            "floor": 1,
+            "entrance": 3,
+            "priceBySquare": 840000,
+            "maxFloor": 9,
+            "deadLine": "2026-10-30",
+            "blockName": "Aisar - 4",
+            "blockId": "4bd49572-ad9a-11eb-a824-001dd8b726aa",
+            "totalPrice": 73920000,
+            "repairPrice": null,
+            "repairSum": 0,
+            "totalPriceWithDiscount": 73920000,
+            "discountPercent": null,
+            "groupTypeId": 1,
+            "isFavorite": null,
+            "fgjs": 0,
+            "isRepaired": false,
+            "propertyType": {
+                "uuid": "f25589d6-e6f4-43b9-beac-d6698f86b0a3",
+                "name": "Офис"
+            },
+            "discount": {
+                "stock": {
+                    "type": "biClub",
+                    "data": [
+                        {
+                            "percent": 11.0,
+                            "priceWithDiscount": 65788800,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 8131200,
+                            "type": "Platinum"
+                        },
+                        {
+                            "percent": 10.0,
+                            "priceWithDiscount": 66528000,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 7392000,
+                            "type": "Gold +"
+                        },
+                        {
+                            "percent": 9.0,
+                            "priceWithDiscount": 67267200,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 6652800,
+                            "type": "Gold"
+                        },
+                        {
+                            "percent": 8.0,
+                            "priceWithDiscount": 68006400,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 5913600,
+                            "type": "Silver +"
+                        },
+                        {
+                            "percent": 7.0,
+                            "priceWithDiscount": 68745600,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 5174400,
+                            "type": "Silver"
+                        },
+                        {
+                            "percent": 6.0,
+                            "priceWithDiscount": 69484800,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 4435200,
+                            "type": "Bronze +"
+                        },
+                        {
+                            "percent": 5.0,
+                            "priceWithDiscount": 70224000,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 3696000,
+                            "type": "Bronze"
+                        }
+                    ]
+                }
+            },
+            "placementStatusName": "Снятие резерва",
+            "placementStatusId": "1a85b7ab-7adc-11e9-a831-00155d10652c",
+            "individualBooking": null,
+            "liquidityId": null,
+            "placement3dTour": null,
+            "realEstateName": "Aisar",
+            "kitchenSquare": null,
+            "balconySquare": 0.0,
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "heightOfWall": "Не менее 3,0 м",
+            "window": null,
+            "isCorner": false,
+            "masterBedroom": null,
+            "wardrobe": null,
+            "isStudio": false,
+            "isSale": true,
+            "blockAddress": "РК, Астана г., район Есиль, улица Е321, участок №4",
+            "numberSides": "",
+            "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+            "stock": {
+                "stockId": "0db03842-1e42-4cfb-a8c9-23876d76a6f7",
+                "stockName": "BI Club офисы",
+                "stockDeadline": "2027-01-01T17:59:59.000+00:00"
+            },
+            "photoURL1600": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/5fb039c6-1825-4c93-ade2-1e13a733d552/3_1600.png",
+            "photoURL200": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/5fb039c6-1825-4c93-ade2-1e13a733d552/3_200.png",
+            "photoURL400": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/5fb039c6-1825-4c93-ade2-1e13a733d552/3_400.png"
+        },
+        {
+            "realEstateUUID": "32453f14-664f-11ed-a82b-001dd8b726aa",
+            "uuid": "3c84a5c2-f823-4ec1-9b72-4ac03d90df87",
+            "roomCount": 1,
+            "name": "4",
+            "square": 119.11,
+            "floor": 1,
+            "entrance": 3,
+            "priceBySquare": 855000,
+            "maxFloor": 9,
+            "deadLine": "2026-10-30",
+            "blockName": "Aisar - 4",
+            "blockId": "4bd49572-ad9a-11eb-a824-001dd8b726aa",
+            "totalPrice": 101839050,
+            "repairPrice": null,
+            "repairSum": 0,
+            "totalPriceWithDiscount": 101839050,
+            "discountPercent": null,
+            "groupTypeId": 1,
+            "isFavorite": null,
+            "fgjs": 0,
+            "isRepaired": false,
+            "propertyType": {
+                "uuid": "f25589d6-e6f4-43b9-beac-d6698f86b0a3",
+                "name": "Офис"
+            },
+            "discount": {
+                "stock": {
+                    "type": "biClub",
+                    "data": [
+                        {
+                            "percent": 11.0,
+                            "priceWithDiscount": 90636754,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 11202296,
+                            "type": "Platinum"
+                        },
+                        {
+                            "percent": 10.0,
+                            "priceWithDiscount": 91655145,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 10183905,
+                            "type": "Gold +"
+                        },
+                        {
+                            "percent": 9.0,
+                            "priceWithDiscount": 92673535,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 9165515,
+                            "type": "Gold"
+                        },
+                        {
+                            "percent": 8.0,
+                            "priceWithDiscount": 93691926,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 8147124,
+                            "type": "Silver +"
+                        },
+                        {
+                            "percent": 7.0,
+                            "priceWithDiscount": 94710316,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 7128734,
+                            "type": "Silver"
+                        },
+                        {
+                            "percent": 6.0,
+                            "priceWithDiscount": 95728707,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 6110343,
+                            "type": "Bronze +"
+                        },
+                        {
+                            "percent": 5.0,
+                            "priceWithDiscount": 96747097,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 5091953,
+                            "type": "Bronze"
+                        }
+                    ]
+                }
+            },
+            "placementStatusName": "Снятие резерва",
+            "placementStatusId": "1a85b7ab-7adc-11e9-a831-00155d10652c",
+            "individualBooking": null,
+            "liquidityId": null,
+            "placement3dTour": null,
+            "realEstateName": "Aisar",
+            "kitchenSquare": null,
+            "balconySquare": 0.0,
+            "propertyClassName": [
+                "Комфорт+"
+            ],
+            "heightOfWall": "Не менее 3,0 м",
+            "window": null,
+            "isCorner": false,
+            "masterBedroom": null,
+            "wardrobe": null,
+            "isStudio": false,
+            "isSale": true,
+            "blockAddress": "РК, Астана г., район Есиль, улица Е321, участок №4",
+            "numberSides": "",
+            "squareUnit": "baec1529-be26-11e7-aa91-5cb9019dbd39",
+            "stock": {
+                "stockId": "0db03842-1e42-4cfb-a8c9-23876d76a6f7",
+                "stockName": "BI Club офисы",
+                "stockDeadline": "2027-01-01T17:59:59.000+00:00"
+            },
+            "photoURL1600": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/3c84a5c2-f823-4ec1-9b72-4ac03d90df87/4_1600.png",
+            "photoURL200": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/3c84a5c2-f823-4ec1-9b72-4ac03d90df87/4_200.png",
+            "photoURL400": "https://s3.bi.group/crm-clients-e1csales/layouts/4bd49572-ad9a-11eb-a824-001dd8b726aa/3c84a5c2-f823-4ec1-9b72-4ac03d90df87/4_400.png"
+        },
+        {
+            "realEstateUUID": "32453f14-664f-11ed-a82b-001dd8b726aa",
+            "uuid": "0638838c-187b-403f-8fbe-06a35db7799c",
+            "roomCount": 1,
+            "name": "11",
+            "square": 113.57,
+            "floor": 1,
+            "entrance": 1,
+            "priceBySquare": 820000,
+            "maxFloor": 1,
+            "deadLine": "2026-10-30",
+            "blockName": "Aisar - 4 - Паркинг",
+            "blockId": "56427054-15f7-466a-be28-0423c88ea7cf",
+            "totalPrice": 93127400,
+            "repairPrice": null,
+            "repairSum": 0,
+            "totalPriceWithDiscount": 93127400,
+            "discountPercent": null,
+            "groupTypeId": 1,
+            "isFavorite": null,
+            "fgjs": 0,
+            "isRepaired": false,
+            "propertyType": {
+                "uuid": "f25589d6-e6f4-43b9-beac-d6698f86b0a3",
+                "name": "Офис"
+            },
+            "discount": {
+                "stock": {
+                    "type": "biClub",
+                    "data": [
+                        {
+                            "percent": 11.0,
+                            "priceWithDiscount": 82883386,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 10244014,
+                            "type": "Platinum"
+                        },
+                        {
+                            "percent": 10.0,
+                            "priceWithDiscount": 83814660,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 9312740,
+                            "type": "Gold +"
+                        },
+                        {
+                            "percent": 9.0,
+                            "priceWithDiscount": 84745934,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 8381466,
+                            "type": "Gold"
+                        },
+                        {
+                            "percent": 8.0,
+                            "priceWithDiscount": 85677208,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 7450192,
+                            "type": "Silver +"
+                        },
+                        {
+                            "percent": 7.0,
+                            "priceWithDiscount": 86608482,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 6518918,
+                            "type": "Silver"
+                        },
+                        {
+                            "percent": 6.0,
+                            "priceWithDiscount": 87539756,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 5587644,
+                            "type": "Bronze +"
+                        },
+                        {
+                            "percent": 5.0,
+                            "priceWithDiscount": 88471030,
+                            "limit": null,
+                            "roomLimit": null,
+                            "name": "BI Club офисы",
+                            "discountSum": 4656370,
+                            "type": "Bronze"
+                        }
+                    ]
+                }
+            },
+            "placementStatusName": "Снятие резерва",
+            "placementStatusId": "1a85b7ab-7adc-11e9-a831-00155d10652c",
+            "individualBooking": null,
+            "liquidityId": "607f5cfd-e32a-4260-a00f-aadb5c80467e",
+            "placement3dTour": null,
+            "realEstateName": "Aisar",
+            "kitchenSquare": null,
+            "balconySquare": 0.0,
+            "propertyClassName": [
+                "Комфорт"
+            ],
+            "heightOfWall": "3,25",
+            "window": null,
+            "isCorner": false,
+            "masterBedroom": null,
+            "wardrobe": null,
+            "isStudio": false,
+            "isSale": true,
+            "blockAddress": "РК, Астана г., район Есиль, улица Е321, участок №4",
+            "numberSides": "",
+            "squareUnit": "00000000-0000-0000-0000-000000000000",
+            "stock": {
+                "stockId": "0db03842-1e42-4cfb-a8c9-23876d76a6f7",
+                "stockName": "BI Club офисы",
+                "stockDeadline": "2027-01-01T17:59:59.000+00:00"
+            },
+            "photoURL1600": "https://s3.bi.group/crm-clients-e1csales/layouts/56427054-15f7-466a-be28-0423c88ea7cf/0638838c-187b-403f-8fbe-06a35db7799c/11_1600.png",
+            "photoURL200": "https://s3.bi.group/crm-clients-e1csales/layouts/56427054-15f7-466a-be28-0423c88ea7cf/0638838c-187b-403f-8fbe-06a35db7799c/11_200.png",
+            "photoURL400": "https://s3.bi.group/crm-clients-e1csales/layouts/56427054-15f7-466a-be28-0423c88ea7cf/0638838c-187b-403f-8fbe-06a35db7799c/11_400.png"
+        }
+    ],
+    "parkingSchemes": null
+}
