@@ -278,6 +278,47 @@ class EnhancedSearchService:
 
         return results
 
+    def intelligent_search_mixed(self, params: Dict, bi_offset: int = 0, secondary_offset: int = 0,
+                                 limit: int = 5) -> tuple:
+        """
+        Смешанная выдача с фиксированным соотношением (3 BI / 2 вторички).
+        Возвращает: (results, new_bi_offset, new_secondary_offset)
+        """
+        bi_limit = 3
+        sec_limit = 2
+
+        bi_params = dict(params)
+        bi_params['source'] = 'bi'
+
+        sec_params = dict(params)
+        sec_params['source'] = 'secondary'
+
+        bi_results = self.intelligent_search(bi_params, offset=bi_offset, limit=bi_limit)
+        sec_results = self.intelligent_search(sec_params, offset=secondary_offset, limit=sec_limit)
+
+        if len(sec_results) < sec_limit:
+            extra = sec_limit - len(sec_results)
+            if extra > 0:
+                extra_bi = self.intelligent_search(
+                    bi_params,
+                    offset=bi_offset + len(bi_results),
+                    limit=extra
+                )
+                bi_results.extend(extra_bi)
+
+        if len(bi_results) < bi_limit:
+            extra = bi_limit - len(bi_results)
+            if extra > 0:
+                extra_sec = self.intelligent_search(
+                    sec_params,
+                    offset=secondary_offset + len(sec_results),
+                    limit=extra
+                )
+                sec_results.extend(extra_sec)
+
+        results = bi_results + sec_results
+        return results, bi_offset + len(bi_results), secondary_offset + len(sec_results)
+
     @staticmethod
     def _normalize_coords(coords):
         if not coords:

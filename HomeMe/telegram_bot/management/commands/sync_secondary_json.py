@@ -125,27 +125,27 @@ class Command(BaseCommand):
                 defaults=defaults
             )
 
-            # Геокодирование по адресу (если нет координат)
-            if do_geocode and (obj.latitude is None or obj.longitude is None):
-                if address:
-                    if address in geo_cache:
-                        coords = geo_cache[address]
-                    else:
-                        coords = self._resolve_coordinates(location_resolver, address, obj.city)
-                        geo_cache[address] = coords
-
-                    if coords:
-                        obj.latitude = coords[0]
-                        obj.longitude = coords[1]
-                        obj.save(update_fields=["latitude", "longitude"])
-
-            # Эмбеддинг (если отсутствует)
-            if do_embed and obj.embedding is None:
-                text = obj.get_full_text()
-                embedding = ai_service.get_embedding(text) if ai_service else None
-                if embedding:
-                    obj.embedding = embedding
-                    obj.save(update_fields=["embedding"])
+            # # Геокодирование по адресу (если нет координат)
+            # if do_geocode and (obj.latitude is None or obj.longitude is None):
+            #     if address:
+            #         if address in geo_cache:
+            #             coords = geo_cache[address]
+            #         else:
+            #             coords = self._resolve_coordinates(location_resolver, address, obj.city)
+            #             geo_cache[address] = coords
+            #
+            #         if coords:
+            #             obj.latitude = coords[0]
+            #             obj.longitude = coords[1]
+            #             obj.save(update_fields=["latitude", "longitude"])
+            #
+            # # Эмбеддинг (если отсутствует)
+            # if do_embed and obj.embedding is None:
+            #     text = obj.get_full_text()
+            #     embedding = ai_service.get_embedding(text) if ai_service else None
+            #     if embedding:
+            #         obj.embedding = embedding
+            #         obj.save(update_fields=["embedding"])
 
             if was_created:
                 created += 1

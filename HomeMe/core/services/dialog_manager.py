@@ -126,6 +126,24 @@ class EnhancedDialogManager:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
                         response['buttons'] = ['Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                elif params.get('source') == 'mixed':
+                    params['bi_offset'] = 0
+                    params['secondary_offset'] = 0
+                    results, new_bi_offset, new_secondary_offset = await sync_to_async(
+                        self.search.intelligent_search_mixed,
+                        thread_sensitive=False
+                    )(params, bi_offset=0, secondary_offset=0)
+                    if results:
+                        params['bi_offset'] = new_bi_offset
+                        params['secondary_offset'] = new_secondary_offset
+                        await self._update_state(session, 'BROWSING', params)
+                        response['text'] = self._format_intro(results, params)
+                        response['objects'] = results
+                        response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                    else:
+                        await self._update_state(session, 'NO_RESULTS', params)
+                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
+                        response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
                 else:
                     results = await sync_to_async(
                         self.search.intelligent_search,
@@ -177,14 +195,9 @@ class EnhancedDialogManager:
                 response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
 
         elif state == 'SETTING_BUDGET':
-            extracted = await sync_to_async(
-                self.ai.extract_search_parameters,
-                thread_sensitive=False
-            )(text)
-            if self.ai.consume_quota_error():
-                return self._quota_response()
-            if extracted.get('max_price') or extracted.get('min_price'):
-                params.update(extracted)
+            parsed_budget = self._parse_budget_text(text)
+            if parsed_budget.get('max_price') or parsed_budget.get('min_price'):
+                params.update(parsed_budget)
                 if params.get('bi_category') == 'commercial':
                     await self._update_state(session, 'SETTING_AREA', params)
                     response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
@@ -302,6 +315,37 @@ class EnhancedDialogManager:
                             "Варианты действий:"
                         )
                 response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+            elif params.get('source') == 'mixed':
+                params['bi_offset'] = 0
+                params['secondary_offset'] = 0
+                results, new_bi_offset, new_secondary_offset = await sync_to_async(
+                    self.search.intelligent_search_mixed,
+                    thread_sensitive=False
+                )(params, bi_offset=0, secondary_offset=0)
+
+                if results:
+                    params['bi_offset'] = new_bi_offset
+                    params['secondary_offset'] = new_secondary_offset
+                    await self._update_state(session, 'BROWSING', params)
+
+                    response['text'] = self._format_intro(results, params)
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                else:
+                    await self._update_state(session, 'NO_RESULTS', params)
+                    if params.get('coordinates'):
+                        location_label = params.get('embedding_text', 'указанной локации')
+                        response['text'] = (
+                            f"Не удалось найти объекты рядом с \"{location_label}\" "
+                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    else:
+                        response['text'] = (
+                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
             else:
                 results = await sync_to_async(
                     self.search.intelligent_search,
@@ -400,24 +444,46 @@ class EnhancedDialogManager:
 
         elif state == 'BROWSING':
             if text.lower() in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
-                current_offset = params.get('offset', 0)
+                if params.get('source') == 'mixed':
+                    results, new_bi_offset, new_secondary_offset = await sync_to_async(
+                        self.search.intelligent_search_mixed,
+                        thread_sensitive=False
+                    )(
+                        params,
+                        bi_offset=params.get('bi_offset', 0),
+                        secondary_offset=params.get('secondary_offset', 0)
+                    )
 
-                # Поиск следующей страницы
-                results = await sync_to_async(
-                    self.search.intelligent_search,
-                    thread_sensitive=False
-                )(params, offset=current_offset)
+                    if results:
+                        params['bi_offset'] = new_bi_offset
+                        params['secondary_offset'] = new_secondary_offset
+                        await self._update_state(session, 'BROWSING', params)
 
-                if results:
-                    params['offset'] = current_offset + len(results)
-                    await self._update_state(session, 'BROWSING', params)
-
-                    response['text'] = "Вот еще варианты: 👇"
-                    response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                        response['text'] = "Вот еще варианты: 👇"
+                        response['objects'] = results
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                    else:
+                        response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
+                        response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
                 else:
-                    response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
-                    response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
+                    current_offset = params.get('offset', 0)
+
+                    # Поиск следующей страницы
+                    results = await sync_to_async(
+                        self.search.intelligent_search,
+                        thread_sensitive=False
+                    )(params, offset=current_offset)
+
+                    if results:
+                        params['offset'] = current_offset + len(results)
+                        await self._update_state(session, 'BROWSING', params)
+
+                        response['text'] = "Вот еще варианты: 👇"
+                        response['objects'] = results
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                    else:
+                        response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
+                        response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
 
             elif 'бюджет' in text.lower() or 'параметр' in text.lower():
                 await self._update_state(session, 'SETTING_BUDGET', params)
@@ -687,6 +753,53 @@ class EnhancedDialogManager:
             return int(text.strip())
         except Exception:
             return None
+
+    @staticmethod
+    def _parse_budget_text(text: str):
+        """
+        Парсинг бюджета без AI.
+        Поддержка: "до X млн", "от X млн", "X+ млн", "X-Y млн", "X млн".
+        """
+        if not text:
+            return {}
+
+        cleaned = text.lower().replace("млн", "").replace("миллион", "").replace("миллиона", "").replace("миллионов", "")
+        cleaned = cleaned.replace(" ", "")
+
+        def to_amount(value: str):
+            try:
+                value = value.replace(",", ".")
+                return float(value) * 1_000_000
+            except Exception:
+                return None
+
+        if "-" in cleaned:
+            parts = cleaned.split("-", 1)
+            min_v = to_amount(parts[0])
+            max_v = to_amount(parts[1])
+            if min_v or max_v:
+                return {"min_price": min_v, "max_price": max_v}
+
+        if cleaned.startswith("до"):
+            max_v = to_amount(cleaned.replace("до", ""))
+            if max_v:
+                return {"max_price": max_v}
+
+        if cleaned.startswith("от"):
+            min_v = to_amount(cleaned.replace("от", ""))
+            if min_v:
+                return {"min_price": min_v}
+
+        if cleaned.endswith("+"):
+            min_v = to_amount(cleaned[:-1])
+            if min_v:
+                return {"min_price": min_v}
+
+        value = to_amount(cleaned)
+        if value:
+            return {"max_price": value}
+
+        return {}
 
     @staticmethod
     def _merge_complex_candidates(existing, new_items):
