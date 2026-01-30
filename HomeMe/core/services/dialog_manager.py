@@ -217,15 +217,9 @@ class EnhancedDialogManager:
             elif any(word in lowered_text for word in ['офис', 'кабинет', 'помещение', 'retail', 'стрит']):
                 params['bi_scope'] = 'unit'
 
-            extracted = await sync_to_async(
-                self.ai.extract_search_parameters,
-                thread_sensitive=False
-            )(text)
-            if self.ai.consume_quota_error():
-                return self._quota_response()
-
-            if extracted.get('min_area') or extracted.get('max_area'):
-                params.update(extracted)
+            parsed_area = self._parse_area_text(text)
+            if parsed_area.get('min_area') or parsed_area.get('max_area'):
+                params.update(parsed_area)
             elif 'не важно' in lowered_text:
                 params.pop('min_area', None)
                 params.pop('max_area', None)
@@ -798,6 +792,55 @@ class EnhancedDialogManager:
         value = to_amount(cleaned)
         if value:
             return {"max_price": value}
+
+        return {}
+
+    @staticmethod
+    def _parse_area_text(text: str):
+        """
+        Парсинг площади без AI.
+        Поддержка: "до X м2", "от X м2", "X+ м2", "X-Y м2", "X м2".
+        """
+        if not text:
+            return {}
+
+        cleaned = text.lower()
+        for token in ["м2", "м²", "квм", "кв.м", "кв. м", "м", "метр", "метров", "метра"]:
+            cleaned = cleaned.replace(token, "")
+        cleaned = cleaned.replace(" ", "")
+
+        def to_value(value: str):
+            try:
+                value = value.replace(",", ".")
+                return float(value)
+            except Exception:
+                return None
+
+        if "-" in cleaned:
+            parts = cleaned.split("-", 1)
+            min_v = to_value(parts[0])
+            max_v = to_value(parts[1])
+            if min_v or max_v:
+                return {"min_area": min_v, "max_area": max_v}
+
+        if cleaned.startswith("до"):
+            max_v = to_value(cleaned.replace("до", ""))
+            if max_v:
+                return {"max_area": max_v}
+
+        if cleaned.startswith("от"):
+            min_v = to_value(cleaned.replace("от", ""))
+            if min_v:
+                return {"min_area": min_v}
+
+        if cleaned.endswith("+"):
+            min_v = to_value(cleaned[:-1])
+            if min_v:
+                return {"min_area": min_v}
+
+        value = to_value(cleaned)
+        if value:
+            return {"max_area": value}
 
         return {}
 
