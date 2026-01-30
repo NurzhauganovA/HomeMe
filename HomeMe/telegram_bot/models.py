@@ -509,6 +509,7 @@ class BaseBIUnit(models.Model):
     block_name = models.CharField("Блок/Секция", max_length=100, blank=True)
     deadline = models.CharField("Срок сдачи секции", max_length=50, blank=True)
     is_active = models.BooleanField(default=True)
+    photos = models.JSONField("Фотографии", default=list, blank=True)
 
     class Meta:
         abstract = True

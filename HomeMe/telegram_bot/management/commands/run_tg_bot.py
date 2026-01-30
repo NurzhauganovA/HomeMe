@@ -7,7 +7,14 @@ import os
 import logging
 import asyncio
 from django.core.management.base import BaseCommand
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    InputMediaPhoto
+)
 from telegram.ext import (
     ApplicationBuilder,
     ContextTypes,
@@ -282,7 +289,33 @@ class Command(BaseCommand):
                 reply_markup = InlineKeyboardMarkup(inline_keyboard)
 
                 # Отправляем с фото или без
-                if obj.image_url:
+                image_urls = getattr(obj, "image_urls", None) or []
+                if image_urls:
+                    try:
+                        media_group = []
+                        max_photos = 5
+                        for i, url in enumerate(image_urls[:max_photos]):
+                            if i == 0:
+                                media_group.append(InputMediaPhoto(media=url, caption=msg, parse_mode=ParseMode.HTML))
+                            else:
+                                media_group.append(InputMediaPhoto(media=url))
+
+                        await update.message.reply_media_group(media_group)
+                        await update.message.reply_text(
+                            "Выберите действие:",
+                            parse_mode=ParseMode.HTML,
+                            reply_markup=reply_markup,
+                            disable_web_page_preview=False
+                        )
+                    except Exception as e:
+                        logger.warning(f"⚠️ Failed to send media group: {e}")
+                        await update.message.reply_text(
+                            msg,
+                            parse_mode=ParseMode.HTML,
+                            reply_markup=reply_markup,
+                            disable_web_page_preview=False
+                        )
+                elif obj.image_url:
                     try:
                         await update.message.reply_photo(
                             obj.image_url,

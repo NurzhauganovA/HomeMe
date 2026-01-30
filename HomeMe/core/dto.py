@@ -30,6 +30,7 @@ class PropertyDTO:
     description: str = ""
     url: str = ""
     image_url: str = ""
+    image_urls: List[str] = field(default_factory=list)
 
     # Дополнительные метаданные
     total_floors: Optional[int] = None
@@ -169,6 +170,7 @@ class PropertyDTO:
             "description": self.description,
             "url": self.url,
             "image_url": self.image_url,
+            "image_urls": self.image_urls,
             "latitude": self.latitude,
             "longitude": self.longitude,
             "district": self.district,

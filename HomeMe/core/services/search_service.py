@@ -23,6 +23,121 @@ class EnhancedSearchService:
         self.ai_service = ai_service
         self.city_map = EnhancedBIGroupClient.CITY_MAP
 
+    def search_complexes(self, params: Dict, offset: int = 0, limit: int = 5):
+        """
+        Возвращает список комплексов (ЖК/БЦ) по фильтрам.
+        Для коммерции учитывает bi_scope: unit/complex/both.
+        """
+        source = params.get('source', 'mixed')
+        if source not in ['bi', 'mixed']:
+            return []
+
+        bi_category = params.get('bi_category', 'residential')
+        bi_scope = params.get('bi_scope', 'both')
+        embedding_text = params.get('embedding_text', '').lower()
+
+        coords = params.get('coordinates')
+        radius_km = params.get('radius_km', 3.0)
+
+        query_vector = self.ai_service.get_embedding(embedding_text) if embedding_text else None
+
+        complex_filters = Q()
+        lat, lon = self._normalize_coords(coords)
+        if lat is not None and lon is not None:
+            lat_delta = radius_km / 111.0
+            lon_delta = radius_km / (111.0 * math.cos(math.radians(lat)))
+            complex_filters &= Q(
+                latitude__range=(lat - lat_delta, lat + lat_delta),
+                longitude__range=(lon - lon_delta, lon + lon_delta)
+            )
+
+        if 'левый' in embedding_text or 'left' in embedding_text:
+            complex_filters &= Q(features__side='Left')
+        elif 'правый' in embedding_text or 'right' in embedding_text:
+            complex_filters &= Q(features__side='Right')
+
+        if params.get('city'):
+            city_uuid = self.city_map.get(params['city'])
+            if city_uuid:
+                complex_filters &= Q(city_uuid=city_uuid)
+
+        complex_model = BIComplex
+        unit_model = BIUnit
+        if bi_category == 'commercial':
+            complex_model = BICommercialComplex
+            unit_model = BICommercialUnit
+
+        queryset = complex_model.objects.filter(complex_filters)
+        if query_vector:
+            queryset = queryset.alias(
+                distance=CosineDistance('embedding', query_vector)
+            ).order_by('distance')
+
+        results = []
+        for comp in queryset[offset: offset + limit + 10]:
+            if bi_category == 'commercial' and bi_scope in ['complex']:
+                if self._complex_matches_filters(comp, params):
+                    results.append(comp)
+            else:
+                units = unit_model.objects.filter(complex=comp, is_active=True)
+                if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
+                if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+                if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
+                if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
+                if units.exists():
+                    results.append(comp)
+
+            if len(results) >= limit:
+                break
+
+        return results
+
+    def search_units_for_complex(self, params: Dict, complex_id: str, offset: int = 0, limit: int = 5) -> List[PropertyDTO]:
+        """
+        Возвращает список юнитов (квартиры/помещения) по выбранному комплексу.
+        """
+        bi_category = params.get('bi_category', 'residential')
+
+        if bi_category == 'commercial':
+            complex_model = BICommercialComplex
+            unit_model = BICommercialUnit
+            mapper = self._map_bi_commercial_to_dto
+        else:
+            complex_model = BIComplex
+            unit_model = BIUnit
+            mapper = self._map_bi_to_dto
+
+        comp = complex_model.objects.filter(id=complex_id).first()
+        if not comp:
+            return []
+
+        units = unit_model.objects.filter(complex=comp, is_active=True)
+        if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
+        if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+        if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+        if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
+        if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
+
+        results = []
+        for unit in units.order_by('price')[offset: offset + limit]:
+            results.append(mapper(unit, comp))
+
+        return results
+
+    def map_complexes_to_dto(self, params: Dict, complexes: List) -> List[PropertyDTO]:
+        bi_category = params.get('bi_category', 'residential')
+        results = []
+
+        if bi_category == 'commercial':
+            for comp in complexes:
+                results.append(self._map_bi_commercial_complex_to_dto(comp))
+            return results
+
+        for comp in complexes:
+            results.append(self._map_bi_residential_complex_to_dto(comp))
+        return results
+
     def intelligent_search(self, params: Dict, offset: int = 0, limit: int = 5) -> List[PropertyDTO]:
         """
         Умный поиск с фильтрацией по AI-тегам и группировкой по ЖК.
@@ -185,6 +300,9 @@ class EnhancedSearchService:
 
         desc = f"📍 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
 
+        photos = unit.photos or []
+        primary_photo = photos[0] if photos else comp.image_url
+
         return PropertyDTO(
             source="bi_group",
             title=f"ЖК {comp.name}",
@@ -196,7 +314,8 @@ class EnhancedSearchService:
             total_floors=unit.max_floor,
             description=desc,
             url=comp.url,
-            image_url=comp.image_url,
+            image_url=primary_photo,
+            image_urls=photos,
             latitude=comp.latitude,
             longitude=comp.longitude,
         )
@@ -210,6 +329,9 @@ class EnhancedSearchService:
 
         desc = f"🏢 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
 
+        photos = unit.photos or []
+        primary_photo = photos[0] if photos else comp.image_url
+
         return PropertyDTO(
             source="bi_group",
             title=f"БЦ {comp.name}",
@@ -221,7 +343,8 @@ class EnhancedSearchService:
             total_floors=unit.max_floor,
             description=desc,
             url=comp.url,
-            image_url=comp.image_url,
+            image_url=primary_photo,
+            image_urls=photos,
             latitude=comp.latitude,
             longitude=comp.longitude,
         )
@@ -241,6 +364,34 @@ class EnhancedSearchService:
         return PropertyDTO(
             source="bi_group",
             title=f"БЦ {comp.name}",
+            address=comp.address,
+            price=price,
+            rooms=0,
+            area=area,
+            floor=0,
+            total_floors=None,
+            description=desc,
+            url=comp.url,
+            image_url=comp.image_url,
+            latitude=comp.latitude,
+            longitude=comp.longitude,
+        )
+
+    def _map_bi_residential_complex_to_dto(self, comp: BIComplex) -> PropertyDTO:
+        features = comp.features or {}
+        side = "Левый" if features.get('side') == 'Left' else "Правый"
+        district = features.get('district_name', '')
+        tags_list = features.get('tags', [])
+        tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
+
+        desc = f"📍 {side} берег | {district}\n✨ {tags}\nЖК (комплекс)"
+
+        price = float(comp.min_price) if comp.min_price else 0.0
+        area = comp.min_area or 0.0
+
+        return PropertyDTO(
+            source="bi_group",
+            title=f"ЖК {comp.name}",
             address=comp.address,
             price=price,
             rooms=0,

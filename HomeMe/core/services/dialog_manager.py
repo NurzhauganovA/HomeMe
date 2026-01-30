@@ -89,20 +89,45 @@ class EnhancedDialogManager:
                 params['offset'] = 0
                 params['city'] = 'Astana'
 
-                results = await sync_to_async(
-                    self.search.intelligent_search,
-                    thread_sensitive=False
-                )(params, offset=0)
-                if results:
-                    params['offset'] = len(results)
-                    await self._update_state(session, 'BROWSING', params)
-                    response['text'] = self._format_intro(results, params)
-                    response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                if params.get('source') == 'bi':
+                    complex_offset = params.get('complex_offset', 0)
+                    complexes = await sync_to_async(
+                        self.search.search_complexes,
+                        thread_sensitive=False
+                    )(params, offset=complex_offset, limit=5)
+
+                    if complexes:
+                        params['complex_offset'] = complex_offset + len(complexes)
+                        response['objects'] = await sync_to_async(
+                            self.search.map_complexes_to_dto,
+                            thread_sensitive=False
+                        )(params, complexes)
+                        params['complex_candidates'] = self._merge_complex_candidates(
+                            params.get('complex_candidates'),
+                            self._serialize_complexes(complexes)
+                        )
+                        await self._update_state(session, 'COMPLEX_RESULTS', params)
+                        response['text'] = self._format_complexes_intro(params)
+                        response['buttons'] = self._complex_action_buttons(params)
+                    else:
+                        await self._update_state(session, 'NO_RESULTS', params)
+                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
+                        response['buttons'] = ['Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
                 else:
-                    await self._update_state(session, 'NO_RESULTS', params)
-                    response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                    response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                    results = await sync_to_async(
+                        self.search.intelligent_search,
+                        thread_sensitive=False
+                    )(params, offset=0)
+                    if results:
+                        params['offset'] = len(results)
+                        await self._update_state(session, 'BROWSING', params)
+                        response['text'] = self._format_intro(results, params)
+                        response['objects'] = results
+                        response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                    else:
+                        await self._update_state(session, 'NO_RESULTS', params)
+                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
+                        response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
             else:
                 return self._scenario_start(user.name)
@@ -226,35 +251,136 @@ class EnhancedDialogManager:
             params['city'] = 'Astana'  # Hardcode MVP
 
             # ЗАПУСК ПОИСКА
-            results = await sync_to_async(
-                self.search.intelligent_search,
-                thread_sensitive=False
-            )(params, offset=0)
+            if params.get('source') == 'bi':
+                complex_offset = params.get('complex_offset', 0)
+                complexes = await sync_to_async(
+                    self.search.search_complexes,
+                    thread_sensitive=False
+                )(params, offset=complex_offset, limit=5)
 
-            if results:
-                # Увеличиваем offset на длину полученных результатов
-                params['offset'] = len(results)
-                await self._update_state(session, 'BROWSING', params)
-
-                response['text'] = self._format_intro(results, params)
-                response['objects'] = results
-                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
-            else:
-                # Если 0 результатов
-                await self._update_state(session, 'NO_RESULTS', params)
-                if params.get('coordinates'):
-                    location_label = params.get('embedding_text', 'указанной локации')
-                    response['text'] = (
-                        f"Не удалось найти объекты рядом с \"{location_label}\" "
-                        f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
-                        "Варианты действий:"
+                if complexes:
+                    params['complex_offset'] = complex_offset + len(complexes)
+                    response['objects'] = await sync_to_async(
+                        self.search.map_complexes_to_dto,
+                        thread_sensitive=False
+                    )(params, complexes)
+                    params['complex_candidates'] = self._merge_complex_candidates(
+                        params.get('complex_candidates'),
+                        self._serialize_complexes(complexes)
                     )
+                    await self._update_state(session, 'COMPLEX_RESULTS', params)
+                    response['text'] = self._format_complexes_intro(params)
+                    response['buttons'] = self._complex_action_buttons(params)
                 else:
-                    response['text'] = (
-                        f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
-                        "Варианты действий:"
+                    await self._update_state(session, 'NO_RESULTS', params)
+                    if params.get('coordinates'):
+                        location_label = params.get('embedding_text', 'указанной локации')
+                        response['text'] = (
+                            f"Не удалось найти объекты рядом с \"{location_label}\" "
+                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    else:
+                        response['text'] = (
+                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    response['buttons'] = ['Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+            else:
+                results = await sync_to_async(
+                    self.search.intelligent_search,
+                    thread_sensitive=False
+                )(params, offset=0)
+
+                if results:
+                    params['offset'] = len(results)
+                    await self._update_state(session, 'BROWSING', params)
+
+                    response['text'] = self._format_intro(results, params)
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                else:
+                    await self._update_state(session, 'NO_RESULTS', params)
+                    if params.get('coordinates'):
+                        location_label = params.get('embedding_text', 'указанной локации')
+                        response['text'] = (
+                            f"Не удалось найти объекты рядом с \"{location_label}\" "
+                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    else:
+                        response['text'] = (
+                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                            "Варианты действий:"
+                        )
+                    response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+
+        elif state == 'COMPLEX_RESULTS':
+            lowered_text = text.lower()
+            if 'ещ' in lowered_text:
+                complexes = await sync_to_async(
+                    self.search.search_complexes,
+                    thread_sensitive=False
+                )(params, offset=params.get('complex_offset', 0), limit=5)
+
+                if complexes:
+                    params['complex_offset'] = params.get('complex_offset', 0) + len(complexes)
+                    response['objects'] = await sync_to_async(
+                        self.search.map_complexes_to_dto,
+                        thread_sensitive=False
+                    )(params, complexes)
+                    params['complex_candidates'] = self._merge_complex_candidates(
+                        params.get('complex_candidates'),
+                        self._serialize_complexes(complexes)
                     )
-                response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                    await self._update_state(session, 'COMPLEX_RESULTS', params)
+                    response['text'] = "Еще варианты: 👇"
+                    response['buttons'] = self._complex_action_buttons(params)
+                else:
+                    response['text'] = "Больше вариантов нет. Можешь выбрать ЖК/БЦ из списка."
+                    response['buttons'] = self._complex_action_buttons(params)
+            elif 'показать' in lowered_text or 'квартир' in lowered_text or 'помещ' in lowered_text:
+                await self._update_state(session, 'CHOOSING_COMPLEX_NUMBER', params)
+                response['text'] = self._format_complexes_list(params)
+                response['buttons'] = self._complex_number_buttons(params)
+            elif 'изменить' in lowered_text:
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Напиши новый бюджет:"
+            else:
+                response['text'] = self._format_complexes_intro(params)
+                response['buttons'] = self._complex_action_buttons(params)
+
+        elif state == 'CHOOSING_COMPLEX_NUMBER':
+            choice = self._parse_choice(text)
+            candidates = params.get('complex_candidates') or []
+            if 'изменить' in text.lower():
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Напиши новый бюджет:"
+                return self._ensure_main_menu_button(response, state)
+            if not choice or choice < 1 or choice > len(candidates):
+                response['text'] = "Пожалуйста, выбери номер из списка."
+                response['buttons'] = self._complex_number_buttons(params)
+            else:
+                selected = candidates[choice - 1]
+                params['selected_complex_id'] = selected.get('id')
+                params['selected_complex_name'] = selected.get('name')
+                params['offset'] = 0
+
+                results = await sync_to_async(
+                    self.search.search_units_for_complex,
+                    thread_sensitive=False
+                )(params, selected.get('id'), offset=0)
+
+                if results:
+                    params['offset'] = len(results)
+                    await self._update_state(session, 'BROWSING_UNITS', params)
+                    response['text'] = f"Вот варианты по {selected.get('name')}:"
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры']
+                else:
+                    await self._update_state(session, 'BROWSING_UNITS', params)
+                    response['text'] = f"По {selected.get('name')} ничего не найдено по текущим фильтрам."
+                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры']
 
         elif state == 'BROWSING':
             if text.lower() in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
@@ -286,6 +412,40 @@ class EnhancedDialogManager:
                 response['text'] = "Как к тебе обращаться?"
             else:
                 return self._scenario_start(user.name)
+
+        elif state == 'BROWSING_UNITS':
+            lowered_text = text.lower()
+            if lowered_text in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
+                current_offset = params.get('offset', 0)
+                selected_id = params.get('selected_complex_id')
+
+                results = await sync_to_async(
+                    self.search.search_units_for_complex,
+                    thread_sensitive=False
+                )(params, selected_id, offset=current_offset)
+
+                if results:
+                    params['offset'] = current_offset + len(results)
+                    await self._update_state(session, 'BROWSING_UNITS', params)
+                    response['text'] = "Вот еще варианты: 👇"
+                    response['objects'] = results
+                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры']
+                else:
+                    response['text'] = "Варианты по этому ЖК/БЦ закончились. 🤷‍♂️"
+                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры']
+
+            elif 'другой' in lowered_text:
+                await self._update_state(session, 'CHOOSING_COMPLEX_NUMBER', params)
+                response['text'] = self._format_complexes_list(params)
+                response['buttons'] = self._complex_number_buttons(params)
+
+            elif 'изменить' in lowered_text or 'по другому' in lowered_text:
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Напиши новый бюджет:"
+
+            else:
+                response['text'] = self._format_complexes_list(params)
+                response['buttons'] = self._complex_number_buttons(params)
 
         elif state == 'NO_RESULTS':
             if 'бюджет' in text.lower():
@@ -450,6 +610,61 @@ class EnhancedDialogManager:
 
     def _format_intro(self, results, params):
         return f"Нашел {len(results)} вариантов (сгруппировано по ЖК): 👇"
+
+    @staticmethod
+    def _serialize_complexes(complexes):
+        return [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "address": c.address,
+            }
+            for c in complexes
+        ]
+
+    def _format_complexes_intro(self, params):
+        label = "БЦ" if params.get('bi_category') == 'commercial' else "ЖК"
+        count = len(params.get('complex_candidates') or [])
+        action = "помещения" if params.get('bi_category') == 'commercial' else "квартиры"
+        return f"Нашел {count} {label}. Нажмите «Показать {action}», чтобы выбрать конкретный объект."
+
+    def _format_complexes_list(self, params):
+        label = "БЦ" if params.get('bi_category') == 'commercial' else "ЖК"
+        candidates = params.get('complex_candidates') or []
+        lines = [f"Выберите номер {label}, чтобы посмотреть варианты:"]
+        for idx, item in enumerate(candidates, start=1):
+            address = item.get('address') or ''
+            lines.append(f"{idx}. {label} {item.get('name')} — {address}")
+        return "\n".join(lines)
+
+    def _complex_action_buttons(self, params):
+        if params.get('bi_category') == 'commercial':
+            return ['Показать помещения', 'Показать ещё', 'Изменить параметры']
+        return ['Показать квартиры', 'Показать ещё', 'Изменить параметры']
+
+    @staticmethod
+    def _complex_number_buttons(params):
+        candidates = params.get('complex_candidates') or []
+        buttons = [str(i) for i in range(1, min(len(candidates), 10) + 1)]
+        buttons.append('Изменить параметры')
+        return buttons
+
+    @staticmethod
+    def _parse_choice(text):
+        try:
+            return int(text.strip())
+        except Exception:
+            return None
+
+    @staticmethod
+    def _merge_complex_candidates(existing, new_items):
+        existing = existing or []
+        existing_ids = {item.get('id') for item in existing}
+        merged = list(existing)
+        for item in new_items:
+            if item.get('id') not in existing_ids:
+                merged.append(item)
+        return merged
 
     @staticmethod
     def _ensure_main_menu_button(response: dict, state: str) -> dict:

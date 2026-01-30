@@ -354,6 +354,14 @@ class BISyncService:
                 if not final_price:
                     continue
 
+                photos = [
+                    u.get("photoURL1600"),
+                    u.get("photoURL400"),
+                    u.get("photoURL200"),
+                ]
+                photos = [p for p in photos if p]
+                photos = list(dict.fromkeys(photos))
+
                 unit, _ = unit_model.objects.update_or_create(
                     bi_uuid=u.get("uuid"),
                     defaults={
@@ -365,7 +373,8 @@ class BISyncService:
                         "price": final_price,
                         "price_discount": price_disc,
                         "deadline": u.get("deadLine", ""),
-                        "is_active": True
+                        "is_active": True,
+                        "photos": photos,
                     }
                 )
                 current_uuids.append(u.get("uuid"))
