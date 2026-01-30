@@ -1,5 +1,8 @@
 import logging
 import json
+import time
+import requests
+import google.generativeai as genai
 from django.conf import settings
 from telegram_bot.models import BIComplex, BIUnit, BICommercialComplex, BICommercialUnit
 from core.bi_client import EnhancedBIGroupClient
@@ -13,12 +16,27 @@ class BISyncService:
         self.client = EnhancedBIGroupClient()
         self.ai = EnhancedAIService()
         self.ASTANA_UUID = self.client.CITY_MAP.get("Astana", "4c0fe725-4b6f-11e8-80cf-bb580b2abfef")
+        self.groq_api_key = getattr(settings, "GROQ_API_KEY", None)
+        gemini_key = getattr(settings, "GEMINI_API_KEY", None)
+        if gemini_key:
+            genai.configure(api_key=gemini_key)
 
     def run_full_sync(self):
         """Полная синхронизация ЖК и квартир с умным обогащением данных"""
         logger.info("🚀 Starting Smart Full Sync (Residential + Commercial)...")
 
         # 1. Получаем все ЖК
+        residential = self.run_residential_sync()
+        commercial = self.run_commercial_sync()
+
+        logger.info(
+            f"✅ Smart Sync Complete! "
+            f"Residential synced {residential['synced']}, AI skipped {residential['ai_skipped']}. "
+            f"Commercial synced {commercial['synced']}, AI skipped {commercial['ai_skipped']}"
+        )
+
+    def run_residential_sync(self):
+        """Синхронизация только ЖК и квартир"""
         complexes_data = self.client.get_all_real_estates()
         logger.info(f"🏢 Found {len(complexes_data)} complexes via API")
 
@@ -30,7 +48,10 @@ class BISyncService:
             if ai_status == 0:
                 skipped_ai_count += 1
 
-        # 2. Получаем все коммерческие объекты
+        return {"synced": synced_count, "ai_skipped": skipped_ai_count}
+
+    def run_commercial_sync(self):
+        """Синхронизация только коммерческих объектов и помещений"""
         commercial_data = self.client.get_all_commercial_real_estates()
         logger.info(f"🏢 Found {len(commercial_data)} commercial complexes via API")
 
@@ -42,11 +63,7 @@ class BISyncService:
             if ai_status == 0:
                 commercial_skipped_ai += 1
 
-        logger.info(
-            f"✅ Smart Sync Complete! "
-            f"Residential synced {synced_count}, AI skipped {skipped_ai_count}. "
-            f"Commercial synced {commercial_synced}, AI skipped {commercial_skipped_ai}"
-        )
+        return {"synced": commercial_synced, "ai_skipped": commercial_skipped_ai}
 
     def _sync_complex_and_units(self, item: dict):
         """Синхронизация одного ЖК, AI-анализ локации и обновление квартир"""
@@ -207,8 +224,7 @@ class BISyncService:
 
         try:
             # Вызов AI с повторами
-            response = self.ai._generate_with_retry(prompt, json_mode=True)
-            text = self.ai._extract_text(response)
+            text = self._groq_generate_json(prompt)
             analysis = self.ai._parse_json_response(text)
 
             if analysis:
@@ -228,7 +244,7 @@ class BISyncService:
                     f"Адрес: {complex_obj.address}."
                 )
 
-                embedding = self.ai.get_embedding(rich_text)
+                embedding = self._get_embedding_sync(rich_text)
                 if embedding:
                     complex_obj.embedding = embedding
 
@@ -279,8 +295,7 @@ class BISyncService:
         """
 
         try:
-            response = self.ai._generate_with_retry(prompt, json_mode=True)
-            text = self.ai._extract_text(response)
+            text = self._groq_generate_json(prompt)
             analysis = self.ai._parse_json_response(text)
 
             if analysis:
@@ -290,7 +305,7 @@ class BISyncService:
                 side_str = "Левый берег" if analysis.get('side') == 'Left' else "Правый берег"
                 rich_text = self._build_embedding_text(complex_obj, analysis, kind="commercial", side_str=side_str)
 
-                embedding = self.ai.get_embedding(rich_text)
+                embedding = self._get_embedding_sync(rich_text)
                 if embedding:
                     complex_obj.embedding = embedding
 
@@ -313,11 +328,87 @@ class BISyncService:
         rich_text = self._build_embedding_text(complex_obj, features, kind=kind, side_str=side_str)
 
         # Запрос только на эмбеддинг (это дешевле)
-        embedding = self.ai.get_embedding(rich_text)
+        embedding = self._get_embedding_sync(rich_text)
         if embedding:
             complex_obj.embedding = embedding
             complex_obj.save()
             logger.info(f"✅ Embedding saved for {complex_obj.name}")
+
+    def _groq_generate_json(self, prompt: str, retries: int = 3) -> str:
+        """Вызов Groq (только для синхронизации БД)"""
+        if not self.groq_api_key:
+            logger.error("❌ GROQ_API_KEY not configured; skipping AI enrichment")
+            return ""
+
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 1200
+        }
+
+        for attempt in range(retries):
+            try:
+                response = requests.post(url, headers=headers, json=payload, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+            except Exception as e:
+                wait_time = 2 * (attempt + 1)
+                logger.warning(f"Groq request failed (attempt {attempt + 1}/{retries}): {e}")
+                time.sleep(wait_time)
+        return ""
+
+    @staticmethod
+    def _get_embedding_sync(text: str):
+        """Эмбеддинг для синхронизаций. Приводим размерность к 768."""
+        try:
+            result = genai.embed_content(
+                model="models/gemini-embedding-001",
+                content=text,
+                task_type="retrieval_document"
+            )
+            embedding = result.get('embedding')
+            if embedding is None:
+                return None
+
+            embedding = list(embedding)
+            if len(embedding) == 768:
+                return embedding
+
+            logger.warning(
+                f"Embedding dimension mismatch (gemini-embedding-001): {len(embedding)}. "
+                "Falling back to text-embedding-004."
+            )
+
+            fallback = genai.embed_content(
+                model="models/text-embedding-004",
+                content=text,
+                task_type="retrieval_document"
+            )
+            fallback_embedding = fallback.get('embedding')
+            if fallback_embedding is None:
+                return None
+
+            fallback_embedding = list(fallback_embedding)
+            if len(fallback_embedding) != 768:
+                logger.error(
+                    f"Embedding dimension mismatch (text-embedding-004): {len(fallback_embedding)}. "
+                    "Skipping embedding."
+                )
+                return None
+
+            return fallback_embedding
+        except Exception as e:
+            logger.error(f"Embedding error (sync): {e}")
+            return None
 
     def _build_embedding_text(self, complex_obj, features: dict, kind: str, side_str: str) -> str:
         atm_str = ", ".join(features.get('atmosphere', []))
@@ -356,8 +447,6 @@ class BISyncService:
 
                 photos = [
                     u.get("photoURL1600"),
-                    u.get("photoURL400"),
-                    u.get("photoURL200"),
                 ]
                 photos = [p for p in photos if p]
                 photos = list(dict.fromkeys(photos))

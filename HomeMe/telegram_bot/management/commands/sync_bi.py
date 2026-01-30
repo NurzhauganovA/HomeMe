@@ -4,7 +4,7 @@ import time
 
 
 class Command(BaseCommand):
-    help = 'Запуск полной синхронизации с BI Group API'
+    help = 'Запуск полной синхронизации с BI Group API (ЖК + коммерция)'
 
     def handle(self, *args, **options):
         self.stdout.write("⏳ Начинаю синхронизацию...")

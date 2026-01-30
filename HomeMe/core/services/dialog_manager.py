@@ -5,7 +5,8 @@ from shutil import which
 from pydub import AudioSegment
 
 from core.location_resolver import DynamicLocationResolver
-from telegram_bot.models import BotUser, UserSession, Lead
+from telegram_bot.models import BotUser, UserSession, Lead, FavoriteProperty
+from core.dto import PropertyDTO
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
 
@@ -54,6 +55,18 @@ class EnhancedDialogManager:
             elif text == '3' or 'эксперт' in lowered_text:
                 await self._update_state(session, 'LEAD_NAME')
                 response['text'] = "Я соединю тебя с экспертом. Как к тебе обращаться?"
+
+            elif 'избран' in lowered_text:
+                favorites = await sync_to_async(
+                    lambda: list(FavoriteProperty.objects.filter(user=user).order_by('-created_at'))
+                )()
+                if favorites:
+                    response['text'] = "⭐ Ваши избранные объекты:"
+                    response['objects'] = [PropertyDTO.from_dict(item.data) for item in favorites]
+                else:
+                    response['text'] = "⭐ Избранное пока пустое."
+                response['buttons'] = ['В главное меню']
+                await self._update_state(session, 'START', params)
 
             elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир']):
                 # Быстрый старт без кнопок: извлекаем параметры и сразу ищем
@@ -158,7 +171,10 @@ class EnhancedDialogManager:
 
             await self._update_state(session, 'SETTING_BUDGET', params)
             response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
-            response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
+            if params.get('bi_category') == 'commercial':
+                response['buttons'] = ['до 50 млн', '50-80 млн', '80-120 млн', '120-200 млн']
+            else:
+                response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
 
         elif state == 'SETTING_BUDGET':
             extracted = await sync_to_async(
@@ -285,7 +301,7 @@ class EnhancedDialogManager:
                             f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                             "Варианты действий:"
                         )
-                    response['buttons'] = ['Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
             else:
                 results = await sync_to_async(
                     self.search.intelligent_search,
@@ -317,7 +333,7 @@ class EnhancedDialogManager:
 
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
-            if 'ещ' in lowered_text:
+            if lowered_text in ['показать еще', 'показать ещё', 'еще', 'ещё', 'показать больше']:
                 complexes = await sync_to_async(
                     self.search.search_complexes,
                     thread_sensitive=False
@@ -451,6 +467,10 @@ class EnhancedDialogManager:
             if 'бюджет' in text.lower():
                 await self._update_state(session, 'SETTING_BUDGET', params)
                 response['text'] = "Какой новый бюджет?"
+            elif 'район' in text.lower() or 'местополож' in text.lower():
+                await self._update_state(session, 'SETTING_LOCATION', params)
+                response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
+                response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
             elif 'комнат' in text.lower():
                 await self._update_state(session, 'SETTING_ROOMS', params)
                 response['text'] = "Сколько комнат?"
@@ -479,7 +499,19 @@ class EnhancedDialogManager:
             response['buttons'] = ['Искать здесь', 'В меню']
             await self._update_state(session, 'START', {})
 
+        if response.get('objects'):
+            await self._cache_last_objects(session, response['objects'])
+
         return self._ensure_main_menu_button(response, state)
+
+    async def _cache_last_objects(self, session, objects):
+        if not objects:
+            return
+        payload = [obj.to_dict() for obj in objects]
+        params = session.search_params or {}
+        params['last_objects'] = payload
+        session.search_params = params
+        await sync_to_async(session.save)()
 
     async def process_voice(self, user_id, platform, voice_file_object, user_name=None):
         """
@@ -599,7 +631,7 @@ class EnhancedDialogManager:
     def _scenario_start(self, name):
         return {
             'text': f"Привет, {name}!\nЯ HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?",
-            'buttons': ['1. Подобрать объект', '2. Узнать про районы', '3. Связаться с экспертом']
+            'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы', '3. Связаться с экспертом']
         }
 
     @staticmethod

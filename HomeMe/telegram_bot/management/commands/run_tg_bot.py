@@ -6,6 +6,7 @@ Enhanced Telegram Bot
 import os
 import logging
 import asyncio
+from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 from telegram import (
     Update,
@@ -26,7 +27,7 @@ from telegram.ext import (
 from telegram.constants import ParseMode, ChatAction
 
 from core.services.dialog_manager import EnhancedDialogManager
-from telegram_bot.models import BotUser
+from telegram_bot.models import BotUser, UserSession, FavoriteProperty
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -309,12 +310,27 @@ class Command(BaseCommand):
                         )
                     except Exception as e:
                         logger.warning(f"⚠️ Failed to send media group: {e}")
-                        await update.message.reply_text(
-                            msg,
-                            parse_mode=ParseMode.HTML,
-                            reply_markup=reply_markup,
-                            disable_web_page_preview=False
-                        )
+                        sent_photo = False
+                        for url in image_urls:
+                            try:
+                                await update.message.reply_photo(
+                                    url,
+                                    caption=msg,
+                                    parse_mode=ParseMode.HTML,
+                                    reply_markup=reply_markup
+                                )
+                                sent_photo = True
+                                break
+                            except Exception as photo_exc:
+                                logger.warning(f"⚠️ Failed to send photo {url}: {photo_exc}")
+
+                        if not sent_photo:
+                            await update.message.reply_text(
+                                msg,
+                                parse_mode=ParseMode.HTML,
+                                reply_markup=reply_markup,
+                                disable_web_page_preview=False
+                            )
                 elif obj.image_url:
                     try:
                         await update.message.reply_photo(
@@ -361,10 +377,46 @@ class Command(BaseCommand):
         action = parts[0]
 
         if action == 'save':
-            await query.message.reply_text(
-                "✅ Объект добавлен в избранное!\n"
-                "Все сохраненные объекты доступны в разделе 'Избранное'"
-            )
+            try:
+                user = query.from_user
+                bot_user = await sync_to_async(BotUser.objects.get)(
+                    user_id=str(user.id),
+                    platform='telegram'
+                )
+                session = await sync_to_async(UserSession.objects.get)(user=bot_user)
+                params = session.search_params or {}
+                last_objects = params.get('last_objects') or []
+
+                source = "_".join(parts[1:-1]) if len(parts) > 2 else "unknown"
+                idx = int(parts[-1]) if len(parts) > 1 else 0
+                if idx < 1 or idx > len(last_objects):
+                    await query.message.reply_text("Не удалось найти объект для сохранения.")
+                    return
+
+                data = last_objects[idx - 1]
+                object_kind = data.get('object_kind') or 'unknown'
+                object_id = data.get('object_id') or f"{data.get('title')}|{data.get('address')}"
+
+                favorite, created = await sync_to_async(FavoriteProperty.objects.get_or_create)(
+                    user=bot_user,
+                    object_kind=object_kind,
+                    object_id=object_id,
+                    defaults={
+                        "source": data.get('source', source),
+                        "data": data
+                    }
+                )
+
+                if created:
+                    await query.message.reply_text(
+                        "✅ Объект добавлен в избранное!\n"
+                        "Все сохраненные объекты доступны в разделе 'Избранное'"
+                    )
+                else:
+                    await query.message.reply_text("⭐ Этот объект уже в избранном.")
+            except Exception as e:
+                logger.error(f"Failed to save favorite: {e}")
+                await query.message.reply_text("Не удалось сохранить объект.")
 
         elif action == 'contact':
             await query.message.reply_text(

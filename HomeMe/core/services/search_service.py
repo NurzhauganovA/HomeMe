@@ -318,6 +318,8 @@ class EnhancedSearchService:
             image_urls=photos,
             latitude=comp.latitude,
             longitude=comp.longitude,
+            object_id=unit.bi_uuid,
+            object_kind="unit",
         )
 
     def _map_bi_commercial_to_dto(self, unit: BICommercialUnit, comp: BICommercialComplex) -> PropertyDTO:
@@ -347,6 +349,8 @@ class EnhancedSearchService:
             image_urls=photos,
             latitude=comp.latitude,
             longitude=comp.longitude,
+            object_id=unit.bi_uuid,
+            object_kind="unit",
         )
 
     def _map_bi_commercial_complex_to_dto(self, comp: BICommercialComplex) -> PropertyDTO:
@@ -375,6 +379,8 @@ class EnhancedSearchService:
             image_url=comp.image_url,
             latitude=comp.latitude,
             longitude=comp.longitude,
+            object_id=comp.bi_uuid,
+            object_kind="complex",
         )
 
     def _map_bi_residential_complex_to_dto(self, comp: BIComplex) -> PropertyDTO:
@@ -403,6 +409,8 @@ class EnhancedSearchService:
             image_url=comp.image_url,
             latitude=comp.latitude,
             longitude=comp.longitude,
+            object_id=comp.bi_uuid,
+            object_kind="complex",
         )
 
     @staticmethod
@@ -425,6 +433,8 @@ class EnhancedSearchService:
         return True
 
     def _map_secondary_to_dto(self, item: SecondaryProperty) -> PropertyDTO:
+        photos = item.photos or []
+        primary_photo = photos[0] if photos else (item.image.url if item.image else "")
         return PropertyDTO(
             source="secondary",
             title=item.title,
@@ -435,7 +445,13 @@ class EnhancedSearchService:
             floor=item.floor,
             total_floors=item.total_floors,
             description=item.description,
-            image_url=item.image.url if item.image else "",
+            image_url=primary_photo,
+            image_urls=photos,
+            url=item.source_url or "",
             latitude=item.latitude,
             longitude=item.longitude,
+            owner_phone=item.owner_phone,
+            owner_name=item.owner_name,
+            object_id=str(item.id),
+            object_kind="secondary",
         )

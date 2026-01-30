@@ -250,6 +250,18 @@ class SecondaryProperty(models.Model):
 
     # Основная информация
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    external_uuid = models.CharField("Внешний UUID", max_length=100, unique=True, null=True, blank=True, db_index=True)
+    external_id = models.BigIntegerField("Внешний ID", null=True, blank=True, db_index=True)
+    property_type = models.CharField("Тип объекта", max_length=50, null=True, blank=True, db_index=True)
+    deal_type = models.CharField("Тип сделки", max_length=50, null=True, blank=True, db_index=True)
+    condition = models.CharField("Состояние", max_length=50, null=True, blank=True)
+    repair = models.CharField("Ремонт", max_length=50, null=True, blank=True)
+    construction_year = models.IntegerField("Год постройки", null=True, blank=True)
+    material = models.JSONField("Материал", default=list, blank=True)
+    address_note = models.CharField("Адрес (текст)", max_length=500, null=True, blank=True)
+    source_url = models.URLField("Источник", blank=True)
+    photos = models.JSONField("Фотографии", default=list, blank=True)
+    raw_data = models.JSONField("Raw данные", default=dict, blank=True)
     title = models.CharField("Заголовок", max_length=200, db_index=True)
     description = models.TextField("Описание")
     address = models.CharField("Адрес", max_length=255, db_index=True)
@@ -458,6 +470,33 @@ class UserFeedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.user.name}: {self.rating}⭐"
+
+
+class FavoriteProperty(models.Model):
+    """
+    Избранные объекты пользователя (снимок карточки).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(BotUser, on_delete=models.CASCADE, related_name='favorites')
+    source = models.CharField(max_length=20, db_index=True)
+    object_kind = models.CharField(max_length=20, db_index=True)
+    object_id = models.CharField(max_length=100, db_index=True)
+    data = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Избранный объект"
+        verbose_name_plural = "Избранные объекты"
+        indexes = [
+            models.Index(fields=['user', 'source']),
+            models.Index(fields=['object_kind', 'object_id']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'object_kind', 'object_id'], name='unique_favorite_object'),
+        ]
+
+    def __str__(self):
+        return f"Favorite {self.object_kind}:{self.object_id} ({self.user.name})"
 
 
 class BaseBIComplex(models.Model):

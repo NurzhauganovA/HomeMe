@@ -31,6 +31,8 @@ class PropertyDTO:
     url: str = ""
     image_url: str = ""
     image_urls: List[str] = field(default_factory=list)
+    object_id: Optional[str] = None
+    object_kind: Optional[str] = None  # "unit", "complex", "secondary"
 
     # Дополнительные метаданные
     total_floors: Optional[int] = None
@@ -52,6 +54,11 @@ class PropertyDTO:
     # Контакты (только для вторички)
     owner_phone: Optional[str] = None
     owner_name: Optional[str] = None
+
+    # Удобства
+    has_parking: bool = False
+    has_balcony: bool = False
+    has_renovation: bool = False
 
     # Служебные поля
     relevance_score: float = 0.0  # Оценка релевантности (для ранжирования)
@@ -94,23 +101,27 @@ class PropertyDTO:
         msg += f"💰 <b>{price_mln:.1f} млн ₸</b> ({price_sqm:.0f}к/м²)\n"
 
         # Параметры
-        msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
-        if self.total_floors:
-            msg += f"/{self.total_floors}"
-        msg += "\n"
+        if self.object_kind == "complex":
+            if self.area and self.area > 0:
+                msg += f"📐 от {self.area:.0f} м²\n"
+        else:
+            msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
+            if self.total_floors:
+                msg += f"/{self.total_floors}"
+            msg += "\n"
 
         # Дополнительная информация
         if self.description:
             msg += f"ℹ️ {self.description[:100]}\n"
 
-        # Условия
-        conditions = []
-        if self.has_installment:
-            conditions.append("💳 Рассрочка")
-        if self.has_mortgage:
-            conditions.append("🏦 Ипотека")
-        if conditions:
-            msg += " | ".join(conditions) + "\n"
+        amenities = self._format_amenities()
+        if amenities:
+            msg += f"✨ {amenities}\n"
+
+        if self.source == "secondary":
+            if self.owner_phone:
+                contact_name = f" ({self.owner_name})" if self.owner_name else ""
+                msg += f"📞 {self.owner_phone}{contact_name}\n"
 
         # Ссылка
         if self.url:
@@ -141,13 +152,26 @@ class PropertyDTO:
         price_sqm = self.price_per_sqm / 1000
         msg += f"💰 *{price_mln:.1f} млн ₸* ({price_sqm:.0f}к/м²)\n"
 
-        msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
-        if self.total_floors:
-            msg += f"/{self.total_floors}"
-        msg += "\n"
+        if self.object_kind == "complex":
+            if self.area and self.area > 0:
+                msg += f"📐 от {self.area:.0f} м²\n"
+        else:
+            msg += f"📐 {self.rooms}-комн, {self.area:.0f} м², {self.floor} эт."
+            if self.total_floors:
+                msg += f"/{self.total_floors}"
+            msg += "\n"
 
         if self.description:
             msg += f"ℹ️ {self.description[:100]}\n"
+
+        amenities = self._format_amenities()
+        if amenities:
+            msg += f"✨ {amenities}\n"
+
+        if self.source == "secondary":
+            if self.owner_phone:
+                contact_name = f" ({self.owner_name})" if self.owner_name else ""
+                msg += f"📞 {self.owner_phone}{contact_name}\n"
 
         if self.url:
             msg += f"\n🔗 Подробнее: {self.url}"
@@ -171,6 +195,8 @@ class PropertyDTO:
             "url": self.url,
             "image_url": self.image_url,
             "image_urls": self.image_urls,
+            "object_id": self.object_id,
+            "object_kind": self.object_kind,
             "latitude": self.latitude,
             "longitude": self.longitude,
             "district": self.district,
@@ -181,6 +207,42 @@ class PropertyDTO:
             "relevance_score": self.relevance_score
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict):
+        allowed = {
+            "source",
+            "title",
+            "address",
+            "price",
+            "rooms",
+            "area",
+            "floor",
+            "description",
+            "url",
+            "image_url",
+            "image_urls",
+            "total_floors",
+            "building_type",
+            "property_class",
+            "deadline",
+            "latitude",
+            "longitude",
+            "district",
+            "city",
+            "has_installment",
+            "has_mortgage",
+            "mortgage_banks",
+            "owner_phone",
+            "owner_name",
+            "relevance_score",
+            "matched_keywords",
+            "created_at",
+            "object_id",
+            "object_kind",
+        }
+        payload = {k: v for k, v in (data or {}).items() if k in allowed}
+        return cls(**payload)
+
     def __str__(self) -> str:
         """Строковое представление для логирования"""
         return (f"PropertyDTO(source={self.source}, title={self.title[:30]}..., "
@@ -188,6 +250,20 @@ class PropertyDTO:
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    def _format_amenities(self) -> str:
+        items = []
+        if self.has_parking:
+            items.append("Парковка")
+        if self.has_balcony:
+            items.append("Балкон")
+        if self.has_renovation:
+            items.append("С ремонтом")
+        if self.has_installment:
+            items.append("Рассрочка")
+        if self.has_mortgage:
+            items.append("Ипотека")
+        return " | ".join(items)
 
 
 @dataclass
