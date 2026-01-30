@@ -5,7 +5,7 @@ from typing import List, Dict
 from django.db.models import Q
 from pgvector.django import CosineDistance
 
-from telegram_bot.models import BIUnit, BIComplex, SecondaryProperty
+from telegram_bot.models import BIUnit, BIComplex, BICommercialComplex, BICommercialUnit, SecondaryProperty
 from core.dto import PropertyDTO
 from core.bi_client import EnhancedBIGroupClient
 
@@ -23,6 +23,7 @@ class EnhancedSearchService:
         """
         results = []
         source = params.get('source', 'mixed')
+        bi_category = params.get('bi_category', 'residential')
         embedding_text = params.get('embedding_text', '').lower()
 
         # Получаем координаты из параметров (их туда положил DialogManager)
@@ -67,8 +68,10 @@ class EnhancedSearchService:
 
         # --- 2. ПОИСК BI GROUP ---
         if source in ['bi', 'mixed']:
-            # Находим подходящие ЖК
-            target_complexes = BIComplex.objects.filter(complex_filters)
+            if bi_category == 'commercial':
+                target_complexes = BICommercialComplex.objects.filter(complex_filters)
+            else:
+                target_complexes = BIComplex.objects.filter(complex_filters)
 
             # Если есть вектор, сортируем ЖК по смысловой близости
             if query_vector:
@@ -84,17 +87,24 @@ class EnhancedSearchService:
                 if query_vector and not coords:
                     pass
 
-                # Внутри каждого ЖК ищем подходящую квартиру
-                units = BIUnit.objects.filter(complex=comp, is_active=True)
+                if bi_category == 'commercial':
+                    units = BICommercialUnit.objects.filter(complex=comp, is_active=True)
+                else:
+                    units = BIUnit.objects.filter(complex=comp, is_active=True)
 
-                if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
-                if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
-                if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                if params.get('min_price'):
+                    units = units.filter(price__gte=params['min_price'])
+                if params.get('max_price'):
+                    units = units.filter(price__lte=params['max_price'])
+                if params.get('rooms'):
+                    units = units.filter(room_count=params['rooms'])
 
-                # Берем ОДНУ лучшую (самую дешевую) квартиру из этого ЖК для разнообразия
                 best_unit = units.order_by('price').first()
                 if best_unit:
-                    results.append(self._map_bi_to_dto(best_unit, comp))
+                    if bi_category == 'commercial':
+                        results.append(self._map_bi_commercial_to_dto(best_unit, comp))
+                    else:
+                        results.append(self._map_bi_to_dto(best_unit, comp))
 
                 # Если набрали лимит, останавливаемся
                 if len(results) >= limit:
@@ -156,7 +166,33 @@ class EnhancedSearchService:
 
         return PropertyDTO(
             source="bi_group",
+            property_kind="residential",
             title=f"ЖК {comp.name}",
+            address=comp.address,
+            price=float(unit.price),
+            rooms=unit.room_count,
+            area=unit.area,
+            floor=unit.floor,
+            total_floors=unit.max_floor,
+            description=desc,
+            url=comp.url,
+            image_url=comp.image_url,
+            latitude=comp.latitude,
+            longitude=comp.longitude,
+        )
+
+    def _map_bi_commercial_to_dto(self, unit: BICommercialUnit, comp: BICommercialComplex) -> PropertyDTO:
+        side = "Левый" if comp.features.get('side') == 'Left' else "Правый"
+        district = comp.features.get('district_name', '')
+        tags_list = comp.features.get('tags', [])
+        tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
+
+        desc = f"📍 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
+
+        return PropertyDTO(
+            source="bi_group",
+            property_kind="commercial",
+            title=f"Коммерция {comp.name}",
             address=comp.address,
             price=float(unit.price),
             rooms=unit.room_count,

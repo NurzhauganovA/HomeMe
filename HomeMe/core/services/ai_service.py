@@ -1,13 +1,14 @@
 import ast
+import io
 import re
-
-import google.generativeai as genai
-from google.api_core import exceptions
 import json
 import logging
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
+
+import google.generativeai as genai
 from django.conf import settings
+from groq import Groq
 
 logger = logging.getLogger(__name__)
 
@@ -18,52 +19,110 @@ class EnhancedAIService:
     Включает: NLU, геокодирование, анализ предпочтений, валидацию и обогащение данных.
     """
 
-    def __init__(self):
-        api_key = getattr(settings, 'GEMINI_API_KEY')
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-3-flash-preview')
+    def __init__(self, text_provider: Optional[str] = None):
+        self.text_provider = (text_provider or getattr(settings, "AI_TEXT_PROVIDER", "gemini")).lower()
 
-        print("🔍 Поиск доступных моделей...\n")
+        groq_key = getattr(settings, 'GROQ_API_KEY', None)
+        self.client = Groq(api_key=groq_key) if groq_key else None
+        self.text_model = getattr(settings, "GROQ_TEXT_MODEL", "llama-3.3-70b-versatile")
+        self.audio_model = getattr(settings, "GROQ_AUDIO_MODEL", "whisper-large-v3-turbo")
 
-        try:
-            for m in genai.list_models():
-                # Нам нужны только те, которые умеют генерировать текст (generateContent)
-                if 'generateContent' in m.supported_generation_methods:
-                    print(f"- {m.name}")
-        except Exception as e:
-            print(f"Ошибка при получении списка: {e}")
+        self.gemini_text_model = getattr(settings, "GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+        self.gemini_json_model = getattr(settings, "GEMINI_JSON_MODEL", "gemini-1.5-flash")
+        self.gemini_model = None
+        self.gemini_json_model_client = None
+
+        embedding_key = getattr(settings, 'GEMINI_API_KEY', None)
+        if embedding_key:
+            genai.configure(api_key=embedding_key)
+            self.gemini_model = genai.GenerativeModel(self.gemini_text_model)
+            self.gemini_json_model_client = genai.GenerativeModel(self.gemini_json_model)
 
         # Кэш для экономии запросов
         self._location_cache = {}
-        self._query_enrichment_cache = {}
         self._quota_exceeded = False
 
     def _generate_with_retry(self, prompt: str, retries=3, temperature=0.3, json_mode=False):
-        """Умная генерация с retry логикой и настраиваемой температурой"""
+        """Генерация текста через выбранный провайдер с retry логикой"""
+        if self.text_provider == "groq":
+            return self._generate_with_retry_groq(prompt, retries, temperature, json_mode)
+        return self._generate_with_retry_gemini(prompt, retries, temperature, json_mode)
+
+    def _generate_with_retry_groq(self, prompt: str, retries=3, temperature=0.3, json_mode=False):
+        """Генерация текста через Groq с retry логикой"""
+        force_json = bool(json_mode)
         for attempt in range(retries):
             try:
-                # Настройка конфига
-                config = genai.types.GenerationConfig(
-                    temperature=temperature,
-                    top_p=0.95,
-                    top_k=40,
-                    max_output_tokens=4096,  # Увеличим лимит токенов на всякий случай
-                    response_mime_type="application/json" if json_mode else "text/plain"
-                )
+                if not self.client:
+                    raise RuntimeError("GROQ_API_KEY is not configured")
 
-                response = self.model.generate_content(prompt, generation_config=config)
+                messages = [
+                    {
+                        "role": "system",
+                        "content": "Return a valid JSON object only. No extra text." if force_json else "You are a helpful assistant."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+
+                request_kwargs = {
+                    "model": self.text_model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "top_p": 0.95,
+                    "max_tokens": 2048,
+                }
+                if force_json:
+                    request_kwargs["response_format"] = {"type": "json_object"}
+
+                response = self.client.chat.completions.create(**request_kwargs)
                 return response
-            except exceptions.ResourceExhausted as e:
-                wait_time = 10 * (attempt + 1)
-                logger.warning(f"Gemini quota exceeded. Retry {attempt + 1}/{retries} after {wait_time}s")
+            except Exception as e:
+                wait_time = 5 * (attempt + 1)
+                error_text = str(e)
+                if force_json and "response_format" in error_text.lower():
+                    logger.warning("Groq response_format not supported, retrying without JSON mode")
+                    force_json = False
+                elif "429" in error_text or "rate" in error_text.lower():
+                    logger.warning(f"Groq rate limit. Retry {attempt + 1}/{retries} after {wait_time}s")
+                else:
+                    logger.error(f"Groq error: {e}")
                 if attempt == retries - 1:
                     self._quota_exceeded = True
                     return None
                 time.sleep(wait_time)
+        return None
+
+    def _generate_with_retry_gemini(self, prompt: str, retries=3, temperature=0.3, json_mode=False):
+        """Генерация текста через Gemini с retry логикой"""
+        for attempt in range(retries):
+            try:
+                if not self.gemini_model:
+                    raise RuntimeError("GEMINI_API_KEY is not configured")
+
+                model = self.gemini_json_model_client if json_mode else self.gemini_model
+                config = genai.types.GenerationConfig(
+                    temperature=temperature,
+                    top_p=0.95,
+                    top_k=40,
+                    max_output_tokens=4096,
+                    response_mime_type="application/json" if json_mode else "text/plain"
+                )
+                response = model.generate_content(prompt, generation_config=config)
+                return response
             except Exception as e:
-                logger.error(f"Gemini error: {e}")
+                wait_time = 5 * (attempt + 1)
+                error_text = str(e)
+                if "429" in error_text or "rate" in error_text.lower():
+                    logger.warning(f"Gemini rate limit. Retry {attempt + 1}/{retries} after {wait_time}s")
+                else:
+                    logger.error(f"Gemini error: {e}")
                 if attempt == retries - 1:
+                    self._quota_exceeded = True
                     return None
+                time.sleep(wait_time)
         return None
 
     def consume_quota_error(self) -> bool:
@@ -75,23 +134,19 @@ class EnhancedAIService:
 
     @staticmethod
     def _extract_text(response) -> str:
-        """Безопасное извлечение текста из ответа Gemini"""
+        """Безопасное извлечение текста из ответа"""
         if not response:
             return ""
         try:
-            return response.text or ""
+            choices = getattr(response, "choices", [])
+            if choices:
+                message = getattr(choices[0], "message", None)
+                if message and getattr(message, "content", None):
+                    return message.content
+            if getattr(response, "text", None):
+                return response.text
         except Exception:
-            try:
-                candidates = getattr(response, "candidates", [])
-                for cand in candidates:
-                    content = getattr(cand, "content", None)
-                    parts = getattr(content, "parts", [])
-                    for part in parts:
-                        text = getattr(part, "text", None)
-                        if text:
-                            return text
-            except Exception as e:
-                logger.error(f"Failed to extract text: {e}")
+            logger.error("Failed to extract text from AI response")
         return ""
 
     def _parse_json_response(self, text: str) -> Optional[Dict]:
@@ -149,40 +204,30 @@ class EnhancedAIService:
         """
         Превращает аудио-файл (байты) в текст.
         """
+        if self.text_provider == "groq":
+            return self._transcribe_audio_groq(audio_bytes, mime_type)
+        return self._transcribe_audio_gemini(audio_bytes, mime_type)
+
+    def _transcribe_audio_groq(self, audio_bytes: bytes, mime_type: str) -> str:
         try:
-            logger.info("🎤 Sending audio to Gemini for transcription...")
+            if not self.client:
+                raise RuntimeError("GROQ_API_KEY is not configured")
 
-            # Gemini принимает аудио как часть контента
-            # Промпт должен быть строгим, чтобы AI не добавлял от себя "Вот расшифровка:"
-            prompt = "Listen to this audio and transcribe it exactly into Russian text. Do not add any commentary. Just the text."
+            logger.info("🎤 Sending audio to Groq for transcription...")
 
-            # Формируем запрос (Gemini умеет понимать MIME types)
             if not isinstance(audio_bytes, (bytes, bytearray)):
                 audio_bytes = bytes(audio_bytes)
 
-            response = self.model.generate_content([
-                prompt,
-                {
-                    "mime_type": mime_type,
-                    "data": audio_bytes
-                }
-            ])
+            file_obj = io.BytesIO(audio_bytes)
+            file_obj.name = "audio.mp3" if "mp3" in mime_type else "audio.ogg"
 
-            try:
-                text = response.text.strip()
-            except Exception:
-                text = ""
+            response = self.client.audio.transcriptions.create(
+                model=self.audio_model,
+                file=file_obj,
+                response_format="text"
+            )
 
-            if not text:
-                # Fallback: пытаемся вытащить текст из кандидатов/part
-                try:
-                    if response.candidates:
-                        parts = response.candidates[0].content.parts or []
-                        text = "".join(
-                            getattr(part, "text", "") for part in parts if getattr(part, "text", "")
-                        ).strip()
-                except Exception:
-                    text = ""
+            text = str(response).strip()
 
             if not text:
                 logger.warning("⚠️ Transcription returned empty content")
@@ -200,52 +245,48 @@ class EnhancedAIService:
 
             return ""
 
-    # ======================== STAGE 1: INTENT CLASSIFICATION ========================
+    def _transcribe_audio_gemini(self, audio_bytes: bytes, mime_type: str) -> str:
+        try:
+            if not self.gemini_model:
+                raise RuntimeError("GEMINI_API_KEY is not configured")
 
-    def classify_intent(self, user_message: str, context: Dict = None) -> Dict:
-        """
-        Первый этап: классификация намерения пользователя.
-        Определяет, что хочет пользователь: искать, консультироваться или связаться.
-        """
-        context_info = json.dumps(context or {}, ensure_ascii=False)
+            logger.info("🎤 Sending audio to Gemini for transcription...")
 
-        prompt = f"""Ты — HomeMe AI, эксперт по анализу запросов о недвижимости.
+            if not isinstance(audio_bytes, (bytes, bytearray)):
+                audio_bytes = bytes(audio_bytes)
 
-ЗАДАЧА: Определить намерение (intent) пользователя.
+            prompt = "Listen to this audio and transcribe it exactly into Russian text. Do not add any commentary. Just the text."
+            response = self.gemini_model.generate_content([
+                prompt,
+                {
+                    "mime_type": mime_type,
+                    "data": audio_bytes
+                }
+            ])
 
-ВОЗМОЖНЫЕ ИНТЕНТЫ:
-1. "search_objects" - Хочет найти/посмотреть квартиры
-2. "consult_location" - Спрашивает о районе/локации (информационный запрос)
-3. "contact_expert" - Хочет связаться с живым экспертом
-4. "greeting" - Приветствие или общая беседа
-5. "refine_search" - Уточнение/изменение параметров поиска
+            text = ""
+            try:
+                text = response.text.strip()
+            except Exception:
+                text = ""
 
-КОНТЕКСТ ДИАЛОГА: {context_info}
-СООБЩЕНИЕ: "{user_message}"
+            if not text:
+                logger.warning("⚠️ Transcription returned empty content")
+                return ""
 
-Верни JSON:
-{{
-    "intent": "search_objects",
-    "confidence": 0.95,
-    "reasoning": "Пользователь явно запрашивает поиск недвижимости",
-    "is_continuation": false
-}}"""
+            logger.info(f"📝 Transcription result: '{text}'")
+            return text
 
-        response = self._generate_with_retry(prompt, temperature=0.2)
-        text = self._extract_text(response)
-        result = self._parse_json_response(text)
+        except Exception as e:
+            error_text = str(e)
+            logger.error(f"❌ Transcription failed: {e}")
 
-        if not result:
-            return {
-                "intent": "greeting",
-                "confidence": 0.3,
-                "reasoning": "Не удалось классифицировать",
-                "is_continuation": False
-            }
+            if "429" in error_text or "quota" in error_text.lower():
+                return "__QUOTA_EXCEEDED__"
 
-        return result
+            return ""
 
-    # ======================== STAGE 2: GEOGRAPHIC INTELLIGENCE ========================
+    # ======================== GEOGRAPHIC INTELLIGENCE ========================
 
     def resolve_location_intelligence(self, user_message: str, context: Dict = None) -> Dict:
         """
@@ -315,9 +356,17 @@ class EnhancedAIService:
     "reasoning": "Упомянут EXPO, который находится в Есильском районе Астаны"
 }}"""
 
-        response = self._generate_with_retry(prompt, temperature=0.1)
+        response = self._generate_with_retry(prompt, temperature=0.1, json_mode=True)
         text = self._extract_text(response)
         result = self._parse_json_response(text)
+        if not result:
+            retry_prompt = (
+                "Верни ТОЛЬКО валидный JSON без кода и текста. "
+                "Если не уверен, используй null/0.\n\n" + prompt
+            )
+            response = self._generate_with_retry(retry_prompt, temperature=0.0, json_mode=True)
+            text = self._extract_text(response)
+            result = self._parse_json_response(text)
 
         if not result or result.get('confidence', 0) < 0.4:
             return {
@@ -330,64 +379,7 @@ class EnhancedAIService:
         self._location_cache[cache_key] = result
         return result
 
-    # ======================== STAGE 3: LIFESTYLE & PREFERENCES EXTRACTION ========================
-
-    def extract_lifestyle_preferences(self, user_message: str, context: Dict = None) -> Dict:
-        """
-        Третий этап: извлечение lifestyle-предпочтений и нефункциональных требований.
-        "Тихо", "для семьи", "рядом с метро", "зеленый район" и т.д.
-        """
-        prompt = f"""Ты — AI-психолог недвижимости. Анализируешь lifestyle-предпочтения.
-
-КАТЕГОРИИ ПРЕДПОЧТЕНИЙ:
-
-1. АТМОСФЕРА:
-   - quiet (тихо, спокойно)
-   - lively (оживленно, центр)
-   - nature (зелено, парки)
-   - urban (городской стиль)
-
-2. ИНФРАСТРУКТУРА:
-   - metro (метро рядом)
-   - school (школы, детсады)
-   - mall (ТЦ, магазины)
-   - medical (поликлиники)
-   - park (парки, скверы)
-   - gym (спортзалы)
-
-3. ЦЕЛЕВАЯ АУДИТОРИЯ:
-   - family (семья с детьми)
-   - student (студент)
-   - young_professional (молодой специалист)
-   - investor (инвестор)
-   - retiree (пенсионер)
-
-4. ОСОБЫЕ ТРЕБОВАНИЯ:
-   - view (красивый вид)
-   - new_building (новостройка)
-   - renovation (с ремонтом)
-   - parking (парковка)
-   - security (охрана)
-
-ЗАПРОС: "{user_message}"
-
-Извлеки максимум информации и верни JSON:
-{{
-    "lifestyle_tags": ["quiet", "family", "park", "school"],
-    "priority_tags": ["quiet", "park"],
-    "extracted_phrases": ["где тихо", "для семьи"],
-    "target_audience": "family",
-    "confidence": 0.75,
-    "reasoning": "Запрос указывает на семейные ценности и тишину"
-}}"""
-
-        response = self._generate_with_retry(prompt, temperature=0.3, json_mode=True)
-        text = self._extract_text(response)
-        result = self._parse_json_response(text)
-
-        return result or {"lifestyle_tags": [], "confidence": 0.0}
-
-    # ======================== STAGE 4: PARAMETER EXTRACTION ========================
+    # ======================== PARAMETER EXTRACTION ========================
 
     def extract_search_parameters(self, user_message: str, context: Dict = None) -> Dict:
         """
@@ -426,154 +418,31 @@ class EnhancedAIService:
     "extracted_entities": {{"rooms": "двушка", "price": "до 50 млн"}}
 }}"""
 
-        response = self._generate_with_retry(prompt, temperature=0.2)
+        response = self._generate_with_retry(prompt, temperature=0.2, json_mode=True)
         text = self._extract_text(response)
         result = self._parse_json_response(text)
+        if not result:
+            retry_prompt = (
+                "Верни ТОЛЬКО валидный JSON без кода и текста. "
+                "Если не уверен, используй null/0.\n\n" + prompt
+            )
+            response = self._generate_with_retry(retry_prompt, temperature=0.0, json_mode=True)
+            text = self._extract_text(response)
+            result = self._parse_json_response(text)
 
         return result or {"confidence": 0.0}
-
-    # ======================== STAGE 5: QUERY ENRICHMENT & SEMANTIC EXPANSION ========================
-
-    def enrich_search_query(self, user_message: str, location_data: Dict,
-                            lifestyle_data: Dict, params_data: Dict) -> Dict:
-        """
-        Пятый этап: семантическое обогащение запроса для умного векторного поиска.
-        Генерирует синонимы, связанные термины и поисковые ключи.
-        """
-        combined_context = {
-            "location": location_data,
-            "lifestyle": lifestyle_data,
-            "params": params_data
-        }
-        context_str = json.dumps(combined_context, ensure_ascii=False)
-
-        prompt = f"""Ты — AI для семантического обогащения поисковых запросов.
-
-ЗАДАЧА: Создать расширенное поисковое представление для векторного поиска.
-
-ВХОДНЫЕ ДАННЫЕ:
-{context_str}
-
-ОРИГИНАЛЬНЫЙ ЗАПРОС: "{user_message}"
-
-Сгенерируй:
-1. semantic_keywords - ключевые слова с синонимами
-2. description_match_phrases - фразы для поиска в описаниях
-3. exclusion_keywords - что точно НЕ подходит
-4. embedding_text - итоговый текст для векторизации
-
-ПРИМЕР:
-Если "тихая квартира рядом с парком для семьи":
-- semantic_keywords: ["тихий", "спокойный", "зеленый", "парк", "сквер", "семейный", "детская площадка"]
-- description_match_phrases: ["тихий район", "рядом парк", "для семьи", "детская инфраструктура"]
-- exclusion_keywords: ["шумный", "ночной клуб", "трасса"]
-
-Верни JSON:
-{{
-    "semantic_keywords": ["тихий", "парк"],
-    "description_match_phrases": ["тихий район", "зеленая зона"],
-    "exclusion_keywords": ["шумный"],
-    "embedding_text": "Тихая спокойная квартира в зеленом районе рядом с парком для семьи с детьми",
-    "search_weight_factors": {{
-        "location_weight": 0.4,
-        "lifestyle_weight": 0.35,
-        "params_weight": 0.25
-    }}
-}}"""
-
-        response = self._generate_with_retry(prompt, temperature=0.4)
-        text = self._extract_text(response)
-        result = self._parse_json_response(text)
-
-        return result or {"embedding_text": user_message}
-
-    # ======================== MASTER ORCHESTRATION ========================
-
-    def analyze_query_comprehensive(self, user_message: str, context: Dict = None) -> Dict:
-        """
-        ГЛАВНЫЙ МЕТОД: Оркестрирует все этапы анализа.
-        Возвращает полное понимание запроса пользователя.
-        """
-        logger.info(f"🧠 Starting comprehensive analysis for: {user_message[:50]}...")
-
-        # Stage 1: Intent
-        intent_result = self.classify_intent(user_message, context)
-        logger.info(f"📌 Intent: {intent_result.get('intent')} (conf: {intent_result.get('confidence')})")
-
-        # Если не поиск - возвращаем базовый результат
-        if intent_result.get('intent') not in ['search_objects', 'refine_search']:
-            return {
-                "intent": intent_result.get('intent'),
-                "confidence": intent_result.get('confidence'),
-                "stage": "intent_only"
-            }
-
-        # Stage 2: Location Intelligence
-        location_result = self.resolve_location_intelligence(user_message, context)
-        logger.info(f"📍 Location: {location_result.get('city')}, {location_result.get('district')}")
-
-        # Stage 3: Lifestyle
-        lifestyle_result = self.extract_lifestyle_preferences(user_message, context)
-        logger.info(f"🎯 Lifestyle tags: {lifestyle_result.get('lifestyle_tags', [])}")
-
-        # Stage 4: Parameters
-        params_result = self.extract_search_parameters(user_message, context)
-        logger.info(f"📊 Params: {params_result}")
-
-        # Stage 5: Semantic Enrichment
-        enrichment_result = self.enrich_search_query(
-            user_message, location_result, lifestyle_result, params_result
-        )
-        logger.info(f"✨ Enrichment completed")
-
-        # Собираем финальный результат
-        comprehensive_result = {
-            "intent": intent_result.get('intent'),
-            "intent_confidence": intent_result.get('confidence'),
-
-            # Location
-            "city": location_result.get('city'),
-            "district": location_result.get('district'),
-            "nearby_landmarks": location_result.get('nearby_landmarks', []),
-            "coordinates": location_result.get('coordinates_estimate'),
-            "radius_km": location_result.get('radius_km'),
-            "location_confidence": location_result.get('confidence', 0),
-
-            # Parameters
-            "rooms": params_result.get('rooms'),
-            "max_price": params_result.get('max_price'),
-            "min_price": params_result.get('min_price'),
-            "min_area": params_result.get('min_area'),
-            "max_area": params_result.get('max_area'),
-            "floor_preferences": params_result.get('floor_preferences', []),
-            "property_type": params_result.get('property_type'),
-
-            # Lifestyle
-            "lifestyle_tags": lifestyle_result.get('lifestyle_tags', []),
-            "priority_tags": lifestyle_result.get('priority_tags', []),
-            "target_audience": lifestyle_result.get('target_audience'),
-
-            # Enrichment
-            "semantic_keywords": enrichment_result.get('semantic_keywords', []),
-            "description_match_phrases": enrichment_result.get('description_match_phrases', []),
-            "exclusion_keywords": enrichment_result.get('exclusion_keywords', []),
-            "embedding_text": enrichment_result.get('embedding_text', user_message),
-
-            # Overall
-            "analysis_complete": True,
-            "stage": "comprehensive"
-        }
-
-        logger.info(f"✅ Comprehensive analysis complete!")
-        return comprehensive_result
 
     # ======================== EMBEDDINGS ========================
 
     def get_embedding(self, text: str):
         """Генерация эмбеддинга для векторного поиска"""
         try:
+            if not getattr(settings, 'GEMINI_API_KEY', None):
+                logger.warning("⚠️ GEMINI_API_KEY is not configured, embeddings disabled")
+                return None
+            embedding_model = getattr(settings, "EMBEDDING_MODEL", "models/text-embedding-004")
             result = genai.embed_content(
-                model="models/text-embedding-004",
+                model=embedding_model,
                 content=text,
                 task_type="retrieval_document"
             )
@@ -583,7 +452,19 @@ class EnhancedAIService:
             if embedding is None:
                 return None
 
-            return list(embedding)
+            embedding = list(embedding)
+            expected_dim = getattr(settings, "EMBEDDING_DIMENSIONS", 768)
+            if len(embedding) != expected_dim:
+                logger.warning(
+                    f"⚠️ Embedding dimension mismatch: got {len(embedding)}, expected {expected_dim}. "
+                    "Auto-adjusting."
+                )
+                if len(embedding) > expected_dim:
+                    embedding = embedding[:expected_dim]
+                else:
+                    embedding = embedding + [0.0] * (expected_dim - len(embedding))
+
+            return embedding
         except Exception as e:
             logger.error(f"Embedding error: {e}")
             return None

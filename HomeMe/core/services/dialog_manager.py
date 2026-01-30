@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class EnhancedDialogManager:
     def __init__(self):
-        self.ai = EnhancedAIService()
+        self.ai = EnhancedAIService(text_provider="gemini")
         self.search = EnhancedSearchService(self.ai)
         self.location_resolver = DynamicLocationResolver(self.ai)
 
@@ -43,7 +43,7 @@ class EnhancedDialogManager:
             if text == '1' or 'подобрать' in lowered_text:
                 await self._update_state(session, 'CHOOSING_TYPE')
                 response[
-                    'text'] = "Отлично! Что будем смотреть?\n\n1. Новостройки BI Group 🏗\n2. Вторичка 🏠\n3. Смешанный поиск ⭐"
+                    'text'] = "Отлично! Что будем смотреть?\n\n1. BI Group 🏗\n2. Вторичка 🏠\n3. Смешанный поиск ⭐"
                 response['buttons'] = ['1. BI Group', '2. Вторичка', '3. Смешанный']
 
             elif text == '2' or 'район' in lowered_text:
@@ -55,7 +55,7 @@ class EnhancedDialogManager:
                 await self._update_state(session, 'LEAD_NAME')
                 response['text'] = "Я соединю тебя с экспертом. Как к тебе обращаться?"
 
-            elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир']):
+            elif any(word in lowered_text for word in ['найди', 'квартира', 'квартиру', 'жк', 'жилье', 'квартир', 'офис', 'коммерц']):
                 # Быстрый старт без кнопок: извлекаем параметры и сразу ищем
                 params = await sync_to_async(
                     self.ai.extract_search_parameters,
@@ -65,6 +65,11 @@ class EnhancedDialogManager:
                     return self._quota_response()
                 params['embedding_text'] = text
                 params['source'] = params.get('source', 'mixed')
+                if any(word in lowered_text for word in ['офис', 'коммерц', 'бизнес-центр', 'бц']):
+                    params['source'] = 'bi'
+                    params['bi_category'] = 'commercial'
+                else:
+                    params.setdefault('bi_category', 'residential')
 
                 location_data = await sync_to_async(
                     self.location_resolver.resolve_any_location,
@@ -103,10 +108,25 @@ class EnhancedDialogManager:
         elif state == 'CHOOSING_TYPE':
             if '1' in text or 'bi' in text.lower():
                 params['source'] = 'bi'
+                await self._update_state(session, 'CHOOSING_BI_CATEGORY', params)
+                response['text'] = "Что ищем в BI Group?\n\n1. ЖК (квартиры) 🏗\n2. Офисы/коммерция 🏢"
+                response['buttons'] = ['1. ЖК', '2. Офисы/коммерция']
             elif '2' in text or 'вторич' in text.lower():
                 params['source'] = 'secondary'
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
+                response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
             else:
                 params['source'] = 'mixed'
+                await self._update_state(session, 'SETTING_BUDGET', params)
+                response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
+                response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
+
+        elif state == 'CHOOSING_BI_CATEGORY':
+            if '2' in text or 'офис' in text.lower() or 'коммерц' in text.lower():
+                params['bi_category'] = 'commercial'
+            else:
+                params['bi_category'] = 'residential'
 
             await self._update_state(session, 'SETTING_BUDGET', params)
             response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"

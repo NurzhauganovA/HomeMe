@@ -547,3 +547,91 @@ class BIUnit(models.Model):
     @property
     def current_price(self):
         return self.price_discount if self.price_discount else self.price
+
+
+class BICommercialComplex(models.Model):
+    """
+    Коммерческий объект/очередь (realEstate из API)
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bi_uuid = models.CharField("UUID из API", max_length=100, unique=True, db_index=True)
+
+    # Основные данные
+    name = models.CharField("Название объекта", max_length=255)
+    address = models.CharField("Адрес", max_length=500, blank=True)
+    description = models.TextField(blank=True)
+
+    # Геолокация (из API realEstateList)
+    latitude = models.FloatField("Широта", null=True, blank=True)
+    longitude = models.FloatField("Долгота", null=True, blank=True)
+    city_uuid = models.CharField("UUID Города", max_length=100, db_index=True)
+
+    # Характеристики
+    class_name = models.CharField("Класс", max_length=100, blank=True)
+    deadline = models.CharField("Срок сдачи", max_length=50, blank=True)
+    min_price = models.DecimalField("Цена от", max_digits=15, decimal_places=2, null=True)
+
+    # Медиа
+    url = models.URLField(blank=True)
+    image_url = models.URLField("Фото 400px", blank=True)
+
+    # === AI Brain ===
+    features = models.JSONField("AI Теги", default=dict)
+    embedding = VectorField(dimensions=768, null=True, blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def get_text_for_embedding(self):
+        """Формирует текст для векторизации"""
+        return (
+            f"Коммерческий объект {self.name}. Класс: {self.class_name}. "
+            f"Адрес: {self.address}. Теги: {', '.join(self.features.keys())}"
+        )
+
+    class Meta:
+        db_table = 'bi_commercial_complexes'
+        verbose_name = "Коммерческий объект"
+        verbose_name_plural = "Коммерческие объекты"
+
+
+class BICommercialUnit(models.Model):
+    """
+    Конкретный коммерческий объект (Placement из API).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bi_uuid = models.CharField("UUID объекта", max_length=100, unique=True, db_index=True)
+    complex = models.ForeignKey(BICommercialComplex, on_delete=models.CASCADE, related_name='units')
+
+    # Параметры
+    room_count = models.IntegerField("Комнат", db_index=True)
+    floor = models.IntegerField("Этаж")
+    max_floor = models.IntegerField("Всего этажей", null=True)
+    area = models.FloatField("Площадь")
+
+    # Цена
+    price = models.DecimalField("Базовая цена", max_digits=15, decimal_places=2)
+    price_discount = models.DecimalField("Цена со скидкой", max_digits=15, decimal_places=2, null=True)
+
+    # Дополнительно
+    block_name = models.CharField("Блок/Секция", max_length=100, blank=True)
+    deadline = models.CharField("Срок сдачи секции", max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['price_discount', 'room_count']),
+            models.Index(fields=['area']),
+        ]
+        db_table = 'bi_commercial_units'
+        verbose_name = "Коммерческое помещение"
+        verbose_name_plural = "Коммерческие помещения"
+
+    def __str__(self):
+        return f"{self.area}м2 в {self.complex.name}"
+
+    @property
+    def current_price(self):
+        return self.price_discount if self.price_discount else self.price

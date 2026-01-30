@@ -36,6 +36,7 @@ class PropertyDTO:
     building_type: Optional[str] = None  # "new", "secondary"
     property_class: Optional[str] = None  # "Комфорт", "Бизнес", "Элит"
     deadline: Optional[str] = None  # Срок сдачи для новостроек
+    property_kind: Optional[str] = None  # "residential", "commercial"
 
     # Геолокация
     latitude: Optional[float] = None
@@ -79,7 +80,10 @@ class PropertyDTO:
         Форматирует объект для отправки в Telegram (HTML).
         Красивый, информативный формат с эмодзи.
         """
-        icon = "🏗" if self.is_new_building else "🏠"
+        if self.property_kind == "commercial":
+            icon = "🏢"
+        else:
+            icon = "🏗" if self.is_new_building else "🏠"
 
         # Заголовок
         msg = f"{icon} <b>{self.title}</b>\n"
@@ -131,7 +135,10 @@ class PropertyDTO:
         """
         Форматирует объект для отправки в WhatsApp (Markdown).
         """
-        icon = "🏗" if self.is_new_building else "🏠"
+        if self.property_kind == "commercial":
+            icon = "🏢"
+        else:
+            icon = "🏗" if self.is_new_building else "🏠"
 
         msg = f"{icon} *{self.title}*\n"
         msg += f"📍 {self.address}\n"
@@ -157,6 +164,7 @@ class PropertyDTO:
         """Конвертирует в словарь для JSON/API"""
         return {
             "source": self.source,
+            "property_kind": self.property_kind,
             "title": self.title,
             "address": self.address,
             "price": self.price,
