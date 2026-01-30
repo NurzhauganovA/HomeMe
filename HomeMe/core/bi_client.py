@@ -37,6 +37,10 @@ class EnhancedBIGroupClient:
         "8f72b6b1-0453-4938-9775-0f2f3a836ccd",
         "1429f97b-e73f-4bd4-8b59-a4c779b4db34"
     ]
+    COMMERCIAL_PROPERTY_TYPES = [
+        "f25589d6-e6f4-43b9-beac-d6698f86b0a3",
+        "e8f04293-b2d7-46a7-8ccb-ea022a151c94"
+    ]
 
     # UUID городов
     CITY_MAP = {
@@ -531,6 +535,38 @@ class EnhancedBIGroupClient:
 
         return all_items
 
+    def get_all_commercial_real_estates(self) -> List[Dict]:
+        """Получает ВСЕ коммерческие объекты (обходит пагинацию)"""
+        all_items = []
+        page = 1
+        page_size = 100
+
+        while True:
+            payload = {
+                "companyIds": self.COMPANY_IDS,
+                "propertyTypes": self.COMMERCIAL_PROPERTY_TYPES,
+                "pageNo": page,
+                "pageSize": page_size
+            }
+            try:
+                data = self._make_request("https://apigw.bi.group/sales-picker/microfe-v3/realEstateList", payload)
+                items = data.get("realEstates", [])
+
+                if not items:
+                    break
+
+                all_items.extend(items)
+                logger.info(f"📥 Fetched page {page} of Commercial RealEstates (got {len(items)})")
+
+                if len(items) < page_size:
+                    break
+                page += 1
+            except Exception as e:
+                logger.error(f"❌ Error fetching commercial real estates page {page}: {e}")
+                break
+
+        return all_items
+
     def get_placements_for_complex(self, complex_uuid: str) -> List[Dict]:
         """Получает ВСЕ квартиры конкретного ЖК"""
         all_placements = []
@@ -560,6 +596,37 @@ class EnhancedBIGroupClient:
 
             except Exception as e:
                 # Некоторые ЖК могут не иметь квартир в продаже
+                break
+
+        return all_placements
+
+    def get_commercial_placements_for_complex(self, complex_uuid: str) -> List[Dict]:
+        """Получает ВСЕ помещения конкретного коммерческого объекта"""
+        all_placements = []
+        page = 1
+        page_size = 50
+
+        while True:
+            payload = {
+                "companyIds": self.COMPANY_IDS,
+                "propertyTypes": self.COMMERCIAL_PROPERTY_TYPES,
+                "realEstateUUIDs": [complex_uuid],
+                "pageNo": page,
+                "pageSize": page_size
+            }
+            try:
+                data = self._make_request("https://apigw.bi.group/sales-picker/microfe-v3/placementList", payload)
+                items = data.get("placements", [])
+
+                if not items:
+                    break
+
+                all_placements.extend(items)
+
+                if len(items) < page_size:
+                    break
+                page += 1
+            except Exception:
                 break
 
         return all_placements

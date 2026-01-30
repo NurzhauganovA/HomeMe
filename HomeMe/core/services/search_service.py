@@ -5,7 +5,13 @@ from typing import List, Dict
 from django.db.models import Q
 from pgvector.django import CosineDistance
 
-from telegram_bot.models import BIUnit, BIComplex, SecondaryProperty
+from telegram_bot.models import (
+    BIUnit,
+    BIComplex,
+    BICommercialComplex,
+    BICommercialUnit,
+    SecondaryProperty
+)
 from core.dto import PropertyDTO
 from core.bi_client import EnhancedBIGroupClient
 
@@ -24,6 +30,8 @@ class EnhancedSearchService:
         results = []
         source = params.get('source', 'mixed')
         embedding_text = params.get('embedding_text', '').lower()
+        bi_category = params.get('bi_category', 'residential')
+        bi_scope = params.get('bi_scope', 'both')
 
         # Получаем координаты из параметров (их туда положил DialogManager)
         coords = params.get('coordinates')
@@ -67,8 +75,18 @@ class EnhancedSearchService:
 
         # --- 2. ПОИСК BI GROUP ---
         if source in ['bi', 'mixed']:
+            complex_model = BIComplex
+            unit_model = BIUnit
+            mapper = self._map_bi_to_dto
+            complex_mapper = None
+            if bi_category == 'commercial':
+                complex_model = BICommercialComplex
+                unit_model = BICommercialUnit
+                mapper = self._map_bi_commercial_to_dto
+                complex_mapper = self._map_bi_commercial_complex_to_dto
+
             # Находим подходящие ЖК
-            target_complexes = BIComplex.objects.filter(complex_filters)
+            target_complexes = complex_model.objects.filter(complex_filters)
 
             # Если есть вектор, сортируем ЖК по смысловой близости
             if query_vector:
@@ -84,17 +102,27 @@ class EnhancedSearchService:
                 if query_vector and not coords:
                     pass
 
-                # Внутри каждого ЖК ищем подходящую квартиру
-                units = BIUnit.objects.filter(complex=comp, is_active=True)
+                best_unit = None
 
-                if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
-                if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
-                if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                # Для коммерции можно искать юниты, комплекс или оба варианта
+                if not (bi_category == 'commercial' and bi_scope == 'complex'):
+                    units = unit_model.objects.filter(complex=comp, is_active=True)
 
-                # Берем ОДНУ лучшую (самую дешевую) квартиру из этого ЖК для разнообразия
-                best_unit = units.order_by('price').first()
-                if best_unit:
-                    results.append(self._map_bi_to_dto(best_unit, comp))
+                    if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
+                    if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+                    if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                    if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
+                    if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
+
+                    # Берем ОДНУ лучшую (самую дешевую) квартиру из этого ЖК для разнообразия
+                    best_unit = units.order_by('price').first()
+                    if best_unit:
+                        results.append(mapper(best_unit, comp))
+
+                # Если пользователю нужен объект целиком, добавляем комплекс как отдельный результат
+                if bi_category == 'commercial' and bi_scope in ['complex', 'both'] and complex_mapper:
+                    if self._complex_matches_filters(comp, params):
+                        results.append(complex_mapper(comp))
 
                 # Если набрали лимит, останавливаемся
                 if len(results) >= limit:
@@ -113,6 +141,8 @@ class EnhancedSearchService:
             if params.get('min_price'): sec_props = sec_props.filter(price__gte=params['min_price'])
             if params.get('max_price'): sec_props = sec_props.filter(price__lte=params['max_price'])
             if params.get('rooms'): sec_props = sec_props.filter(rooms=params['rooms'])
+            if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
+            if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])
 
             # Вектор
             if query_vector:
@@ -147,9 +177,10 @@ class EnhancedSearchService:
 
     def _map_bi_to_dto(self, unit: BIUnit, comp: BIComplex) -> PropertyDTO:
         # Формируем богатое описание из тегов AI
-        side = "Левый" if comp.features.get('side') == 'Left' else "Правый"
-        district = comp.features.get('district_name', '')
-        tags_list = comp.features.get('tags', [])
+        features = comp.features or {}
+        side = "Левый" if features.get('side') == 'Left' else "Правый"
+        district = features.get('district_name', '')
+        tags_list = features.get('tags', [])
         tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
 
         desc = f"📍 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
@@ -169,6 +200,78 @@ class EnhancedSearchService:
             latitude=comp.latitude,
             longitude=comp.longitude,
         )
+
+    def _map_bi_commercial_to_dto(self, unit: BICommercialUnit, comp: BICommercialComplex) -> PropertyDTO:
+        features = comp.features or {}
+        side = "Левый" if features.get('side') == 'Left' else "Правый"
+        district = features.get('district_name', '')
+        tags_list = features.get('tags', [])
+        tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
+
+        desc = f"🏢 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
+
+        return PropertyDTO(
+            source="bi_group",
+            title=f"БЦ {comp.name}",
+            address=comp.address,
+            price=float(unit.price),
+            rooms=unit.room_count,
+            area=unit.area,
+            floor=unit.floor,
+            total_floors=unit.max_floor,
+            description=desc,
+            url=comp.url,
+            image_url=comp.image_url,
+            latitude=comp.latitude,
+            longitude=comp.longitude,
+        )
+
+    def _map_bi_commercial_complex_to_dto(self, comp: BICommercialComplex) -> PropertyDTO:
+        features = comp.features or {}
+        side = "Левый" if features.get('side') == 'Left' else "Правый"
+        district = features.get('district_name', '')
+        tags_list = features.get('tags', [])
+        tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
+
+        desc = f"🏢 {side} берег | {district}\n✨ {tags}\nКоммерческий объект целиком"
+
+        price = float(comp.min_price) if comp.min_price else 0.0
+        area = comp.min_area or 0.0
+
+        return PropertyDTO(
+            source="bi_group",
+            title=f"БЦ {comp.name}",
+            address=comp.address,
+            price=price,
+            rooms=0,
+            area=area,
+            floor=0,
+            total_floors=None,
+            description=desc,
+            url=comp.url,
+            image_url=comp.image_url,
+            latitude=comp.latitude,
+            longitude=comp.longitude,
+        )
+
+    @staticmethod
+    def _complex_matches_filters(comp, params: Dict) -> bool:
+        min_price = params.get('min_price')
+        max_price = params.get('max_price')
+        min_area = params.get('min_area')
+        max_area = params.get('max_area')
+
+        if min_price and comp.min_price is not None and comp.min_price < min_price:
+            return False
+        if max_price and comp.min_price is not None and comp.min_price > max_price:
+            return False
+
+        if min_area and comp.max_area is not None and comp.max_area < min_area:
+            return False
+        if max_area and comp.min_area is not None and comp.min_area > max_area:
+            return False
+
+        return True
 
     def _map_secondary_to_dto(self, item: SecondaryProperty) -> PropertyDTO:
         return PropertyDTO(

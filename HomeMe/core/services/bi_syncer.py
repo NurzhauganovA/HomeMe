@@ -1,7 +1,7 @@
 import logging
 import json
 from django.conf import settings
-from telegram_bot.models import BIComplex, BIUnit
+from telegram_bot.models import BIComplex, BIUnit, BICommercialComplex, BICommercialUnit
 from core.bi_client import EnhancedBIGroupClient
 from core.services.ai_service import EnhancedAIService
 
@@ -16,7 +16,7 @@ class BISyncService:
 
     def run_full_sync(self):
         """Полная синхронизация ЖК и квартир с умным обогащением данных"""
-        logger.info("🚀 Starting Smart Full Sync...")
+        logger.info("🚀 Starting Smart Full Sync (Residential + Commercial)...")
 
         # 1. Получаем все ЖК
         complexes_data = self.client.get_all_real_estates()
@@ -30,8 +30,23 @@ class BISyncService:
             if ai_status == 0:
                 skipped_ai_count += 1
 
+        # 2. Получаем все коммерческие объекты
+        commercial_data = self.client.get_all_commercial_real_estates()
+        logger.info(f"🏢 Found {len(commercial_data)} commercial complexes via API")
 
-        logger.info(f"✅ Smart Sync Complete! Synced {synced_count}. AI Skipped (Saved tokens): {skipped_ai_count}")
+        commercial_synced = 0
+        commercial_skipped_ai = 0
+        for item in commercial_data:
+            ai_status = self._sync_commercial_complex_and_units(item)
+            commercial_synced += 1
+            if ai_status == 0:
+                commercial_skipped_ai += 1
+
+        logger.info(
+            f"✅ Smart Sync Complete! "
+            f"Residential synced {synced_count}, AI skipped {skipped_ai_count}. "
+            f"Commercial synced {commercial_synced}, AI skipped {commercial_skipped_ai}"
+        )
 
     def _sync_complex_and_units(self, item: dict):
         """Синхронизация одного ЖК, AI-анализ локации и обновление квартир"""
@@ -54,7 +69,10 @@ class BISyncService:
                 "url": item.get("website", ""),
                 "image_url": item.get("photoURL400") or item.get("photoURL", ""),
                 "class_name": item.get('propertyClassName', [''])[0] if item.get('propertyClassName') else "",
-                "description": f"ЖК {name}. Адрес: {address}"
+                "description": f"ЖК {name}. Адрес: {address}",
+                "min_price": item.get("minTotalPrice"),
+                "min_area": item.get("squareMin"),
+                "max_area": item.get("squareMax"),
             }
 
             complex_obj, created = BIComplex.objects.update_or_create(
@@ -86,10 +104,68 @@ class BISyncService:
             # Синхронизация квартир
             placements = self.client.get_placements_for_complex(bi_uuid)
             if placements:
-                self._sync_units_batch(complex_obj, placements)
+                self._sync_units_batch(complex_obj, placements, BIUnit)
+
+            return status
 
         except Exception as e:
             logger.error(f"⚠️ Error syncing complex {item.get('name')}: {e}")
+            return None
+
+    def _sync_commercial_complex_and_units(self, item: dict):
+        """Синхронизация коммерческого объекта и помещений"""
+        try:
+            item_city_uuid = item.get("cityUUID")
+            if item_city_uuid != self.ASTANA_UUID:
+                return None
+
+            bi_uuid = item.get("uuid")
+            name = item.get("name")
+            address = item.get("address", "")
+
+            defaults = {
+                "name": name,
+                "address": address,
+                "city_uuid": item.get("cityUUID", ""),
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude"),
+                "url": item.get("website", ""),
+                "image_url": item.get("photoURL400") or item.get("photoURL", ""),
+                "class_name": item.get('propertyClassName', [''])[0] if item.get('propertyClassName') else "",
+                "description": f"Коммерческий объект {name}. Адрес: {address}",
+                "min_price": item.get("minTotalPrice"),
+                "min_area": item.get("squareMin"),
+                "max_area": item.get("squareMax"),
+            }
+
+            complex_obj, created = BICommercialComplex.objects.update_or_create(
+                bi_uuid=bi_uuid,
+                defaults=defaults
+            )
+
+            status = 0
+
+            if not complex_obj.features:
+                logger.info(f"🤖 AI Analysis needed for commercial {name} (No features)...")
+                self._enrich_commercial_complex_with_deep_analysis(complex_obj)
+                status = 1
+            elif complex_obj.embedding is None:
+                logger.info(f"🧬 Generating Commercial Embedding only for {name} (Features exist)...")
+                self._regenerate_embedding_from_features(complex_obj, kind="commercial")
+                status = 2
+            else:
+                logger.info(f"⏭️ SKIPPING AI for commercial {name} (All data present)")
+                status = 0
+
+            placements = self.client.get_commercial_placements_for_complex(bi_uuid)
+            if placements:
+                self._sync_units_batch(complex_obj, placements, BICommercialUnit)
+
+            return status
+
+        except Exception as e:
+            logger.error(f"⚠️ Error syncing commercial complex {item.get('name')}: {e}")
+            return None
 
     def _enrich_complex_with_deep_analysis(self, complex_obj: BIComplex):
         """
@@ -138,7 +214,7 @@ class BISyncService:
             if analysis:
                 # 1. Сохраняем жесткие теги в JSONField
                 complex_obj.features = analysis
-                self._regenerate_embedding_from_features(complex_obj)
+                self._regenerate_embedding_from_features(complex_obj, kind="residential")
 
                 # 2. Генерируем "умный" текст для вектора
                 # Включаем туда результаты анализа, чтобы векторный поиск тоже понимал берег
@@ -164,25 +240,77 @@ class BISyncService:
         except Exception as e:
             logger.error(f"❌ AI Enrichment failed: {e}")
 
-    def _regenerate_embedding_from_features(self, complex_obj: BIComplex):
+    def _enrich_commercial_complex_with_deep_analysis(self, complex_obj: BICommercialComplex):
+        """
+        AI-агент для коммерческих объектов: фокус на бизнес-трафике и доступности.
+        """
+        logger.info(f"🧠 Deep Analyzing Commercial Location: {complex_obj.name}...")
+
+        prompt = f"""
+        Ты — эксперт по коммерческой недвижимости Астаны и Алматы.
+
+        Объект: "{complex_obj.name}"
+        Адрес: "{complex_obj.address}"
+
+        Твоя задача — классифицировать этот объект для поиска коммерции.
+
+        1. ОПРЕДЕЛИ БЕРЕГ (только для Астаны): 
+           - "Left": Есильский район, Нура, район EXPO, Ботанический сад.
+           - "Right": Сарыарка, Байконур, Алматинский район.
+
+        2. АТМОСФЕРА (СТРОГО НА РУССКОМ):
+           - Используй прилагательные: "деловой", "трафиковый", "активный", "спокойный",
+             "центральный", "премиальный", "доступный", "проходимый", "офисный".
+
+        3. ТЕГИ: добавь максимум бизнес-тегов:
+           - "высокий трафик", "первая линия", "видимость фасада", "парковка",
+             "удобный подъезд", "рядом остановка", "рядом метро", "рядом БЦ",
+             "рядом ТРЦ", "рядом госучреждения", "логистика", "грузовой лифт",
+             "отдельный вход", "офисный кластер", "street retail", "удобно для клиентов".
+           - Также добавь ориентиры и инфраструктуру рядом, если возможно.
+
+        Верни ответ СТРОГО в формате JSON:
+        {{
+            "side": "Right" (или "Left"),
+            "district_name": "Есильский",
+            "atmosphere": ["деловой", "трафиковый", ...],
+            "tags": ["первая линия", "парковка", ...]
+        }}
+        """
+
+        try:
+            response = self.ai._generate_with_retry(prompt, json_mode=True)
+            text = self.ai._extract_text(response)
+            analysis = self.ai._parse_json_response(text)
+
+            if analysis:
+                complex_obj.features = analysis
+                self._regenerate_embedding_from_features(complex_obj, kind="commercial")
+
+                side_str = "Левый берег" if analysis.get('side') == 'Left' else "Правый берег"
+                rich_text = self._build_embedding_text(complex_obj, analysis, kind="commercial", side_str=side_str)
+
+                embedding = self.ai.get_embedding(rich_text)
+                if embedding:
+                    complex_obj.embedding = embedding
+
+                complex_obj.save()
+                logger.info(f"✅ Commercial enriched {complex_obj.name}: {side_str}, {analysis.get('atmosphere')}")
+            else:
+                logger.warning(f"⚠️ Empty commercial analysis for {complex_obj.name}")
+
+        except Exception as e:
+            logger.error(f"❌ Commercial AI Enrichment failed: {e}")
+
+    def _regenerate_embedding_from_features(self, complex_obj: BIComplex, kind: str = "residential"):
         """Генерация вектора из уже существующих features (без запроса классификации)"""
         if not complex_obj.features:
             return
 
         features = complex_obj.features
 
-        # Формируем текст для вектора
         side_str = "Левый берег" if features.get('side') == 'Left' else "Правый берег"
-        atm_str = ", ".join(features.get('atmosphere', []))
-        tags_str = ", ".join(features.get('tags', []))
-
-        rich_text = (
-            f"ЖК {complex_obj.name}. Город Астана. "
-            f"Район: {features.get('district_name')}. {side_str}. "
-            f"Атмосфера: {atm_str}. "
-            f"Инфраструктура рядом: {tags_str}. "
-            f"Адрес: {complex_obj.address}."
-        )
+        rich_text = self._build_embedding_text(complex_obj, features, kind=kind, side_str=side_str)
 
         # Запрос только на эмбеддинг (это дешевле)
         embedding = self.ai.get_embedding(rich_text)
@@ -191,8 +319,29 @@ class BISyncService:
             complex_obj.save()
             logger.info(f"✅ Embedding saved for {complex_obj.name}")
 
-    def _sync_units_batch(self, complex_obj: BIComplex, units_data: list):
-        """Массовое сохранение квартир"""
+    def _build_embedding_text(self, complex_obj, features: dict, kind: str, side_str: str) -> str:
+        atm_str = ", ".join(features.get('atmosphere', []))
+        tags_str = ", ".join(features.get('tags', []))
+
+        if kind == "commercial":
+            return (
+                f"Коммерческий объект {complex_obj.name}. Город Астана. "
+                f"Район: {features.get('district_name')}. {side_str}. "
+                f"Атмосфера: {atm_str}. "
+                f"Бизнес-инфраструктура: {tags_str}. "
+                f"Адрес: {complex_obj.address}."
+            )
+
+        return (
+            f"ЖК {complex_obj.name}. Город Астана. "
+            f"Район: {features.get('district_name')}. {side_str}. "
+            f"Атмосфера: {atm_str}. "
+            f"Инфраструктура рядом: {tags_str}. "
+            f"Адрес: {complex_obj.address}."
+        )
+
+    def _sync_units_batch(self, complex_obj, units_data: list, unit_model):
+        """Массовое сохранение юнитов (квартиры или помещения)"""
         current_uuids = []
 
         for u in units_data:
@@ -205,7 +354,7 @@ class BISyncService:
                 if not final_price:
                     continue
 
-                unit, _ = BIUnit.objects.update_or_create(
+                unit, _ = unit_model.objects.update_or_create(
                     bi_uuid=u.get("uuid"),
                     defaults={
                         "complex": complex_obj,
@@ -225,4 +374,4 @@ class BISyncService:
 
         # Помечаем проданные как неактивные
         if current_uuids:
-            BIUnit.objects.filter(complex=complex_obj).exclude(bi_uuid__in=current_uuids).update(is_active=False)
+            unit_model.objects.filter(complex=complex_obj).exclude(bi_uuid__in=current_uuids).update(is_active=False)

@@ -460,90 +460,111 @@ class UserFeedback(models.Model):
         return f"Feedback from {self.user.name}: {self.rating}⭐"
 
 
-class BIComplex(models.Model):
-    """
-    ЖК или очередь (realEstate из API)
-    """
+class BaseBIComplex(models.Model):
+    """Базовый класс для ЖК и БЦ"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bi_uuid = models.CharField("UUID из API", max_length=100, unique=True, db_index=True)
 
-    # Основные данные
-    name = models.CharField("Название ЖК", max_length=255)
+    name = models.CharField("Название", max_length=255)
     address = models.CharField("Адрес", max_length=500, blank=True)
     description = models.TextField(blank=True)
 
-    # Геолокация (из API realEstateList)
     latitude = models.FloatField("Широта", null=True, blank=True)
     longitude = models.FloatField("Долгота", null=True, blank=True)
     city_uuid = models.CharField("UUID Города", max_length=100, db_index=True)
 
-    # Характеристики ЖК
-    class_name = models.CharField("Класс жилья", max_length=100, blank=True)  # Комфорт, Бизнес...
+    class_name = models.CharField("Класс", max_length=100, blank=True)
     deadline = models.CharField("Срок сдачи", max_length=50, blank=True)
     min_price = models.DecimalField("Цена от", max_digits=15, decimal_places=2, null=True)
+    min_area = models.FloatField("Площадь от", null=True, blank=True)
+    max_area = models.FloatField("Площадь до", null=True, blank=True)
 
-    # Медиа
     url = models.URLField(blank=True)
-    image_url = models.URLField("Фото 400px", blank=True)
+    image_url = models.URLField("Фото", blank=True)
 
-    # === AI Brain ===
-    # Сюда пишем теги после анализа описания и локации (quiet, park, center)
     features = models.JSONField("AI Теги", default=dict)
-    # Сюда пишем векторное представление ЖК для умного поиска
     embedding = VectorField(dimensions=768, null=True, blank=True)
-
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.name}"
-
-    def get_text_for_embedding(self):
-        """Формирует текст для векторизации"""
-        # Можно добавить сюда названия ближайших парков (если есть свой гео-сервис)
-        return f"ЖК {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Теги: {', '.join(self.features.keys())}"
-
     class Meta:
-        db_table = 'bi_complexes'
-        verbose_name = "ЖК"
-        verbose_name_plural = "ЖК"
+        abstract = True  # Таблица не создается, только для наследования
+
+    def __str__(self):
+        return self.name
 
 
-class BIUnit(models.Model):
-    """
-    Конкретная квартира (Placement из API).
-    Хранит точные параметры для фильтрации.
-    """
+class BaseBIUnit(models.Model):
+    """Базовый класс для Квартир и Офисов"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    bi_uuid = models.CharField("UUID Квартиры", max_length=100, unique=True, db_index=True)
-    complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
+    bi_uuid = models.CharField("UUID Юнита", max_length=100, unique=True, db_index=True)
 
-    # Параметры квартиры
-    room_count = models.IntegerField("Комнат", db_index=True)
+    room_count = models.IntegerField("Комнат/Помещений", db_index=True)
     floor = models.IntegerField("Этаж")
     max_floor = models.IntegerField("Всего этажей", null=True)
     area = models.FloatField("Площадь")
 
-    # Цена
     price = models.DecimalField("Базовая цена", max_digits=15, decimal_places=2)
     price_discount = models.DecimalField("Цена со скидкой", max_digits=15, decimal_places=2, null=True)
 
-    # Дополнительно
     block_name = models.CharField("Блок/Секция", max_length=100, blank=True)
     deadline = models.CharField("Срок сдачи секции", max_length=50, blank=True)
-    is_active = models.BooleanField(default=True)  # Если пропала из API -> False
+    is_active = models.BooleanField(default=True)
 
     class Meta:
+        abstract = True
         indexes = [
             models.Index(fields=['price_discount', 'room_count']),
             models.Index(fields=['area']),
         ]
-        db_table = 'bi_units'
-        verbose_name = "Квартира в ЖК"
-        verbose_name_plural = "Квартиры в ЖК"
-
-    def __str__(self):
-        return f"{self.room_count}-комн, {self.area}м2 в {self.complex.name}"
 
     @property
     def current_price(self):
         return self.price_discount if self.price_discount else self.price
+
+
+# --- Реальные модели (создадут таблицы) ---
+
+class BIComplex(BaseBIComplex):
+    """Жилые Комплексы"""
+
+    def get_text_for_embedding(self):
+        # Акцент на жизнь, комфорт, детей
+        return f"ЖК {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Теги: {', '.join(self.features.keys())}"
+
+    class Meta:
+        verbose_name = "ЖК (Жилой)"
+        verbose_name_plural = "ЖК (Жилые)"
+        db_table = 'bi_complexes'
+
+
+class BIUnit(BaseBIUnit):
+    """Квартиры"""
+    complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
+
+    class Meta(BaseBIUnit.Meta):
+        verbose_name = "Квартира"
+        verbose_name_plural = "Квартиры"
+        db_table = 'bi_units'
+
+
+class BICommercialComplex(BaseBIComplex):
+    """Бизнес Центры и Коммерция"""
+
+    def get_text_for_embedding(self):
+        # Акцент на бизнес, проходимость, этажность
+        return f"Коммерческий объект {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Подходит для бизнеса. Теги: {', '.join(self.features.keys())}"
+
+    class Meta:
+        verbose_name = "Коммерческий объект"
+        verbose_name_plural = "Коммерческие объекты"
+        db_table = 'bi_commercial_complexes'
+
+
+class BICommercialUnit(BaseBIUnit):
+    """Офисы и помещения"""
+    complex = models.ForeignKey(BICommercialComplex, on_delete=models.CASCADE, related_name='units')
+
+    class Meta(BaseBIUnit.Meta):
+        verbose_name = "Офис/Помещение"
+        verbose_name_plural = "Офисы/Помещения"
+        db_table = 'bi_commercial_units'

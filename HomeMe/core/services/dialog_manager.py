@@ -66,6 +66,13 @@ class EnhancedDialogManager:
                 params['embedding_text'] = text
                 params['source'] = params.get('source', 'mixed')
 
+                if any(word in lowered_text for word in ['офис', 'коммер', 'помещение', 'бизнес', 'retail', 'стрит']):
+                    params['source'] = 'bi'
+                    params['bi_category'] = 'commercial'
+                    params['bi_scope'] = 'both'
+                    if any(word in lowered_text for word in ['здание', 'целиком', 'бц', 'business center']):
+                        params['bi_scope'] = 'complex'
+
                 location_data = await sync_to_async(
                     self.location_resolver.resolve_any_location,
                     thread_sensitive=False
@@ -103,10 +110,26 @@ class EnhancedDialogManager:
         elif state == 'CHOOSING_TYPE':
             if '1' in text or 'bi' in text.lower():
                 params['source'] = 'bi'
+                await self._update_state(session, 'CHOOSING_BI_CATEGORY', params)
+                response['text'] = "Что именно интересует в BI Group?\n\n1. ЖК (квартиры)\n2. Офисы / коммерция"
+                response['buttons'] = ['1. ЖК', '2. Офисы/коммерция']
+                return self._ensure_main_menu_button(response, state)
             elif '2' in text or 'вторич' in text.lower():
                 params['source'] = 'secondary'
             else:
                 params['source'] = 'mixed'
+
+            await self._update_state(session, 'SETTING_BUDGET', params)
+            response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
+            response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
+
+        elif state == 'CHOOSING_BI_CATEGORY':
+            lowered_text = text.lower()
+            if '2' in lowered_text or 'офис' in lowered_text or 'коммер' in lowered_text:
+                params['bi_category'] = 'commercial'
+                params['bi_scope'] = 'both'
+            else:
+                params['bi_category'] = 'residential'
 
             await self._update_state(session, 'SETTING_BUDGET', params)
             response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
@@ -121,14 +144,47 @@ class EnhancedDialogManager:
                 return self._quota_response()
             if extracted.get('max_price') or extracted.get('min_price'):
                 params.update(extracted)
-                await self._update_state(session, 'SETTING_ROOMS', params)
-                response['text'] = "Сколько комнат? 🛏"
-                response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
+                if params.get('bi_category') == 'commercial':
+                    await self._update_state(session, 'SETTING_AREA', params)
+                    response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
+                    response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
+                else:
+                    await self._update_state(session, 'SETTING_ROOMS', params)
+                    response['text'] = "Сколько комнат? 🛏"
+                    response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
             else:
                 response['text'] = "Не понял сумму. Напиши просто цифрами, например '50 млн'."
 
+        elif state == 'SETTING_AREA':
+            lowered_text = text.lower()
+
+            if any(word in lowered_text for word in ['здание', 'целиком', 'бц', 'business center']):
+                params['bi_scope'] = 'complex'
+            elif any(word in lowered_text for word in ['офис', 'кабинет', 'помещение', 'retail', 'стрит']):
+                params['bi_scope'] = 'unit'
+
+            extracted = await sync_to_async(
+                self.ai.extract_search_parameters,
+                thread_sensitive=False
+            )(text)
+            if self.ai.consume_quota_error():
+                return self._quota_response()
+
+            if extracted.get('min_area') or extracted.get('max_area'):
+                params.update(extracted)
+            elif 'не важно' in lowered_text:
+                params.pop('min_area', None)
+                params.pop('max_area', None)
+
+            await self._update_state(session, 'SETTING_LOCATION', params)
+            response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
+            response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
+
         elif state == 'SETTING_ROOMS':
-            if '1' in text:
+            lowered_text = text.lower()
+            if 'не важно' in lowered_text:
+                params.pop('rooms', None)
+            elif '1' in text:
                 params['rooms'] = 1
             elif '2' in text:
                 params['rooms'] = 2
