@@ -19,7 +19,7 @@ class EnhancedDialogManager:
         self.search = EnhancedSearchService(self.ai)
         self.location_resolver = DynamicLocationResolver(self.ai)
 
-    async def process_message(self, user_id, platform, text, user_name=None):
+    async def process_message(self, user_id, platform, text, user_name=None, is_voice: bool = False):
         user, _ = await sync_to_async(BotUser.objects.get_or_create)(
             user_id=str(user_id),
             platform=platform,
@@ -36,6 +36,16 @@ class EnhancedDialogManager:
         if text.lower() in ['/start', 'привет', 'меню', 'start', 'reset', 'в главное меню']:
             await self._update_state(session, 'START', {})
             return self._scenario_start(user.name or 'друг')
+
+        # Голосовые сообщения: используем AI для извлечения параметров
+        if is_voice:
+            voice_params = await self._apply_voice_ai_params(text, params)
+            if voice_params is None:
+                return self._quota_response()
+            params = voice_params
+            if self._has_search_intent(params, text):
+                response = await self._run_search_with_params(session, params)
+                return self._ensure_main_menu_button(response, state)
 
         # --- МАШИНА СОСТОЯНИЙ ---
 
@@ -273,101 +283,7 @@ class EnhancedDialogManager:
             params['offset'] = 0
             params['city'] = 'Astana'  # Hardcode MVP
 
-            # ЗАПУСК ПОИСКА
-            if params.get('source') == 'bi':
-                complex_offset = params.get('complex_offset', 0)
-                complexes = await sync_to_async(
-                    self.search.search_complexes,
-                    thread_sensitive=False
-                )(params, offset=complex_offset, limit=5)
-
-                if complexes:
-                    params['complex_offset'] = complex_offset + len(complexes)
-                    response['objects'] = await sync_to_async(
-                        self.search.map_complexes_to_dto,
-                        thread_sensitive=False
-                    )(params, complexes)
-                    params['complex_candidates'] = self._merge_complex_candidates(
-                        params.get('complex_candidates'),
-                        self._serialize_complexes(complexes)
-                    )
-                    await self._update_state(session, 'COMPLEX_RESULTS', params)
-                    response['text'] = self._format_complexes_intro(params)
-                    response['buttons'] = self._complex_action_buttons(params)
-                else:
-                    await self._update_state(session, 'NO_RESULTS', params)
-                    if params.get('coordinates'):
-                        location_label = params.get('embedding_text', 'указанной локации')
-                        response['text'] = (
-                            f"Не удалось найти объекты рядом с \"{location_label}\" "
-                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    else:
-                        response['text'] = (
-                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
-            elif params.get('source') == 'mixed':
-                params['bi_offset'] = 0
-                params['secondary_offset'] = 0
-                results, new_bi_offset, new_secondary_offset = await sync_to_async(
-                    self.search.intelligent_search_mixed,
-                    thread_sensitive=False
-                )(params, bi_offset=0, secondary_offset=0)
-
-                if results:
-                    params['bi_offset'] = new_bi_offset
-                    params['secondary_offset'] = new_secondary_offset
-                    await self._update_state(session, 'BROWSING', params)
-
-                    response['text'] = self._format_intro(results, params)
-                    response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
-                else:
-                    await self._update_state(session, 'NO_RESULTS', params)
-                    if params.get('coordinates'):
-                        location_label = params.get('embedding_text', 'указанной локации')
-                        response['text'] = (
-                            f"Не удалось найти объекты рядом с \"{location_label}\" "
-                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    else:
-                        response['text'] = (
-                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
-            else:
-                results = await sync_to_async(
-                    self.search.intelligent_search,
-                    thread_sensitive=False
-                )(params, offset=0)
-
-                if results:
-                    params['offset'] = len(results)
-                    await self._update_state(session, 'BROWSING', params)
-
-                    response['text'] = self._format_intro(results, params)
-                    response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
-                else:
-                    await self._update_state(session, 'NO_RESULTS', params)
-                    if params.get('coordinates'):
-                        location_label = params.get('embedding_text', 'указанной локации')
-                        response['text'] = (
-                            f"Не удалось найти объекты рядом с \"{location_label}\" "
-                            f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    else:
-                        response['text'] = (
-                            f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
-                            "Варианты действий:"
-                        )
-                    response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+            response = await self._run_search_with_params(session, params)
 
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
@@ -626,7 +542,7 @@ class EnhancedDialogManager:
             logger.info(f"🗣 Voice recognized as: '{text}' -> '{normalized_text}' -> Delegating to process_message")
 
             # Добавляем пометку (🎤), чтобы юзер видел, как мы его поняли
-            response = await self.process_message(user_id, platform, normalized_text, user_name)
+            response = await self.process_message(user_id, platform, normalized_text, user_name, is_voice=True)
 
             # Модифицируем ответ, добавляя расшифровку
             original_text = response.get('text', '')
@@ -702,6 +618,153 @@ class EnhancedDialogManager:
 
     def _format_intro(self, results, params):
         return f"Нашел {len(results)} вариантов (сгруппировано по ЖК): 👇"
+
+    def _has_search_intent(self, params: dict, text: str) -> bool:
+        keywords = ['найди', 'поиск', 'квартира', 'жк', 'офис', 'помещение', 'вторич']
+        if any(k in text.lower() for k in keywords):
+            return True
+        return any(params.get(k) for k in ['min_price', 'max_price', 'rooms', 'min_area', 'max_area', 'coordinates'])
+
+    async def _apply_voice_ai_params(self, text: str, params: dict):
+        extracted = await sync_to_async(
+            self.ai.extract_search_parameters,
+            thread_sensitive=False
+        )(text)
+        if self.ai.consume_quota_error():
+            return None
+
+        location_data = await sync_to_async(
+            self.location_resolver.resolve_any_location,
+            thread_sensitive=False
+        )(text, city_hint="Astana")
+        if self.ai.consume_quota_error():
+            return None
+
+        if extracted:
+            params.update({k: v for k, v in extracted.items() if v is not None})
+
+        if location_data:
+            center = location_data.get('center_coordinates')
+            radius_km = location_data.get('search_radius_km')
+            if center:
+                params['coordinates'] = {'lat': center[0], 'lon': center[1]}
+                params['radius_km'] = radius_km or 3.0
+            params['embedding_text'] = text
+
+        lowered = text.lower()
+        if any(word in lowered for word in ['офис', 'коммер', 'помещение', 'бизнес', 'retail', 'стрит']):
+            params['source'] = 'bi'
+            params['bi_category'] = 'commercial'
+            params['bi_scope'] = 'both'
+        elif 'вторич' in lowered:
+            params['source'] = 'secondary'
+        else:
+            params['source'] = params.get('source', 'mixed')
+
+        return params
+
+    async def _run_search_with_params(self, session, params):
+        response = {'text': '', 'buttons': [], 'objects': []}
+
+        params['offset'] = 0
+        params['city'] = 'Astana'
+
+        if params.get('source') == 'bi':
+            complex_offset = params.get('complex_offset', 0)
+            complexes = await sync_to_async(
+                self.search.search_complexes,
+                thread_sensitive=False
+            )(params, offset=complex_offset, limit=5)
+
+            if complexes:
+                params['complex_offset'] = complex_offset + len(complexes)
+                response['objects'] = await sync_to_async(
+                    self.search.map_complexes_to_dto,
+                    thread_sensitive=False
+                )(params, complexes)
+                params['complex_candidates'] = self._merge_complex_candidates(
+                    params.get('complex_candidates'),
+                    self._serialize_complexes(complexes)
+                )
+                await self._update_state(session, 'COMPLEX_RESULTS', params)
+                response['text'] = self._format_complexes_intro(params)
+                response['buttons'] = self._complex_action_buttons(params)
+            else:
+                await self._update_state(session, 'NO_RESULTS', params)
+                if params.get('coordinates'):
+                    location_label = params.get('embedding_text', 'указанной локации')
+                    response['text'] = (
+                        f"Не удалось найти объекты рядом с \"{location_label}\" "
+                        f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                else:
+                    response['text'] = (
+                        f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+        elif params.get('source') == 'mixed':
+            params['bi_offset'] = 0
+            params['secondary_offset'] = 0
+            results, new_bi_offset, new_secondary_offset = await sync_to_async(
+                self.search.intelligent_search_mixed,
+                thread_sensitive=False
+            )(params, bi_offset=0, secondary_offset=0)
+
+            if results:
+                params['bi_offset'] = new_bi_offset
+                params['secondary_offset'] = new_secondary_offset
+                await self._update_state(session, 'BROWSING', params)
+
+                response['text'] = self._format_intro(results, params)
+                response['objects'] = results
+                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+            else:
+                await self._update_state(session, 'NO_RESULTS', params)
+                if params.get('coordinates'):
+                    location_label = params.get('embedding_text', 'указанной локации')
+                    response['text'] = (
+                        f"Не удалось найти объекты рядом с \"{location_label}\" "
+                        f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                else:
+                    response['text'] = (
+                        f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+        else:
+            results = await sync_to_async(
+                self.search.intelligent_search,
+                thread_sensitive=False
+            )(params, offset=0)
+
+            if results:
+                params['offset'] = len(results)
+                await self._update_state(session, 'BROWSING', params)
+
+                response['text'] = self._format_intro(results, params)
+                response['objects'] = results
+                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+            else:
+                await self._update_state(session, 'NO_RESULTS', params)
+                if params.get('coordinates'):
+                    location_label = params.get('embedding_text', 'указанной локации')
+                    response['text'] = (
+                        f"Не удалось найти объекты рядом с \"{location_label}\" "
+                        f"в радиусе {params.get('radius_km', '')} км. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                else:
+                    response['text'] = (
+                        f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
+                        "Варианты действий:"
+                    )
+                response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+
+        return response
 
     @staticmethod
     def _serialize_complexes(complexes):
