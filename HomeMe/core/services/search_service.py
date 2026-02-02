@@ -176,11 +176,15 @@ class EnhancedSearchService:
             )
             logger.info(f"📍 GEO FILTER ACTIVE: {lat}, {lon} (+/- {radius_km}km)")
 
-        # Фильтр по берегу (используем данные из features, которые заполнил AI при синхронизации)
+        # Фильтр по берегу (BI - через features)
         if 'левый' in embedding_text or 'left' in embedding_text:
             complex_filters &= Q(features__side='Left')
         elif 'правый' in embedding_text or 'right' in embedding_text:
             complex_filters &= Q(features__side='Right')
+
+        # Фильтр по району (BI - через features.district_name)
+        if params.get('district'):
+            complex_filters &= Q(features__district_name=params['district'])
 
         # Фильтр по городу
         if params.get('city'):
@@ -258,6 +262,8 @@ class EnhancedSearchService:
             if params.get('rooms'): sec_props = sec_props.filter(rooms=params['rooms'])
             if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
             if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])
+            if params.get('district'):
+                sec_props = sec_props.filter(district__icontains=params['district'])
 
             # Вектор
             if query_vector:
