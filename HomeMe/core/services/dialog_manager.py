@@ -235,8 +235,8 @@ class EnhancedDialogManager:
                 params.pop('max_area', None)
 
             await self._update_state(session, 'SETTING_LOCATION', params)
-            response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
-            response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
+            response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
+            response['buttons'] = self._location_buttons()
 
         elif state == 'SETTING_ROOMS':
             lowered_text = text.lower()
@@ -252,32 +252,49 @@ class EnhancedDialogManager:
                 params['rooms'] = 4
 
             await self._update_state(session, 'SETTING_LOCATION', params)
-            response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
-            response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
+            response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
+            response['buttons'] = self._location_buttons()
 
         elif state == 'SETTING_LOCATION':
-            if 'не важно' not in text.lower():
-                params['embedding_text'] = text
+            lowered = text.lower()
+            if 'не важно' in lowered:
+                params.pop('coordinates', None)
+                params.pop('radius_km', None)
+                params.pop('embedding_text', None)
+                params.pop('district', None)
+            else:
+                district = self._normalize_admin_district(text)
+                if district:
+                    params['district'] = district
+                    params['embedding_text'] = district
+                    params.pop('coordinates', None)
+                    params.pop('radius_km', None)
+                elif 'левый' in lowered or 'правый' in lowered:
+                    params['embedding_text'] = text
+                    params.pop('coordinates', None)
+                    params.pop('radius_km', None)
+                    params.pop('district', None)
+                else:
+                    params['embedding_text'] = text
 
-                location_data = await sync_to_async(
-                    self.location_resolver.resolve_any_location,
-                    thread_sensitive=False
-                )(text, city_hint="Astana")
-                if self.ai.consume_quota_error():
-                    return self._quota_response()
+                    location_data = await sync_to_async(
+                        self.location_resolver.resolve_any_location,
+                        thread_sensitive=False
+                    )(text, city_hint="Astana")
+                    if self.ai.consume_quota_error():
+                        return self._quota_response()
 
-                if location_data:
-                    center = location_data.get('center_coordinates')
-                    radius_km = location_data.get('search_radius_km')
-                    if center:
-                        params['coordinates'] = {'lat': center[0], 'lon': center[1]}
-                        params['radius_km'] = radius_km or 3.0
-                        logger.info(f"📍 Coordinates found for '{text}': {params['coordinates']}")
+                    if location_data:
+                        center = location_data.get('center_coordinates')
+                        radius_km = location_data.get('search_radius_km')
+                        if center:
+                            params['coordinates'] = {'lat': center[0], 'lon': center[1]}
+                            params['radius_km'] = radius_km or 3.0
+                            logger.info(f"📍 Coordinates found for '{text}': {params['coordinates']}")
+                        else:
+                            params.pop('coordinates', None)
                     else:
                         params.pop('coordinates', None)
-                else:
-                    # Если координаты не найдены (например, "тихий район"), удаляем старые, чтобы не мешали
-                    params.pop('coordinates', None)
 
             # Сброс пагинации перед новым поиском
             params['offset'] = 0
@@ -906,6 +923,34 @@ class EnhancedDialogManager:
             return {"max_area": value}
 
         return {}
+
+    @staticmethod
+    def _location_buttons():
+        return [
+            'Левый берег', 'Правый берег',
+            'Есильский', 'Сарыаркинский',
+            'Алматинский', 'Байконурский',
+            'Нуринский', 'Сарайшык',
+            'Не важно'
+        ]
+
+    @staticmethod
+    def _normalize_admin_district(text: str):
+        if not text:
+            return None
+        lowered = text.strip().lower()
+        mapping = {
+            'алматинский': 'Алматинский',
+            'сарыаркинский': 'Сарыаркинский',
+            'есильский': 'Есильский',
+            'байконурский': 'Байконурский',
+            'нуринский': 'Нуринский',
+            'сарайшык': 'Сарайшык',
+        }
+        for key, value in mapping.items():
+            if key in lowered:
+                return value
+        return None
 
     @staticmethod
     def _merge_complex_candidates(existing, new_items):
