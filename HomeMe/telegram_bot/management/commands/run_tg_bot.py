@@ -16,6 +16,7 @@ from telegram import (
     InlineKeyboardMarkup,
     InputMediaPhoto
 )
+from telegram.error import BadRequest
 from telegram.ext import (
     ApplicationBuilder,
     ContextTypes,
@@ -234,6 +235,7 @@ class Command(BaseCommand):
         """Отправляет текстовый ответ с кнопками"""
         text = response.get('text', 'Что-то пошло не так...')
         buttons = response.get('buttons', [])
+        parse_mode = response.get('parse_mode', ParseMode.MARKDOWN)
 
         # Формируем клавиатуру
         keyboard = None
@@ -256,11 +258,46 @@ class Command(BaseCommand):
                 one_time_keyboard=False
             )
 
-        await update.message.reply_text(
-            text,
-            reply_markup=keyboard,
-            parse_mode=ParseMode.MARKDOWN
-        )
+        try:
+            await self._send_text_chunks(update, text, keyboard, parse_mode)
+        except BadRequest as e:
+            logger.warning(f"⚠️ Parse error, fallback to plain text: {e}")
+            await self._send_text_chunks(update, text, keyboard, "plain")
+
+    async def _send_text_chunks(self, update: Update, text: str, keyboard, parse_mode):
+        max_len = 3500
+        if len(text) <= max_len:
+            await self._send_one_text(update, text, keyboard, parse_mode)
+            return
+
+        parts = []
+        remaining = text
+        while len(remaining) > max_len:
+            cut = remaining.rfind("\n", 0, max_len)
+            if cut == -1:
+                cut = max_len
+            parts.append(remaining[:cut].strip())
+            remaining = remaining[cut:].strip()
+        if remaining:
+            parts.append(remaining)
+
+        for i, part in enumerate(parts):
+            is_last = i == len(parts) - 1
+            await self._send_one_text(update, part, keyboard if is_last else None, parse_mode)
+
+    async def _send_one_text(self, update: Update, text: str, keyboard, parse_mode):
+        if parse_mode == "plain":
+            await update.message.reply_text(
+                text,
+                reply_markup=keyboard,
+                disable_web_page_preview=False
+            )
+        else:
+            await update.message.reply_text(
+                text,
+                reply_markup=keyboard,
+                parse_mode=parse_mode
+            )
 
     async def _send_property_cards(self, update: Update, response: dict):
         """Отправляет карточки объектов недвижимости"""

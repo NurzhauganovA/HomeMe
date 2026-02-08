@@ -1,7 +1,7 @@
 import logging
 import json
 import time
-import requests
+# import requests  # Groq отключен
 import google.generativeai as genai
 from django.conf import settings
 from telegram_bot.models import BIComplex, BIUnit, BICommercialComplex, BICommercialUnit
@@ -16,10 +16,10 @@ class BISyncService:
         self.client = EnhancedBIGroupClient()
         self.ai = EnhancedAIService()
         self.ASTANA_UUID = self.client.CITY_MAP.get("Astana", "4c0fe725-4b6f-11e8-80cf-bb580b2abfef")
-        self.groq_api_key = getattr(settings, "GROQ_API_KEY", None)
         gemini_key = getattr(settings, "GEMINI_API_KEY", None)
         if gemini_key:
             genai.configure(api_key=gemini_key)
+        self._sync_model = genai.GenerativeModel('gemini-2.5-flash')
 
     def run_full_sync(self):
         """Полная синхронизация ЖК и квартир с умным обогащением данных"""
@@ -200,8 +200,8 @@ class BISyncService:
         Твоя задача — классифицировать этот объект для фильтров поиска.
 
         1. ОПРЕДЕЛИ БЕРЕГ (Только для Астаны): 
-           - "Left": Есильский район, Нура, район EXPO, Ботанический сад.
-           - "Right": Сарыарка, Байконур, Алматинский район.
+           - "Left": Есильский район, Нура, район EXPO, Ботанический сад и т.д. Узнай округ левого берега и определи.
+           - "Right": Сарыарка, Байконур, Алматинский район и т.д. Узнай округ правого берега и определи.
 
         2. АТМОСФЕРА:
            - Опиши атмосферу района СТРОГО НА РУССКОМ ЯЗЫКЕ.
@@ -224,8 +224,7 @@ class BISyncService:
 
         try:
             # Вызов AI с повторами
-            text = self._groq_generate_json(prompt)
-            analysis = self.ai._parse_json_response(text)
+            analysis = self._generate_json_analysis(prompt)
 
             if analysis:
                 # 1. Сохраняем жесткие теги в JSONField
@@ -295,8 +294,7 @@ class BISyncService:
         """
 
         try:
-            text = self._groq_generate_json(prompt)
-            analysis = self.ai._parse_json_response(text)
+            analysis = self._generate_json_analysis(prompt)
 
             if analysis:
                 complex_obj.features = analysis
@@ -334,37 +332,58 @@ class BISyncService:
             complex_obj.save()
             logger.info(f"✅ Embedding saved for {complex_obj.name}")
 
-    def _groq_generate_json(self, prompt: str, retries: int = 3) -> str:
-        """Вызов Groq (только для синхронизации БД)"""
-        if not self.groq_api_key:
-            logger.error("❌ GROQ_API_KEY not configured; skipping AI enrichment")
-            return ""
-
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.groq_api_key}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 1200
-        }
-
+    def _gemini_generate_json(self, prompt: str, retries: int = 3) -> str:
+        """Вызов Gemini (только для синхронизации БД)"""
         for attempt in range(retries):
             try:
-                response = requests.post(url, headers=headers, json=payload, timeout=30)
-                response.raise_for_status()
-                data = response.json()
-                return data.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+                config = genai.types.GenerationConfig(
+                    temperature=0.2,
+                    top_p=0.95,
+                    top_k=40,
+                    max_output_tokens=2048,
+                    response_mime_type="application/json"
+                )
+                response = self._sync_model.generate_content(prompt, generation_config=config)
+                return response.text or ""
             except Exception as e:
                 wait_time = 2 * (attempt + 1)
-                logger.warning(f"Groq request failed (attempt {attempt + 1}/{retries}): {e}")
+                logger.warning(f"Gemini sync request failed (attempt {attempt + 1}/{retries}): {e}")
                 time.sleep(wait_time)
         return ""
+
+    def _generate_json_analysis(self, prompt: str):
+        """
+        Генерирует JSON с повтором и строгим режимом, если первый ответ сломан.
+        """
+        text = self._gemini_generate_json(prompt)
+        analysis = self.ai._parse_json_response(text)
+        if analysis:
+            return analysis
+
+        self._log_bad_json(text, context="primary")
+
+        strict_prompt = (
+            f"{prompt}\n\n"
+            "Верни СТРОГО валидный JSON без комментариев и лишнего текста. "
+            "Все строки должны быть в кавычках. Если не уверен, верни {}."
+        )
+        text = self._gemini_generate_json(strict_prompt)
+        analysis = self.ai._parse_json_response(text)
+        if not analysis:
+            self._log_bad_json(text, context="strict")
+        return analysis
+
+    @staticmethod
+    def _log_bad_json(text: str, context: str):
+        if not text:
+            logger.error(f"❌ Empty JSON response ({context})")
+            return
+        logger.error(
+            "❌ JSON Parse Failed (%s). Raw length=%s. Raw content:\n%s",
+            context,
+            len(text),
+            text
+        )
 
     @staticmethod
     def _get_embedding_sync(text: str):

@@ -1,5 +1,6 @@
 import io
 import logging
+import random
 from asgiref.sync import sync_to_async
 from shutil import which
 from pydub import AudioSegment
@@ -54,13 +55,13 @@ class EnhancedDialogManager:
             if text == '1' or 'подобрать' in lowered_text:
                 await self._update_state(session, 'CHOOSING_TYPE')
                 response[
-                    'text'] = "Отлично! Что будем смотреть?\n\n1. Новостройки BI Group 🏗\n2. Вторичка 🏠\n3. Смешанный поиск ⭐"
-                response['buttons'] = ['1. BI Group', '2. Вторичка', '3. Смешанный']
+                    'text'] = "Отлично! Что будем смотреть?\n\n1. Новостройки BI Group 🏗\n2. Вторичка 🏠"
+                response['buttons'] = ['1. BI Group', '2. Вторичка', 'В главное меню']
 
             elif text == '2' or 'район' in lowered_text:
                 await self._update_state(session, 'CONSULTATION_TOPIC')
-                response['text'] = "Про какой район рассказать? (Например: 'Есильский', 'EXPO')"
-                response['buttons'] = ['Левый берег', 'Есильский', 'EXPO']
+                response['text'] = "Про какой район рассказать? (Выберите район или берег)"
+                response['buttons'] = self._location_buttons()
 
             elif text == '3' or 'эксперт' in lowered_text:
                 await self._update_state(session, 'LEAD_NAME')
@@ -114,13 +115,14 @@ class EnhancedDialogManager:
 
                 if params.get('source') == 'bi':
                     complex_offset = params.get('complex_offset', 0)
-                    complexes = await sync_to_async(
+                    search_result = await sync_to_async(
                         self.search.search_complexes,
                         thread_sensitive=False
                     )(params, offset=complex_offset, limit=5)
+                    complexes, next_offset = self._unpack_complexes_result(search_result, complex_offset)
 
                     if complexes:
-                        params['complex_offset'] = complex_offset + len(complexes)
+                        params['complex_offset'] = next_offset
                         response['objects'] = await sync_to_async(
                             self.search.map_complexes_to_dto,
                             thread_sensitive=False
@@ -144,6 +146,7 @@ class EnhancedDialogManager:
                         thread_sensitive=False
                     )(params, bi_offset=0, secondary_offset=0)
                     if results:
+                        results = self._filter_seen_objects(params, results)
                         params['bi_offset'] = new_bi_offset
                         params['secondary_offset'] = new_secondary_offset
                         await self._update_state(session, 'BROWSING', params)
@@ -206,6 +209,13 @@ class EnhancedDialogManager:
 
         elif state == 'SETTING_BUDGET':
             parsed_budget = self._parse_budget_text(text)
+            if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
+                ai_budget = await self._ai_fallback_parse(text, ['min_price', 'max_price'])
+                if ai_budget is None:
+                    return self._quota_response()
+                if ai_budget.get('min_price') or ai_budget.get('max_price'):
+                    parsed_budget = ai_budget
+
             if parsed_budget.get('max_price') or parsed_budget.get('min_price'):
                 params.update(parsed_budget)
                 if params.get('bi_category') == 'commercial':
@@ -217,7 +227,11 @@ class EnhancedDialogManager:
                     response['text'] = "Сколько комнат? 🛏"
                     response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
             else:
-                response['text'] = "Не понял сумму. Напиши просто цифрами, например '50 млн'."
+                response['text'] = self._random_prompt(
+                    "Бюджет не распознал.",
+                    "Можно ответить так: 'до 50 млн' или '50-80 млн'.",
+                    "Напиши бюджет цифрами, например: 45-60 млн."
+                )
 
         elif state == 'SETTING_AREA':
             lowered_text = text.lower()
@@ -228,11 +242,26 @@ class EnhancedDialogManager:
                 params['bi_scope'] = 'unit'
 
             parsed_area = self._parse_area_text(text)
+            if not (parsed_area.get('min_area') or parsed_area.get('max_area')) and 'не важно' not in lowered_text:
+                ai_area = await self._ai_fallback_parse(text, ['min_area', 'max_area'])
+                if ai_area is None:
+                    return self._quota_response()
+                if ai_area.get('min_area') or ai_area.get('max_area'):
+                    parsed_area = ai_area
+
             if parsed_area.get('min_area') or parsed_area.get('max_area'):
                 params.update(parsed_area)
             elif 'не важно' in lowered_text:
                 params.pop('min_area', None)
                 params.pop('max_area', None)
+            else:
+                response['text'] = self._random_prompt(
+                    "Площадь не распознал.",
+                    "Ответь так: 'до 80 м²' или '100-200 м²'.",
+                    "Напиши площадь цифрами, например: 120 м²."
+                )
+                response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
+                return self._ensure_main_menu_button(response, state)
 
             await self._update_state(session, 'SETTING_LOCATION', params)
             response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
@@ -250,6 +279,20 @@ class EnhancedDialogManager:
                 params['rooms'] = 3
             elif '4' in text:
                 params['rooms'] = 4
+            else:
+                ai_rooms = await self._ai_fallback_parse(text, ['rooms'])
+                if ai_rooms is None:
+                    return self._quota_response()
+                if ai_rooms.get('rooms'):
+                    params['rooms'] = ai_rooms.get('rooms')
+                else:
+                    response['text'] = self._random_prompt(
+                        "Количество комнат не распознал.",
+                        "Можно написать: 1, 2, 3, 4+ или 'Не важно'.",
+                        "Напиши количество комнат цифрой, например: 2."
+                    )
+                    response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
+                    return self._ensure_main_menu_button(response, state)
 
             await self._update_state(session, 'SETTING_LOCATION', params)
             response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
@@ -262,20 +305,29 @@ class EnhancedDialogManager:
                 params.pop('radius_km', None)
                 params.pop('embedding_text', None)
                 params.pop('district', None)
+                params.pop('side', None)
+                logger.info(f"🌍 Location: Не важно (все фильтры локации сброшены)")
             else:
                 district = self._normalize_admin_district(text)
                 if district:
                     params['district'] = district
-                    params['embedding_text'] = district
                     params.pop('coordinates', None)
                     params.pop('radius_km', None)
+                    params.pop('side', None)
+                    params.pop('embedding_text', None)
+                    logger.info(f"🏘 DISTRICT SET: {district}")
                 elif 'левый' in lowered or 'правый' in lowered:
-                    params['embedding_text'] = text
+                    params['side'] = 'Left' if 'левый' in lowered else 'Right'
                     params.pop('coordinates', None)
                     params.pop('radius_km', None)
                     params.pop('district', None)
+                    params.pop('embedding_text', None)
+                    logger.info(f"🏖 SIDE SET: {params['side']}")
                 else:
                     params['embedding_text'] = text
+                    params.pop('side', None)
+                    params.pop('district', None)
+                    logger.info(f"📍 LANDMARK/EMBEDDING: {text}")
 
                     location_data = await sync_to_async(
                         self.location_resolver.resolve_any_location,
@@ -299,19 +351,25 @@ class EnhancedDialogManager:
             # Сброс пагинации перед новым поиском
             params['offset'] = 0
             params['city'] = 'Astana'  # Hardcode MVP
+            
+            logger.info(f"🚀 Starting search with params: district={params.get('district')}, side={params.get('side')}, coords={params.get('coordinates')}, source={params.get('source')}")
 
             response = await self._run_search_with_params(session, params)
 
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
             if lowered_text in ['показать еще', 'показать ещё', 'еще', 'ещё', 'показать больше']:
-                complexes = await sync_to_async(
+                search_result = await sync_to_async(
                     self.search.search_complexes,
                     thread_sensitive=False
                 )(params, offset=params.get('complex_offset', 0), limit=5)
+                complexes, next_offset = self._unpack_complexes_result(
+                    search_result,
+                    params.get('complex_offset', 0)
+                )
 
                 if complexes:
-                    params['complex_offset'] = params.get('complex_offset', 0) + len(complexes)
+                    params['complex_offset'] = next_offset
                     response['objects'] = await sync_to_async(
                         self.search.map_complexes_to_dto,
                         thread_sensitive=False
@@ -359,6 +417,7 @@ class EnhancedDialogManager:
                 )(params, selected.get('id'), offset=0)
 
                 if results:
+                    results = self._filter_seen_objects(params, results)
                     params['offset'] = len(results)
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = f"Вот варианты по {selected.get('name')}:"
@@ -402,6 +461,7 @@ class EnhancedDialogManager:
                     )(params, offset=current_offset)
 
                     if results:
+                        results = self._filter_seen_objects(params, results)
                         params['offset'] = current_offset + len(results)
                         await self._update_state(session, 'BROWSING', params)
 
@@ -434,6 +494,7 @@ class EnhancedDialogManager:
                 )(params, selected_id, offset=current_offset)
 
                 if results:
+                    results = self._filter_seen_objects(params, results)
                     params['offset'] = current_offset + len(results)
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = "Вот еще варианты: 👇"
@@ -462,8 +523,8 @@ class EnhancedDialogManager:
                 response['text'] = "Какой новый бюджет?"
             elif 'район' in text.lower() or 'местополож' in text.lower():
                 await self._update_state(session, 'SETTING_LOCATION', params)
-                response['text'] = "Есть предпочтения по району? 📍\n('Левый берег', 'EXPO' или 'Не важно')"
-                response['buttons'] = ['Левый берег', 'Есильский', 'EXPO', 'Не важно']
+                response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
+                response['buttons'] = self._location_buttons()
             elif 'комнат' in text.lower():
                 await self._update_state(session, 'SETTING_ROOMS', params)
                 response['text'] = "Сколько комнат?"
@@ -489,6 +550,7 @@ class EnhancedDialogManager:
             if self.ai.consume_quota_error():
                 return self._quota_response()
             response['text'] = consultation
+            response['parse_mode'] = 'plain'
             response['buttons'] = ['Искать здесь', 'В меню']
             await self._update_state(session, 'START', {})
 
@@ -505,6 +567,29 @@ class EnhancedDialogManager:
         params['last_objects'] = payload
         session.search_params = params
         await sync_to_async(session.save)()
+
+    @staticmethod
+    def _filter_seen_objects(params: dict, objects):
+        if not objects:
+            return objects
+        seen = set(params.get('seen_object_ids') or [])
+        filtered = []
+        for obj in objects:
+            obj_id = getattr(obj, "object_id", None) or ""
+            key = f"{getattr(obj, 'object_kind', '')}:{obj_id}"
+            if key in seen:
+                continue
+            seen.add(key)
+            filtered.append(obj)
+        params['seen_object_ids'] = list(seen)
+        return filtered
+
+    @staticmethod
+    def _unpack_complexes_result(search_result, fallback_offset: int):
+        if isinstance(search_result, tuple) and len(search_result) == 2:
+            return search_result
+        complexes = search_result or []
+        return complexes, fallback_offset + len(complexes)
 
     async def process_voice(self, user_id, platform, voice_file_object, user_name=None):
         """
@@ -685,16 +770,18 @@ class EnhancedDialogManager:
 
         params['offset'] = 0
         params['city'] = 'Astana'
+        params['seen_object_ids'] = []
 
         if params.get('source') == 'bi':
             complex_offset = params.get('complex_offset', 0)
-            complexes = await sync_to_async(
+            search_result = await sync_to_async(
                 self.search.search_complexes,
                 thread_sensitive=False
             )(params, offset=complex_offset, limit=5)
+            complexes, next_offset = self._unpack_complexes_result(search_result, complex_offset)
 
             if complexes:
-                params['complex_offset'] = complex_offset + len(complexes)
+                params['complex_offset'] = next_offset
                 response['objects'] = await sync_to_async(
                     self.search.map_complexes_to_dto,
                     thread_sensitive=False
@@ -730,6 +817,7 @@ class EnhancedDialogManager:
             )(params, bi_offset=0, secondary_offset=0)
 
             if results:
+                results = self._filter_seen_objects(params, results)
                 params['bi_offset'] = new_bi_offset
                 params['secondary_offset'] = new_secondary_offset
                 await self._update_state(session, 'BROWSING', params)
@@ -759,6 +847,7 @@ class EnhancedDialogManager:
             )(params, offset=0)
 
             if results:
+                results = self._filter_seen_objects(params, results)
                 params['offset'] = len(results)
                 await self._update_state(session, 'BROWSING', params)
 
@@ -854,12 +943,12 @@ class EnhancedDialogManager:
             if min_v or max_v:
                 return {"min_price": min_v, "max_price": max_v}
 
-        if cleaned.startswith("до"):
+        if cleaned.startswith("до") or cleaned.startswith("меньше"):
             max_v = to_amount(cleaned.replace("до", ""))
             if max_v:
                 return {"max_price": max_v}
 
-        if cleaned.startswith("от"):
+        if cleaned.startswith("от") or cleaned.startswith("больше"):
             min_v = to_amount(cleaned.replace("от", ""))
             if min_v:
                 return {"min_price": min_v}
@@ -924,28 +1013,52 @@ class EnhancedDialogManager:
 
         return {}
 
+    def _random_prompt(self, *variants):
+        return random.choice([v for v in variants if v])
+
+    async def _ai_fallback_parse(self, text: str, fields: list):
+        extracted = await sync_to_async(
+            self.ai.extract_search_parameters,
+            thread_sensitive=False
+        )(text)
+        if self.ai.consume_quota_error():
+            return None
+        if not extracted:
+            return {}
+        return {k: extracted.get(k) for k in fields if extracted.get(k) is not None}
+
     @staticmethod
     def _location_buttons():
         return [
             'Левый берег', 'Правый берег',
             'Есильский', 'Сарыаркинский',
             'Алматинский', 'Байконурский',
-            'Нуринский', 'Сарайшык',
-            'Не важно'
+            'Нура', 'Сарайшык',
+            'Не важно', 'В главное меню'
         ]
 
     @staticmethod
     def _normalize_admin_district(text: str):
+        """
+        Нормализует район на значения, которые есть в БД.
+        Возвращает каноническое имя района.
+        """
         if not text:
             return None
         lowered = text.strip().lower()
+        
+        # Маппинг на базовые значения, которые реально есть в БД
         mapping = {
             'алматинский': 'Алматинский',
-            'сарыаркинский': 'Сарыаркинский',
+            'сарыаркинский': 'Сарыарка',  # В BI это "Сарыарка", во вторичке "Сарыаркинский"
+            'сарыарка': 'Сарыарка',
+            'есильский район': 'Есильский',
             'есильский': 'Есильский',
             'байконурский': 'Байконурский',
-            'нуринский': 'Нуринский',
-            'сарайшык': 'Сарайшык',
+            'нуринский': 'Нура',  # В БД везде "Нура"
+            'нура': 'Нура',
+            'сарайшық': 'Сарайшық',
+            'сарайшык': 'Сарайшық',
         }
         for key, value in mapping.items():
             if key in lowered:

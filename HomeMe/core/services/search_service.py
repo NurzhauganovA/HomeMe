@@ -50,11 +50,17 @@ class EnhancedSearchService:
                 latitude__range=(lat - lat_delta, lat + lat_delta),
                 longitude__range=(lon - lon_delta, lon + lon_delta)
             )
+            logger.info(f"📍 GEO FILTER (complexes): {lat}, {lon} (+/- {radius_km}km)")
 
-        if 'левый' in embedding_text or 'left' in embedding_text:
-            complex_filters &= Q(features__side='Left')
-        elif 'правый' in embedding_text or 'right' in embedding_text:
-            complex_filters &= Q(features__side='Right')
+        # Фильтр по берегу (строго Left/Right)
+        if params.get('side'):
+            complex_filters &= Q(features__side=params['side'])
+            logger.info(f"🏖 SIDE FILTER (complexes): {params['side']}")
+
+        # Фильтр по району (icontains для ловли вариантов "Есильский" / "Есильский район")
+        if params.get('district'):
+            complex_filters &= Q(features__district_name__icontains=params['district'])
+            logger.info(f"🏘 DISTRICT FILTER (complexes): {params['district']}")
 
         if params.get('city'):
             city_uuid = self.city_map.get(params['city'])
@@ -68,6 +74,9 @@ class EnhancedSearchService:
             unit_model = BICommercialUnit
 
         queryset = complex_model.objects.filter(complex_filters)
+        
+        logger.info(f"🔍 Total complexes after filters: {queryset.count()}")
+        
         if query_vector:
             queryset = queryset.alias(
                 distance=CosineDistance('embedding', query_vector)
@@ -91,6 +100,7 @@ class EnhancedSearchService:
             if len(results) >= limit:
                 break
 
+        logger.info(f"✅ Complexes returned: {len(results)}")
         return results
 
     def search_units_for_complex(self, params: Dict, complex_id: str, offset: int = 0, limit: int = 5) -> List[PropertyDTO]:
@@ -148,6 +158,8 @@ class EnhancedSearchService:
         bi_category = params.get('bi_category', 'residential')
         bi_scope = params.get('bi_scope', 'both')
 
+        logger.info(f"🔎 intelligent_search called: source={source}, district={params.get('district')}, side={params.get('side')}, offset={offset}")
+
         # Получаем координаты из параметров (их туда положил DialogManager)
         coords = params.get('coordinates')
         radius_km = params.get('radius_km', 3.0)
@@ -162,6 +174,8 @@ class EnhancedSearchService:
 
         # ГЕО-ФИЛЬТР (RADIUS SEARCH) - "Убийца" нерелевантных результатов
         lat, lon = self._normalize_coords(coords)
+        lat_delta = None
+        lon_delta = None
         if lat is not None and lon is not None:
 
             # 1 градус широты ~= 111 км
@@ -174,17 +188,20 @@ class EnhancedSearchService:
                 latitude__range=(lat - lat_delta, lat + lat_delta),
                 longitude__range=(lon - lon_delta, lon + lon_delta)
             )
-            logger.info(f"📍 GEO FILTER ACTIVE: {lat}, {lon} (+/- {radius_km}km)")
+            logger.info(f"📍 GEO FILTER ACTIVE (BI): {lat}, {lon} (+/- {radius_km}km)")
 
         # Фильтр по берегу (BI - через features)
-        if 'левый' in embedding_text or 'left' in embedding_text:
+        if params.get('side') == 'Left':
             complex_filters &= Q(features__side='Left')
-        elif 'правый' in embedding_text or 'right' in embedding_text:
+            logger.info(f"🏖 SIDE FILTER (BI): Left")
+        elif params.get('side') == 'Right':
             complex_filters &= Q(features__side='Right')
+            logger.info(f"🏖 SIDE FILTER (BI): Right")
 
         # Фильтр по району (BI - через features.district_name)
         if params.get('district'):
-            complex_filters &= Q(features__district_name=params['district'])
+            complex_filters &= Q(features__district_name__icontains=params['district'])
+            logger.info(f"🏘 DISTRICT FILTER (BI): {params['district']}")
 
         # Фильтр по городу
         if params.get('city'):
@@ -206,6 +223,8 @@ class EnhancedSearchService:
 
             # Находим подходящие ЖК
             target_complexes = complex_model.objects.filter(complex_filters)
+            
+            logger.info(f"🔍 Total BI complexes after filters: {target_complexes.count()}")
 
             # Если есть вектор, сортируем ЖК по смысловой близости
             if query_vector:
@@ -216,8 +235,14 @@ class EnhancedSearchService:
             # Для пагинации с группировкой нужно взять ЖК с запасом
             # (Offset применяем к списку ЖК, а не квартир)
             complexes_list = list(target_complexes[offset: offset + limit + 5])
+            
+            logger.info(f"📋 BI complexes slice [{offset}:{offset + limit + 5}]: {len(complexes_list)} items")
 
             for comp in complexes_list:
+                comp_district = comp.features.get('district_name', 'N/A') if comp.features else 'N/A'
+                comp_side = comp.features.get('side', 'N/A') if comp.features else 'N/A'
+                logger.info(f"🏢 Processing complex: {comp.name} | District: {comp_district} | Side: {comp_side}")
+                
                 if query_vector and not coords:
                     pass
 
@@ -236,6 +261,7 @@ class EnhancedSearchService:
                     # Берем ОДНУ лучшую (самую дешевую) квартиру из этого ЖК для разнообразия
                     best_unit = units.order_by('price').first()
                     if best_unit:
+                        logger.info(f"  ✅ Added unit from {comp.name} (district: {comp_district})")
                         results.append(mapper(best_unit, comp))
 
                 # Если пользователю нужен объект целиком, добавляем комплекс как отдельный результат
@@ -246,24 +272,37 @@ class EnhancedSearchService:
                 # Если набрали лимит, останавливаемся
                 if len(results) >= limit:
                     break
+            
+            logger.info(f"✅ BI results added: {len(results)}")
 
         # --- 3. ПОИСК ВТОРИЧКИ ---
         if source in ['secondary', 'mixed'] and len(results) < limit:
-            sec_props = SecondaryProperty.objects.filter(is_active=True)
+            sec_props = SecondaryProperty.objects.filter(is_active=True, deal_type='sell')
 
             if lat is not None and lon is not None:
                 sec_props = sec_props.filter(
                     latitude__range=(lat - lat_delta, lat + lat_delta),
                     longitude__range=(lon - lon_delta, lon + lon_delta)
                 )
+                logger.info(f"📍 GEO FILTER (secondary): {lat}, {lon} (+/- {radius_km}km)")
 
             if params.get('min_price'): sec_props = sec_props.filter(price__gte=params['min_price'])
             if params.get('max_price'): sec_props = sec_props.filter(price__lte=params['max_price'])
             if params.get('rooms'): sec_props = sec_props.filter(rooms=params['rooms'])
             if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
             if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])
+            
+            # Фильтр по району с учётом вариантов написания
             if params.get('district'):
-                sec_props = sec_props.filter(district__icontains=params['district'])
+                district = params['district']
+                # Для Сарыарка ищем и "Сарыарка", и "Сарыаркинский"
+                if district == 'Сарыарка':
+                    sec_props = sec_props.filter(
+                        Q(district__icontains='Сарыарка') | Q(district__icontains='Сарыаркинский')
+                    )
+                else:
+                    sec_props = sec_props.filter(district__icontains=district)
+                logger.info(f"🏘 DISTRICT FILTER (secondary): {district}")
 
             # Вектор
             if query_vector:
@@ -271,17 +310,23 @@ class EnhancedSearchService:
             else:
                 sec_props = sec_props.order_by('-created_at')
 
+            logger.info(f"🔍 Total secondary after filters: {sec_props.count()}")
+
             # Добираем вторичкой остаток лимита (с учетом offset для вторички можно сделать отдельную логику, но пока упростим)
             sec_limit = limit - len(results)
             sec_results = sec_props[offset: offset + sec_limit]
 
             for item in sec_results:
+                logger.info(f"🏠 Secondary property: {item.title} | District: {item.district}")
                 results.append(self._map_secondary_to_dto(item))
+            
+            logger.info(f"✅ Secondary returned: {len(sec_results)}")
 
         # Сортировка смешанной выдачи
         if source == 'mixed':
             results.sort(key=lambda x: (0 if x.source == 'bi_group' else 1, x.price))
 
+        logger.info(f"📦 Total results (BI + Secondary): {len(results)}")
         return results
 
     def intelligent_search_mixed(self, params: Dict, bi_offset: int = 0, secondary_offset: int = 0,
@@ -295,6 +340,8 @@ class EnhancedSearchService:
 
         bi_params = dict(params)
         bi_params['source'] = 'bi'
+        
+        logger.info(f"🔀 MIXED SEARCH: district={params.get('district')}, side={params.get('side')}, coords={params.get('coordinates')}")
 
         sec_params = dict(params)
         sec_params['source'] = 'secondary'
@@ -350,6 +397,8 @@ class EnhancedSearchService:
         photos = unit.photos or []
         primary_photo = photos[0] if photos else comp.image_url
 
+        unit_url = f"https://bi.group/ru/filter/placement/{unit.bi_uuid}"
+
         return PropertyDTO(
             source="bi_group",
             title=f"ЖК {comp.name}",
@@ -360,7 +409,7 @@ class EnhancedSearchService:
             floor=unit.floor,
             total_floors=unit.max_floor,
             description=desc,
-            url=comp.url,
+            url=unit_url,
             image_url=primary_photo,
             image_urls=photos,
             latitude=comp.latitude,
@@ -381,6 +430,8 @@ class EnhancedSearchService:
         photos = unit.photos or []
         primary_photo = photos[0] if photos else comp.image_url
 
+        unit_url = f"https://bi.group/ru/filter/placement/{unit.bi_uuid}"
+
         return PropertyDTO(
             source="bi_group",
             title=f"БЦ {comp.name}",
@@ -391,7 +442,7 @@ class EnhancedSearchService:
             floor=unit.floor,
             total_floors=unit.max_floor,
             description=desc,
-            url=comp.url,
+            url=unit_url,
             image_url=primary_photo,
             image_urls=photos,
             latitude=comp.latitude,
