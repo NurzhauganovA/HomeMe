@@ -25,6 +25,9 @@ services:
       - 8000
     env_file:
       - .env
+    environment:
+      - RUN_MIGRATIONS=1
+      - RUN_COLLECTSTATIC=1
     depends_on:
       - db
     restart: always
@@ -35,6 +38,9 @@ services:
     command: python manage.py run_tg_bot
     env_file:
       - .env
+    environment:
+      - RUN_MIGRATIONS=0
+      - RUN_COLLECTSTATIC=0
     depends_on:
       - db
       - web  # Ждем пока веб запустится и проведет миграции

@@ -10,13 +10,21 @@ while ! nc -z db 5432; do
 done
 echo "PostgreSQL started"
 
-# Накатываем миграции
-echo "Running migrations..."
-python manage.py migrate
+# Накатываем миграции (только если включено)
+if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
+  echo "Running migrations..."
+  python manage.py migrate
+else
+  echo "Skipping migrations..."
+fi
 
-# Собираем статику (для админки и дашборда)
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+# Собираем статику (только если включено)
+if [ "${RUN_COLLECTSTATIC:-1}" = "1" ]; then
+  echo "Collecting static files..."
+  python manage.py collectstatic --noinput
+else
+  echo "Skipping collectstatic..."
+fi
 
 # Запускаем команду, переданную в аргументах (или gunicorn по умолчанию)
 exec "$@"
