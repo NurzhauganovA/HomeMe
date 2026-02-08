@@ -7,8 +7,13 @@ from django.db.models import Q, Count, Min, Max
 from django.http import JsonResponse
 from datetime import timedelta
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
 from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit
+from .models import ApiAccessToken
+from core.services.secondary_importer import SecondaryImporter
 from .forms import SecondaryPropertyForm, LeadUpdateForm
 
 
@@ -306,3 +311,44 @@ class BotUserDetailView(StaffRequiredMixin, DetailView):
         # Добавляем статистику пользователя
         context['user_leads'] = Lead.objects.filter(user=self.object).order_by('-created_at')[:10]
         return context
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SecondaryImportAPIView(View):
+    """
+    API endpoint for importing secondary properties from external clients.
+    Auth: Authorization: Bearer <token> or X-API-KEY header.
+    """
+    def post(self, request):
+        token = self._extract_token(request)
+        if not token:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+        token_obj = ApiAccessToken.objects.filter(token=token, is_active=True).first()
+        if not token_obj or not token_obj.is_valid():
+            return JsonResponse({'error': 'Invalid or expired token'}, status=403)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        do_geocode = request.GET.get('geocode', '1') == '1'
+        do_embed = request.GET.get('embed', '1') == '1'
+
+        importer = SecondaryImporter(do_geocode=do_geocode, do_embed=do_embed)
+        stats = importer.import_items(payload)
+
+        return JsonResponse({
+            'status': 'ok',
+            'created': stats['created'],
+            'updated': stats['updated'],
+            'skipped': stats['skipped'],
+        })
+
+    @staticmethod
+    def _extract_token(request):
+        auth = request.headers.get('Authorization') or ''
+        if auth.lower().startswith('bearer '):
+            return auth.split(' ', 1)[1].strip()
+        return request.headers.get('X-API-KEY')

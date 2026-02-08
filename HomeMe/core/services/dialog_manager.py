@@ -189,8 +189,15 @@ class EnhancedDialogManager:
                 params['source'] = 'mixed'
 
             await self._update_state(session, 'SETTING_BUDGET', params)
-            response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
-            response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
+            response['text'] = (
+                "Какой бюджет? 💰\n"
+                "Указывайте конкретный диапазон, чтобы поиск был точнее.\n"
+                "Например: 40-45 млн или 18-20 млн."
+            )
+            response['buttons'] = [
+                'до 30 млн', '30-40 млн', '40-50 млн',
+                '50-60 млн', '60-70 млн', '70-80 млн'
+            ]
 
         elif state == 'CHOOSING_BI_CATEGORY':
             lowered_text = text.lower()
@@ -201,13 +208,28 @@ class EnhancedDialogManager:
                 params['bi_category'] = 'residential'
 
             await self._update_state(session, 'SETTING_BUDGET', params)
-            response['text'] = "Какой бюджет? 💰 (Например: '45-60' или 'до 50' млн)"
+            response['text'] = (
+                "Какой бюджет? 💰\n"
+                "Указывайте конкретный диапазон, чтобы поиск был точнее.\n"
+                "Например: 40-45 млн или 18-20 млн."
+            )
             if params.get('bi_category') == 'commercial':
-                response['buttons'] = ['до 50 млн', '50-80 млн', '80-120 млн', '120-200 млн']
+                response['buttons'] = [
+                    'до 50 млн', '50-70 млн', '70-90 млн',
+                    '90-120 млн', '120-150 млн', '150-200 млн'
+                ]
             else:
-                response['buttons'] = ['до 30 млн', '30-50 млн', '50-80 млн']
+                response['buttons'] = [
+                    'до 30 млн', '30-40 млн', '40-50 млн',
+                    '50-60 млн', '60-70 млн', '70-80 млн'
+                ]
 
         elif state == 'SETTING_BUDGET':
+            allowed_budgets = {
+                'до 30 млн', '30-40 млн', '40-50 млн', '50-60 млн', '60-70 млн', '70-80 млн',
+                'до 50 млн', '50-70 млн', '70-90 млн', '90-120 млн', '120-150 млн', '150-200 млн',
+                '30-50 млн', '50-80 млн', '80-120 млн', '120-200 млн'
+            }
             parsed_budget = self._parse_budget_text(text)
             if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
                 ai_budget = await self._ai_fallback_parse(text, ['min_price', 'max_price'])
@@ -215,6 +237,19 @@ class EnhancedDialogManager:
                     return self._quota_response()
                 if ai_budget.get('min_price') or ai_budget.get('max_price'):
                     parsed_budget = ai_budget
+
+            if text.strip().lower() not in allowed_budgets and parsed_budget.get('min_price') and parsed_budget.get('max_price'):
+                min_p = parsed_budget['min_price']
+                max_p = parsed_budget['max_price']
+                if min_p and max_p and max_p > min_p:
+                    spread = (max_p - min_p) / max_p
+                    if spread > 0.2:
+                        response['text'] = self._random_prompt(
+                            "Диапазон слишком широкий. Попробуйте сузить до 10–20%.",
+                            "Для точного подбора нужен более узкий диапазон (например: 40-45 млн).",
+                            "Укажите конкретнее, например: 90-100 млн или выберите кнопку ниже."
+                        )
+                        return self._ensure_main_menu_button(response, state)
 
             if parsed_budget.get('max_price') or parsed_budget.get('min_price'):
                 params.update(parsed_budget)
