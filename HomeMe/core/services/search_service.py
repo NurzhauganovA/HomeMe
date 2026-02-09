@@ -25,12 +25,12 @@ class EnhancedSearchService:
 
     def search_complexes(self, params: Dict, offset: int = 0, limit: int = 5):
         """
-        Возвращает список комплексов (ЖК/БЦ) по фильтрам.
+        Возвращает список комплексов (ЖК/БЦ) по фильтрам и следующий offset.
         Для коммерции учитывает bi_scope: unit/complex/both.
         """
         source = params.get('source', 'mixed')
         if source not in ['bi', 'mixed']:
-            return []
+            return [], offset
 
         bi_category = params.get('bi_category', 'residential')
         bi_scope = params.get('bi_scope', 'both')
@@ -83,7 +83,9 @@ class EnhancedSearchService:
             ).order_by('distance')
 
         results = []
+        processed = 0
         for comp in queryset[offset: offset + limit + 10]:
+            processed += 1
             if bi_category == 'commercial' and bi_scope in ['complex']:
                 if self._complex_matches_filters(comp, params):
                     results.append(comp)
@@ -101,7 +103,7 @@ class EnhancedSearchService:
                 break
 
         logger.info(f"✅ Complexes returned: {len(results)}")
-        return results
+        return results, offset + processed
 
     def search_units_for_complex(self, params: Dict, complex_id: str, offset: int = 0, limit: int = 5) -> List[PropertyDTO]:
         """

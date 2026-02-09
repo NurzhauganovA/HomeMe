@@ -411,9 +411,11 @@ class EnhancedDialogManager:
                     )(params, complexes)
                     mapped = self._filter_seen_objects(params, mapped)
                     response['objects'] = mapped
+                    allowed_ids = {obj.object_id for obj in mapped if obj.object_id}
+                    complexes_for_candidates = [c for c in complexes if c.bi_uuid in allowed_ids]
                     params['complex_candidates'] = self._merge_complex_candidates(
                         params.get('complex_candidates'),
-                        self._serialize_complexes(complexes)
+                        self._serialize_complexes(complexes_for_candidates)
                     )
                     await self._update_state(session, 'COMPLEX_RESULTS', params)
                     response['text'] = "Еще варианты: 👇"
@@ -823,13 +825,17 @@ class EnhancedDialogManager:
 
             if complexes:
                 params['complex_offset'] = next_offset
-                response['objects'] = await sync_to_async(
+                mapped = await sync_to_async(
                     self.search.map_complexes_to_dto,
                     thread_sensitive=False
                 )(params, complexes)
+                mapped = self._filter_seen_objects(params, mapped)
+                response['objects'] = mapped
+                allowed_ids = {obj.object_id for obj in mapped if obj.object_id}
+                complexes_for_candidates = [c for c in complexes if c.bi_uuid in allowed_ids]
                 params['complex_candidates'] = self._merge_complex_candidates(
                     params.get('complex_candidates'),
-                    self._serialize_complexes(complexes)
+                    self._serialize_complexes(complexes_for_candidates)
                 )
                 await self._update_state(session, 'COMPLEX_RESULTS', params)
                 response['text'] = self._format_complexes_intro(params)
