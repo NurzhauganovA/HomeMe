@@ -405,10 +405,12 @@ class EnhancedDialogManager:
 
                 if complexes:
                     params['complex_offset'] = next_offset
-                    response['objects'] = await sync_to_async(
+                    mapped = await sync_to_async(
                         self.search.map_complexes_to_dto,
                         thread_sensitive=False
                     )(params, complexes)
+                    mapped = self._filter_seen_objects(params, mapped)
+                    response['objects'] = mapped
                     params['complex_candidates'] = self._merge_complex_candidates(
                         params.get('complex_candidates'),
                         self._serialize_complexes(complexes)
@@ -452,8 +454,9 @@ class EnhancedDialogManager:
                 )(params, selected.get('id'), offset=0)
 
                 if results:
+                    raw_count = len(results)
                     results = self._filter_seen_objects(params, results)
-                    params['offset'] = len(results)
+                    params['offset'] = raw_count
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = f"Вот варианты по {selected.get('name')}:"
                     response['objects'] = results
@@ -476,6 +479,7 @@ class EnhancedDialogManager:
                     )
 
                     if results:
+                        results = self._filter_seen_objects(params, results)
                         params['bi_offset'] = new_bi_offset
                         params['secondary_offset'] = new_secondary_offset
                         await self._update_state(session, 'BROWSING', params)
@@ -496,8 +500,9 @@ class EnhancedDialogManager:
                     )(params, offset=current_offset)
 
                     if results:
+                        raw_count = len(results)
                         results = self._filter_seen_objects(params, results)
-                        params['offset'] = current_offset + len(results)
+                        params['offset'] = current_offset + raw_count
                         await self._update_state(session, 'BROWSING', params)
 
                         response['text'] = "Вот еще варианты: 👇"
@@ -529,8 +534,9 @@ class EnhancedDialogManager:
                 )(params, selected_id, offset=current_offset)
 
                 if results:
+                    raw_count = len(results)
                     results = self._filter_seen_objects(params, results)
-                    params['offset'] = current_offset + len(results)
+                    params['offset'] = current_offset + raw_count
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = "Вот еще варианты: 👇"
                     response['objects'] = results
