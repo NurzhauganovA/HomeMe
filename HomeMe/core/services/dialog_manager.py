@@ -271,10 +271,11 @@ class EnhancedDialogManager:
         elif state == 'SETTING_AREA':
             lowered_text = text.lower()
 
-            if any(word in lowered_text for word in ['здание', 'целиком', 'бц', 'business center']):
-                params['bi_scope'] = 'complex'
-            elif any(word in lowered_text for word in ['офис', 'кабинет', 'помещение', 'retail', 'стрит']):
-                params['bi_scope'] = 'unit'
+            if params.get('bi_category') == 'commercial':
+                if any(word in lowered_text for word in ['здание', 'целиком', 'бц', 'business center']):
+                    params['bi_scope'] = 'complex'
+                elif any(word in lowered_text for word in ['офис', 'кабинет', 'помещение', 'retail', 'стрит']):
+                    params['bi_scope'] = 'unit'
 
             parsed_area = self._parse_area_text(text)
             if not (parsed_area.get('min_area') or parsed_area.get('max_area')) and 'не важно' not in lowered_text:
@@ -295,7 +296,10 @@ class EnhancedDialogManager:
                     "Ответь так: 'до 80 м²' или '100-200 м²'.",
                     "Напиши площадь цифрами, например: 120 м²."
                 )
-                response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
+                if params.get('bi_category') == 'commercial':
+                    response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
+                else:
+                    response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
                 return self._ensure_main_menu_button(response, state)
 
             await self._update_state(session, 'SETTING_LOCATION', params)
@@ -329,9 +333,9 @@ class EnhancedDialogManager:
                     response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
                     return self._ensure_main_menu_button(response, state)
 
-            await self._update_state(session, 'SETTING_LOCATION', params)
-            response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
-            response['buttons'] = self._location_buttons()
+            await self._update_state(session, 'SETTING_AREA', params)
+            response['text'] = "Какая площадь нужна? 📐 (Например: '45-70 м²' или 'до 60 м²')"
+            response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
 
         elif state == 'SETTING_LOCATION':
             lowered = text.lower()
