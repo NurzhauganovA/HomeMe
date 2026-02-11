@@ -631,6 +631,18 @@ class EnhancedBIGroupClient:
 
         return all_placements
 
+    def get_placement_details(self, placement_uuid: str) -> Dict:
+        """Получает детальные данные по квартире/помещению"""
+        payload = {"placementUUID": placement_uuid}
+        try:
+            return self._make_request(
+                "https://apigw.bi.group/sales-picker/microfe-v3/placement",
+                payload
+            )
+        except Exception as e:
+            logger.error(f"❌ Error fetching placement details {placement_uuid}: {e}")
+            return {}
+
     def _make_request(self, url: str, payload: Dict) -> Dict:
         """Вспомогательный метод для чистоты кода"""
         response = self.session.post(url, json=payload, headers=self._get_headers(), timeout=10)

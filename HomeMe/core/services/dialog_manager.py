@@ -137,7 +137,7 @@ class EnhancedDialogManager:
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
                 elif params.get('source') == 'mixed':
                     params['bi_offset'] = 0
                     params['secondary_offset'] = 0
@@ -156,7 +156,7 @@ class EnhancedDialogManager:
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
                 else:
                     results = await sync_to_async(
                         self.search.intelligent_search,
@@ -171,7 +171,7 @@ class EnhancedDialogManager:
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
             else:
                 return self._scenario_start(user.name)
@@ -180,8 +180,8 @@ class EnhancedDialogManager:
             if '1' in text or 'bi' in text.lower():
                 params['source'] = 'bi'
                 await self._update_state(session, 'CHOOSING_BI_CATEGORY', params)
-                response['text'] = "Что именно интересует в BI Group?\n\n1. ЖК (квартиры)\n2. Офисы / коммерция"
-                response['buttons'] = ['1. ЖК', '2. Офисы/коммерция']
+                response['text'] = "Что именно интересует в BI Group?\n\n1. Квартиры\n2. Коммерческие помещения"
+                response['buttons'] = ['1. Квартиры', '2. Коммерческие помещения']
                 return self._ensure_main_menu_button(response, state)
             elif '2' in text or 'вторич' in text.lower():
                 params['source'] = 'secondary'
@@ -598,7 +598,7 @@ class EnhancedDialogManager:
                 return self._quota_response()
             response['text'] = consultation
             response['parse_mode'] = 'plain'
-            response['buttons'] = ['Искать здесь', 'В меню']
+            response['buttons'] = ['В меню']
             await self._update_state(session, 'START', {})
 
         if response.get('objects'):
@@ -858,7 +858,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
         elif params.get('source') == 'mixed':
             params['bi_offset'] = 0
             params['secondary_offset'] = 0
@@ -890,7 +890,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить район', 'Увеличить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
         else:
             results = await sync_to_async(
                 self.search.intelligent_search,
@@ -919,7 +919,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Увеличить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
 
         return response
 

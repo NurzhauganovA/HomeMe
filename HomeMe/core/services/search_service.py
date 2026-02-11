@@ -23,6 +23,16 @@ class EnhancedSearchService:
         self.ai_service = ai_service
         self.city_map = EnhancedBIGroupClient.CITY_MAP
 
+    @staticmethod
+    def _apply_price_filters(queryset, min_price, max_price):
+        if min_price and max_price:
+            return queryset.filter(price__gte=min_price, price__lte=max_price)
+        if min_price:
+            return queryset.filter(price__gte=min_price)
+        if max_price:
+            return queryset.filter(Q(price__lte=max_price) | Q(price__isnull=True))
+        return queryset
+
     def search_complexes(self, params: Dict, offset: int = 0, limit: int = 5):
         """
         Возвращает список комплексов (ЖК/БЦ) по фильтрам и следующий offset.
@@ -91,8 +101,9 @@ class EnhancedSearchService:
                     results.append(comp)
             else:
                 units = unit_model.objects.filter(complex=comp, is_active=True)
-                if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
-                if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+                units = self._apply_price_filters(
+                    units, params.get('min_price'), params.get('max_price')
+                )
                 if params.get('rooms'): units = units.filter(room_count=params['rooms'])
                 if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
                 if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
@@ -125,8 +136,9 @@ class EnhancedSearchService:
             return []
 
         units = unit_model.objects.filter(complex=comp, is_active=True)
-        if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
-        if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+        units = self._apply_price_filters(
+            units, params.get('min_price'), params.get('max_price')
+        )
         if params.get('rooms'): units = units.filter(room_count=params['rooms'])
         if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
         if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
@@ -254,8 +266,9 @@ class EnhancedSearchService:
                 if not (bi_category == 'commercial' and bi_scope == 'complex'):
                     units = unit_model.objects.filter(complex=comp, is_active=True)
 
-                    if params.get('min_price'): units = units.filter(price__gte=params['min_price'])
-                    if params.get('max_price'): units = units.filter(price__lte=params['max_price'])
+                    units = self._apply_price_filters(
+                        units, params.get('min_price'), params.get('max_price')
+                    )
                     if params.get('rooms'): units = units.filter(room_count=params['rooms'])
                     if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
                     if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
@@ -288,8 +301,9 @@ class EnhancedSearchService:
                 )
                 logger.info(f"📍 GEO FILTER (secondary): {lat}, {lon} (+/- {radius_km}km)")
 
-            if params.get('min_price'): sec_props = sec_props.filter(price__gte=params['min_price'])
-            if params.get('max_price'): sec_props = sec_props.filter(price__lte=params['max_price'])
+            sec_props = self._apply_price_filters(
+                sec_props, params.get('min_price'), params.get('max_price')
+            )
             if params.get('rooms'): sec_props = sec_props.filter(rooms=params['rooms'])
             if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
             if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])

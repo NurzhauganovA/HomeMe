@@ -470,6 +470,19 @@ class BISyncService:
                 photos = [p for p in photos if p]
                 photos = list(dict.fromkeys(photos))
 
+                placement_uuid = u.get("uuid")
+                if placement_uuid:
+                    try:
+                        details = self.client.get_placement_details(placement_uuid)
+                        sheet1 = details.get("apartmentSheetURLPage1")
+                        sheet2 = details.get("apartmentSheetURLPage2")
+                        for sheet in [sheet1, sheet2]:
+                            if sheet:
+                                photos.append(sheet)
+                        photos = list(dict.fromkeys(photos))
+                    except Exception:
+                        pass
+
                 unit, _ = unit_model.objects.update_or_create(
                     bi_uuid=u.get("uuid"),
                     defaults={
