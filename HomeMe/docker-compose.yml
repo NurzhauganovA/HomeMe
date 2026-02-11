@@ -14,6 +14,13 @@ services:
       - "5432:5432"  # Можно убрать, если не нужен доступ снаружи
     restart: always
 
+  # Redis (Celery broker/backend)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
   # 2. Django Web (Админка + Дашборд + Webhook WhatsApp)
   web:
     build: .
@@ -30,6 +37,7 @@ services:
       - RUN_COLLECTSTATIC=1
     depends_on:
       - db
+      - redis
     restart: always
 
   # 3. Telegram Bot (Фоновый процесс)
@@ -44,9 +52,38 @@ services:
     depends_on:
       - db
       - web  # Ждем пока веб запустится и проведет миграции
+      - redis
     restart: always
 
-  # 4. Nginx (Раздача статики и проксирование)
+  # 4. Celery Worker (Фоновая обработка задач)
+  celery_worker:
+    build: .
+    command: celery -A HomeMe worker -l info
+    env_file:
+      - .env
+    environment:
+      - RUN_MIGRATIONS=0
+      - RUN_COLLECTSTATIC=0
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  # 5. Celery Beat (Расписание задач)
+  celery_beat:
+    build: .
+    command: celery -A HomeMe beat -l info
+    env_file:
+      - .env
+    environment:
+      - RUN_MIGRATIONS=0
+      - RUN_COLLECTSTATIC=0
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  # 6. Nginx (Раздача статики и проксирование)
   nginx:
     image: nginx:alpine
     ports:

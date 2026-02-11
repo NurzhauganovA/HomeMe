@@ -1,5 +1,6 @@
 import os
 import environ
+from celery.schedules import crontab
 
 from pathlib import Path
 
@@ -130,3 +131,26 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Celery
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://redis:6379/1')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Almaty'
+CELERY_ENABLE_UTC = False
+CELERY_BEAT_SCHEDULE = {
+    'sync-bi-group-all-10': {
+        'task': 'telegram_bot.tasks.sync_bi_group_all',
+        'schedule': crontab(hour=10, minute=0),
+    },
+    'sync-bi-group-all-14': {
+        'task': 'telegram_bot.tasks.sync_bi_group_all',
+        'schedule': crontab(hour=14, minute=0),
+    },
+    'sync-bi-group-all-19': {
+        'task': 'telegram_bot.tasks.sync_bi_group_all',
+        'schedule': crontab(hour=19, minute=0),
+    },
+}
