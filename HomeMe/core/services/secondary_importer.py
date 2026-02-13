@@ -21,14 +21,29 @@ class SecondaryImporter:
         skipped = 0
 
         for item in items:
+            action = item.get("action") if isinstance(item, dict) else None
             payload = self._extract_payload(item)
             if not payload:
                 skipped += 1
                 continue
 
+            if not action and isinstance(payload, dict):
+                action = payload.get("action")
+
             ext_uuid = payload.get("uuid")
             if not ext_uuid:
                 skipped += 1
+                continue
+
+            if action == "archive":
+                obj = SecondaryProperty.objects.filter(external_uuid=ext_uuid).first()
+                if not obj:
+                    skipped += 1
+                    continue
+                if obj.is_active:
+                    obj.is_active = False
+                    obj.save(update_fields=["is_active"])
+                updated += 1
                 continue
 
             price = self._to_decimal(payload.get("price"))
@@ -84,6 +99,7 @@ class SecondaryImporter:
                 "source_url": payload.get("source_url") or "",
                 "photos": photos,
                 "raw_data": payload,
+                "is_active": True,
             }
 
             obj, was_created = SecondaryProperty.objects.update_or_create(
