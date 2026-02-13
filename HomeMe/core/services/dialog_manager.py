@@ -48,6 +48,10 @@ class EnhancedDialogManager:
                 response = await self._run_search_with_params(session, params)
                 return self._ensure_main_menu_button(response, state)
 
+        if self._is_edit_params_command(text):
+            response = await self._enter_edit_params_menu(session, params)
+            return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
+
         # --- МАШИНА СОСТОЯНИЙ ---
 
         if state == 'START':
@@ -137,7 +141,7 @@ class EnhancedDialogManager:
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
                 elif params.get('source') == 'mixed':
                     params['bi_offset'] = 0
                     params['secondary_offset'] = 0
@@ -152,11 +156,11 @@ class EnhancedDialogManager:
                         await self._update_state(session, 'BROWSING', params)
                         response['text'] = self._format_intro(results, params)
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
                 else:
                     results = await sync_to_async(
                         self.search.intelligent_search,
@@ -167,11 +171,11 @@ class EnhancedDialogManager:
                         await self._update_state(session, 'BROWSING', params)
                         response['text'] = self._format_intro(results, params)
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
 
             else:
                 return self._scenario_start(user.name)
@@ -253,6 +257,13 @@ class EnhancedDialogManager:
 
             if parsed_budget.get('max_price') or parsed_budget.get('min_price'):
                 params.update(parsed_budget)
+                if params.get('edit_mode'):
+                    response = await self._enter_edit_params_menu(
+                        session,
+                        params,
+                        prompt="Бюджет обновил. Что ещё изменить? Или нажмите «Искать»."
+                    )
+                    return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
                 if params.get('bi_category') == 'commercial':
                     await self._update_state(session, 'SETTING_AREA', params)
                     response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
@@ -302,6 +313,14 @@ class EnhancedDialogManager:
                     response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
                 return self._ensure_main_menu_button(response, state)
 
+            if params.get('edit_mode'):
+                response = await self._enter_edit_params_menu(
+                    session,
+                    params,
+                    prompt="Площадь обновил. Что ещё изменить? Или нажмите «Искать»."
+                )
+                return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
+
             await self._update_state(session, 'SETTING_LOCATION', params)
             response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
             response['buttons'] = self._location_buttons()
@@ -332,6 +351,14 @@ class EnhancedDialogManager:
                     )
                     response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
                     return self._ensure_main_menu_button(response, state)
+
+            if params.get('edit_mode'):
+                response = await self._enter_edit_params_menu(
+                    session,
+                    params,
+                    prompt="Комнаты обновил. Что ещё изменить? Или нажмите «Искать»."
+                )
+                return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
 
             await self._update_state(session, 'SETTING_AREA', params)
             response['text'] = "Какая площадь нужна? 📐 (Например: '45-70 м²' или 'до 60 м²')"
@@ -393,7 +420,14 @@ class EnhancedDialogManager:
             
             logger.info(f"🚀 Starting search with params: district={params.get('district')}, side={params.get('side')}, coords={params.get('coordinates')}, source={params.get('source')}")
 
-            response = await self._run_search_with_params(session, params)
+            if params.get('edit_mode'):
+                response = await self._enter_edit_params_menu(
+                    session,
+                    params,
+                    prompt="Локацию обновил. Что ещё изменить? Или нажмите «Искать»."
+                )
+            else:
+                response = await self._run_search_with_params(session, params)
 
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
@@ -432,8 +466,7 @@ class EnhancedDialogManager:
                 response['text'] = self._format_complexes_list(params)
                 response['buttons'] = self._complex_number_buttons(params)
             elif 'изменить' in lowered_text:
-                await self._update_state(session, 'SETTING_BUDGET', params)
-                response['text'] = "Напиши новый бюджет:"
+                response = await self._enter_edit_params_menu(session, params)
             else:
                 response['text'] = self._format_complexes_intro(params)
                 response['buttons'] = self._complex_action_buttons(params)
@@ -442,9 +475,8 @@ class EnhancedDialogManager:
             choice = self._parse_choice(text)
             candidates = params.get('complex_candidates') or []
             if 'изменить' in text.lower():
-                await self._update_state(session, 'SETTING_BUDGET', params)
-                response['text'] = "Напиши новый бюджет:"
-                return self._ensure_main_menu_button(response, state)
+                response = await self._enter_edit_params_menu(session, params)
+                return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
             if not choice or choice < 1 or choice > len(candidates):
                 response['text'] = "Пожалуйста, выбери номер из списка."
                 response['buttons'] = self._complex_number_buttons(params)
@@ -466,11 +498,11 @@ class EnhancedDialogManager:
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = f"Вот варианты по {selected.get('name')}:"
                     response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры']
+                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры поиска']
                 else:
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = f"По {selected.get('name')} ничего не найдено по текущим фильтрам."
-                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры']
+                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры поиска']
 
         elif state == 'BROWSING':
             if text.lower() in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
@@ -492,10 +524,10 @@ class EnhancedDialogManager:
 
                         response['text'] = "Вот еще варианты: 👇"
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
                     else:
                         response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
-                        response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
                 else:
                     current_offset = params.get('offset', 0)
 
@@ -513,14 +545,13 @@ class EnhancedDialogManager:
 
                         response['text'] = "Вот еще варианты: 👇"
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
                     else:
                         response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
-                        response['buttons'] = ['Изменить параметры', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
 
-            elif 'бюджет' in text.lower() or 'параметр' in text.lower():
-                await self._update_state(session, 'SETTING_BUDGET', params)
-                response['text'] = "Напиши новый бюджет:"
+            elif 'бюджет' in text.lower() or 'параметр' in text.lower() or 'изменить' in text.lower():
+                response = await self._enter_edit_params_menu(session, params)
 
             elif 'эксперт' in text.lower():
                 await self._update_state(session, 'LEAD_NAME')
@@ -546,10 +577,10 @@ class EnhancedDialogManager:
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = "Вот еще варианты: 👇"
                     response['objects'] = results
-                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры']
+                    response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры поиска']
                 else:
                     response['text'] = "Варианты по этому ЖК/БЦ закончились. 🤷‍♂️"
-                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры']
+                    response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры поиска']
 
             elif 'другой' in lowered_text:
                 await self._update_state(session, 'CHOOSING_COMPLEX_NUMBER', params)
@@ -557,27 +588,61 @@ class EnhancedDialogManager:
                 response['buttons'] = self._complex_number_buttons(params)
 
             elif 'изменить' in lowered_text or 'по другому' in lowered_text:
-                await self._update_state(session, 'SETTING_BUDGET', params)
-                response['text'] = "Напиши новый бюджет:"
+                response = await self._enter_edit_params_menu(session, params)
 
             else:
                 response['text'] = self._format_complexes_list(params)
                 response['buttons'] = self._complex_number_buttons(params)
 
-        elif state == 'NO_RESULTS':
-            if 'бюджет' in text.lower():
+        elif state == 'EDITING_PARAMS_MENU':
+            lowered_text = text.lower()
+            if lowered_text in ['искать', 'поиск', 'начать поиск', 'показать варианты', 'покажи варианты']:
+                params.pop('edit_mode', None)
+                response = await self._run_search_with_params(session, params)
+            elif 'бюджет' in lowered_text:
                 await self._update_state(session, 'SETTING_BUDGET', params)
-                response['text'] = "Какой новый бюджет?"
-            elif 'район' in text.lower() or 'местополож' in text.lower():
+                response['text'] = "Какой бюджет? 💰"
+                response['buttons'] = [
+                    'до 30 млн', '30-40 млн', '40-50 млн',
+                    '50-60 млн', '60-70 млн', '70-80 млн'
+                ]
+                if params.get('bi_category') == 'commercial':
+                    response['buttons'] = [
+                        'до 50 млн', '50-70 млн', '70-90 млн',
+                        '90-120 млн', '120-150 млн', '150-200 млн'
+                    ]
+            elif 'комнат' in lowered_text or 'комнаты' in lowered_text:
+                if params.get('bi_category') == 'commercial':
+                    response = await self._enter_edit_params_menu(
+                        session,
+                        params,
+                        prompt="Для коммерции комнаты не используются. Можно изменить другие параметры."
+                    )
+                else:
+                    await self._update_state(session, 'SETTING_ROOMS', params)
+                    response['text'] = "Сколько комнат?"
+                    response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
+            elif 'площад' in lowered_text:
+                await self._update_state(session, 'SETTING_AREA', params)
+                if params.get('bi_category') == 'commercial':
+                    response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
+                    response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
+                else:
+                    response['text'] = "Какая площадь нужна? 📐 (Например: '45-70 м²' или 'до 60 м²')"
+                    response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
+            elif 'район' in lowered_text or 'местополож' in lowered_text or 'локац' in lowered_text:
                 await self._update_state(session, 'SETTING_LOCATION', params)
                 response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
                 response['buttons'] = self._location_buttons()
-            elif 'комнат' in text.lower():
-                await self._update_state(session, 'SETTING_ROOMS', params)
-                response['text'] = "Сколько комнат?"
-            elif 'эксперт' in text.lower():
+            else:
+                response = await self._enter_edit_params_menu(session, params)
+
+        elif state == 'NO_RESULTS':
+            if 'эксперт' in text.lower():
                 await self._update_state(session, 'LEAD_NAME')
                 response['text'] = "Как тебя зовут?"
+            else:
+                response = await self._enter_edit_params_menu(session, params)
 
         elif state == 'LEAD_NAME':
             await sync_to_async(Lead.objects.create)(
@@ -858,7 +923,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
         elif params.get('source') == 'mixed':
             params['bi_offset'] = 0
             params['secondary_offset'] = 0
@@ -875,7 +940,7 @@ class EnhancedDialogManager:
 
                 response['text'] = self._format_intro(results, params)
                 response['objects'] = results
-                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
             else:
                 await self._update_state(session, 'NO_RESULTS', params)
                 if params.get('coordinates'):
@@ -890,7 +955,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить район', 'Изменить бюджет', 'Изменить параметры', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
         else:
             results = await sync_to_async(
                 self.search.intelligent_search,
@@ -904,7 +969,7 @@ class EnhancedDialogManager:
 
                 response['text'] = self._format_intro(results, params)
                 response['objects'] = results
-                response['buttons'] = ['Показать ещё', 'Изменить бюджет', 'Связаться с экспертом']
+                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
             else:
                 await self._update_state(session, 'NO_RESULTS', params)
                 if params.get('coordinates'):
@@ -919,7 +984,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить бюджет', 'Изменить комнаты', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
 
         return response
 
@@ -951,14 +1016,14 @@ class EnhancedDialogManager:
 
     def _complex_action_buttons(self, params):
         if params.get('bi_category') == 'commercial':
-            return ['Показать помещения', 'Показать ещё', 'Изменить параметры']
-        return ['Показать квартиры', 'Показать ещё', 'Изменить параметры']
+            return ['Показать помещения', 'Показать ещё', 'Изменить параметры поиска']
+        return ['Показать квартиры', 'Показать ещё', 'Изменить параметры поиска']
 
     @staticmethod
     def _complex_number_buttons(params):
         candidates = params.get('complex_candidates') or []
         buttons = [str(i) for i in range(1, min(len(candidates), 10) + 1)]
-        buttons.append('Изменить параметры')
+        buttons.append('Изменить параметры поиска')
         return buttons
 
     @staticmethod
@@ -1087,6 +1152,32 @@ class EnhancedDialogManager:
             'Нура', 'Сарайшык',
             'Не важно', 'В главное меню'
         ]
+
+    @staticmethod
+    def _is_edit_params_command(text: str) -> bool:
+        if not text:
+            return False
+        lowered_text = text.strip().lower()
+        return 'изменить параметры поиска' in lowered_text or lowered_text == 'изменить параметры'
+
+    @staticmethod
+    def _edit_params_buttons(params: dict):
+        buttons = ['Изменить бюджет']
+        if params.get('bi_category') != 'commercial':
+            buttons.append('Изменить комнаты')
+        buttons.extend(['Изменить площадь', 'Изменить район', 'Искать'])
+        return buttons
+
+    async def _enter_edit_params_menu(self, session, params: dict, prompt: str | None = None):
+        params['edit_mode'] = True
+        await self._update_state(session, 'EDITING_PARAMS_MENU', params)
+        return {
+            'text': prompt or (
+                "Что хотите изменить? Можно менять несколько параметров.\n"
+                "Когда готовы — нажмите «Искать»."
+            ),
+            'buttons': self._edit_params_buttons(params)
+        }
 
     @staticmethod
     def _normalize_admin_district(text: str):
