@@ -663,7 +663,7 @@ class EnhancedDialogManager:
                 return self._quota_response()
             response['text'] = consultation
             response['parse_mode'] = 'plain'
-            response['buttons'] = ['В меню']
+            response['buttons'] = []
             await self._update_state(session, 'START', {})
 
         if response.get('objects'):
