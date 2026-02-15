@@ -28,6 +28,7 @@ from telegram.ext import (
 from telegram.constants import ParseMode, ChatAction
 
 from core.services.dialog_manager import EnhancedDialogManager
+from core.services.bitrix24_service import Bitrix24Service
 from telegram_bot.models import BotUser, UserSession, FavoriteProperty
 
 logging.basicConfig(
@@ -43,6 +44,7 @@ class Command(BaseCommand):
     def __init__(self):
         super().__init__()
         self.dialog_manager = None
+        self.bitrix24_service = Bitrix24Service()
 
     async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик голосовых сообщений"""
@@ -319,11 +321,14 @@ class Command(BaseCommand):
 
                 # Inline кнопки для действий
                 inline_keyboard = [
-                    [
-                        InlineKeyboardButton("💾 Сохранить", callback_data=f"save_{obj.source}_{idx}"),
-                        InlineKeyboardButton("👤 Контакты", callback_data=f"contact_{obj.source}_{idx}")
-                    ]
+                    [InlineKeyboardButton("💾 Сохранить", callback_data=f"save_{obj.source}_{idx}")]
                 ]
+                
+                # Кнопка "Контакты" только для объектов BI Group
+                if obj.source == 'bi_group':
+                    inline_keyboard[0].append(
+                        InlineKeyboardButton("👤 Контакты", callback_data=f"contact_{obj.source}_{idx}")
+                    )
                 reply_markup = InlineKeyboardMarkup(inline_keyboard)
 
                 # Отправляем с фото или без
@@ -456,11 +461,109 @@ class Command(BaseCommand):
                 await query.message.reply_text("Не удалось сохранить объект.")
 
         elif action == 'contact':
-            await query.message.reply_text(
-                "📞 Контактная информация:\n\n"
-                "Для получения контактов владельца свяжитесь с нашим менеджером:\n"
-                "👨‍💼 Нажмите 'Связаться с экспертом'"
-            )
+            try:
+                user = query.from_user
+                bot_user = await sync_to_async(BotUser.objects.get)(
+                    user_id=str(user.id),
+                    platform='telegram'
+                )
+                session = await sync_to_async(UserSession.objects.get)(user=bot_user)
+                params = session.search_params or {}
+                last_objects = params.get('last_objects') or []
+
+                source = "_".join(parts[1:-1]) if len(parts) > 2 else "unknown"
+                idx = int(parts[-1]) if len(parts) > 1 else 0
+                
+                if idx < 1 or idx > len(last_objects):
+                    await query.message.reply_text("Не удалось найти объект.")
+                    return
+
+                property_data = last_objects[idx - 1]
+                
+                # Проверяем, что это объект BI Group
+                if property_data.get('source') != 'bi_group':
+                    await query.message.reply_text(
+                        "❌ Кнопка 'Контакты' доступна только для объектов BI Group."
+                    )
+                    return
+
+                # Получаем информацию о пользователе
+                user_name = bot_user.name or user.first_name or "Пользователь"
+                # Пытаемся получить телефон из разных источников
+                user_phone = getattr(bot_user, 'phone', None) or getattr(user, 'phone_number', None)
+                user_id = str(user.id)
+                user_username = getattr(user, 'username', None)  # Username из Telegram (@username), может быть None
+
+                # Создаем заявку в Bitrix24
+                bitrix_result = await sync_to_async(
+                    self.bitrix24_service.create_lead,
+                    thread_sensitive=False
+                )(
+                    user_name=user_name,
+                    user_phone=user_phone,
+                    user_platform='telegram',
+                    property_data=property_data,
+                    user_id=user_id,
+                    user_username=user_username
+                )
+
+                # Получаем номер call center
+                call_center_number = self.bitrix24_service.get_call_center_number()
+                
+                # Формируем сообщение
+                if bitrix_result and bitrix_result.get('success'):
+                    message_text = (
+                        f"✅ <b>Заявка отправлена!</b>\n\n"
+                        f"📋 Ваша заявка по объекту <b>{property_data.get('title', 'недвижимости')}</b> "
+                        f"успешно отправлена в CRM систему.\n\n"
+                        f"📞 <b>Моментальный звонок:</b>\n"
+                        f"Позвоните в call center застройщика BI Group:\n"
+                        f"<b>{call_center_number}</b>\n\n"
+                        f"Наш менеджер свяжется с вами в ближайшее время!"
+                    )
+                else:
+                    # Если Bitrix24 не настроен или произошла ошибка, все равно показываем контакты
+                    message_text = (
+                        f"📞 <b>Контакты по объекту</b>\n\n"
+                        f"Объект: <b>{property_data.get('title', 'недвижимость')}</b>\n\n"
+                        f"Для получения информации и моментального звонка:\n"
+                        f"Позвоните в call center застройщика BI Group:\n"
+                        f"<b>{call_center_number}</b>\n\n"
+                        f"Наш менеджер поможет вам с выбором!"
+                    )
+
+                # Создаем кнопку для звонка
+                # call_keyboard = [
+                #     [
+                #         InlineKeyboardButton(
+                #             f"📞 Позвонить {call_center_number}",
+                #             url=f"tel:{call_center_number}"
+                #         )
+                #     ]
+                # ]
+                # reply_markup = InlineKeyboardMarkup(call_keyboard)
+                #
+                await query.message.reply_text(
+                    message_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=None,  # Убираем кнопку, так как многие клиенты не поддерживают tel: ссылки
+                )
+
+            except BotUser.DoesNotExist:
+                await query.message.reply_text(
+                    "❌ Пользователь не найден. Пожалуйста, начните с команды /start"
+                )
+            except Exception as e:
+                logger.error(f"❌ Ошибка при обработке запроса контактов: {e}", exc_info=True)
+                call_center_number = self.bitrix24_service.get_call_center_number()
+                await query.message.reply_text(
+                    f"Ваша заявка отправлена в CRM систему.\n\n"
+                    f"Вы можете ждать звонка от менеджера, или позвонить самостоятельно:\n\n"
+                    f"📞 <b>Контакты</b>\n\n"
+                    f"Позвоните в call center застройщика BI Group:\n"
+                    f"Телефон: <b>{call_center_number}</b>\n\n",
+                    parse_mode=ParseMode.HTML
+                )
 
         else:
             await query.message.reply_text("Неизвестное действие")

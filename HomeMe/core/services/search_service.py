@@ -64,8 +64,18 @@ class EnhancedSearchService:
 
         # Фильтр по берегу (строго Left/Right)
         if params.get('side'):
-            complex_filters &= Q(features__side=params['side'])
-            logger.info(f"🏖 SIDE FILTER (complexes): {params['side']}")
+            # Есильский, Нура - Левый берег
+            # Сарайшык, Сарыарка, Алматинский, Байконур - Правый берег
+            if params['side'] == 'Left':
+                districts = ['Есильский', 'Нура', 'Нуринский']
+            if params['side'] == 'Right':
+                districts = ['Сарайшык', 'Сарыарка', 'Сарыаркинский', 'Алматинский', 'Байконур', 'Байконурский']
+
+            side_filter = Q()
+            for district in districts:
+                side_filter |= Q(features__district_name__icontains=district)
+            complex_filters &= side_filter
+            logger.info(f"🏖 SIDE FILTER (complexes): {params['side']} (districts: {', '.join(districts)})")
 
         # Фильтр по району (icontains для ловли вариантов "Есильский" / "Есильский район")
         if params.get('district'):
@@ -104,7 +114,10 @@ class EnhancedSearchService:
                 units = self._apply_price_filters(
                     units, params.get('min_price'), params.get('max_price')
                 )
-                if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                # Фильтр по комнатам с поддержкой множественного выбора
+                if params.get('rooms'):
+                    rooms_list = params['rooms'] if isinstance(params['rooms'], list) else [params['rooms']]
+                    units = units.filter(room_count__in=rooms_list)
                 if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
                 if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
                 if units.exists():
@@ -139,7 +152,10 @@ class EnhancedSearchService:
         units = self._apply_price_filters(
             units, params.get('min_price'), params.get('max_price')
         )
-        if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+        # Фильтр по комнатам с поддержкой множественного выбора
+        if params.get('rooms'):
+            rooms_list = params['rooms'] if isinstance(params['rooms'], list) else [params['rooms']]
+            units = units.filter(room_count__in=rooms_list)
         if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
         if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
 
@@ -269,7 +285,10 @@ class EnhancedSearchService:
                     units = self._apply_price_filters(
                         units, params.get('min_price'), params.get('max_price')
                     )
-                    if params.get('rooms'): units = units.filter(room_count=params['rooms'])
+                    # Фильтр по комнатам с поддержкой множественного выбора
+                    if params.get('rooms'):
+                        rooms_list = params['rooms'] if isinstance(params['rooms'], list) else [params['rooms']]
+                        units = units.filter(room_count__in=rooms_list)
                     if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
                     if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
 
@@ -304,7 +323,10 @@ class EnhancedSearchService:
             sec_props = self._apply_price_filters(
                 sec_props, params.get('min_price'), params.get('max_price')
             )
-            if params.get('rooms'): sec_props = sec_props.filter(rooms=params['rooms'])
+            # Фильтр по комнатам с поддержкой множественного выбора
+            if params.get('rooms'):
+                rooms_list = params['rooms'] if isinstance(params['rooms'], list) else [params['rooms']]
+                sec_props = sec_props.filter(rooms__in=rooms_list)
             if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
             if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])
             

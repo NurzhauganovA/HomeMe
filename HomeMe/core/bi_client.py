@@ -111,7 +111,7 @@ class EnhancedBIGroupClient:
 
     def search_properties(
             self,
-            rooms: Optional[int] = None,
+            rooms: Optional[List[int]] = None,  # Поддержка множественного выбора комнат
             max_price: Optional[float] = None,
             min_price: Optional[float] = None,
             min_area: Optional[float] = None,
@@ -312,10 +312,17 @@ class EnhancedBIGroupClient:
         if min_price and price < min_price:
             return False
 
-        # Фильтр 3: Комнаты
-        rooms_list = item.get("roomCounts", [])
-        if rooms and rooms not in rooms_list:
-            return False
+        # Фильтр 3: Комнаты (с поддержкой множественного выбора)
+        item_rooms_list = item.get("roomCounts", [])
+        if rooms:
+            # Если rooms - список, проверяем пересечение
+            if isinstance(rooms, list):
+                if not any(r in item_rooms_list for r in rooms):
+                    return False
+            else:
+                # Если rooms - одно число
+                if rooms not in item_rooms_list:
+                    return False
 
         # Фильтр 4: Площадь
         square_min = item.get("squareMin", 0)

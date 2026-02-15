@@ -141,7 +141,7 @@ class EnhancedDialogManager:
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска']
                 elif params.get('source') == 'mixed':
                     params['bi_offset'] = 0
                     params['secondary_offset'] = 0
@@ -156,11 +156,11 @@ class EnhancedDialogManager:
                         await self._update_state(session, 'BROWSING', params)
                         response['text'] = self._format_intro(results, params)
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска']
                 else:
                     results = await sync_to_async(
                         self.search.intelligent_search,
@@ -171,11 +171,11 @@ class EnhancedDialogManager:
                         await self._update_state(session, 'BROWSING', params)
                         response['text'] = self._format_intro(results, params)
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                     else:
                         await self._update_state(session, 'NO_RESULTS', params)
                         response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска']
 
             else:
                 return self._scenario_start(user.name)
@@ -200,7 +200,7 @@ class EnhancedDialogManager:
             )
             response['buttons'] = [
                 'до 30 млн', '30-40 млн', '40-50 млн',
-                '50-60 млн', '60-70 млн', '70-80 млн'
+                '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
             ]
 
         elif state == 'CHOOSING_BI_CATEGORY':
@@ -220,19 +220,19 @@ class EnhancedDialogManager:
             if params.get('bi_category') == 'commercial':
                 response['buttons'] = [
                     'до 50 млн', '50-70 млн', '70-90 млн',
-                    '90-120 млн', '120-150 млн', '150-200 млн'
+                    '90-120 млн', '120-150 млн', '150-200 млн', 'Не важно'
                 ]
             else:
                 response['buttons'] = [
                     'до 30 млн', '30-40 млн', '40-50 млн',
-                    '50-60 млн', '60-70 млн', '70-80 млн'
+                    '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
                 ]
 
         elif state == 'SETTING_BUDGET':
             allowed_budgets = {
                 'до 30 млн', '30-40 млн', '40-50 млн', '50-60 млн', '60-70 млн', '70-80 млн',
                 'до 50 млн', '50-70 млн', '70-90 млн', '90-120 млн', '120-150 млн', '150-200 млн',
-                '30-50 млн', '50-80 млн', '80-120 млн', '120-200 млн'
+                '30-50 млн', '50-80 млн', '80-120 млн', '120-200 млн', 'Не важно'
             }
             parsed_budget = self._parse_budget_text(text)
             if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
@@ -242,19 +242,7 @@ class EnhancedDialogManager:
                 if ai_budget.get('min_price') or ai_budget.get('max_price'):
                     parsed_budget = ai_budget
 
-            if text.strip().lower() not in allowed_budgets and parsed_budget.get('min_price') and parsed_budget.get('max_price'):
-                min_p = parsed_budget['min_price']
-                max_p = parsed_budget['max_price']
-                if min_p and max_p and max_p > min_p:
-                    spread = (max_p - min_p) / max_p
-                    if spread > 0.2:
-                        response['text'] = self._random_prompt(
-                            "Диапазон слишком широкий. Попробуйте сузить до 10–20%.",
-                            "Для точного подбора нужен более узкий диапазон (например: 40-45 млн).",
-                            "Укажите конкретнее, например: 90-100 млн или выберите кнопку ниже."
-                        )
-                        return self._ensure_main_menu_button(response, state)
-
+            # Убрано ограничение на широкий диапазон - пользователь может указывать любые диапазоны
             if parsed_budget.get('max_price') or parsed_budget.get('min_price'):
                 params.update(parsed_budget)
                 if params.get('edit_mode'):
@@ -270,8 +258,8 @@ class EnhancedDialogManager:
                     response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
                 else:
                     await self._update_state(session, 'SETTING_ROOMS', params)
-                    response['text'] = "Сколько комнат? 🛏"
-                    response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
+                    response['text'] = "Сколько комнат? 🛏\n(Можно выбрать несколько: например, '2-3' или '4-5')"
+                    response['buttons'] = ['1', '2', '3', '4', '5+', '2-3', '4-5', 'Не важно']
             else:
                 response['text'] = self._random_prompt(
                     "Бюджет не распознал.",
@@ -329,28 +317,31 @@ class EnhancedDialogManager:
             lowered_text = text.lower()
             if 'не важно' in lowered_text:
                 params.pop('rooms', None)
-            elif '1' in text:
-                params['rooms'] = 1
-            elif '2' in text:
-                params['rooms'] = 2
-            elif '3' in text:
-                params['rooms'] = 3
-            elif '4' in text:
-                params['rooms'] = 4
             else:
-                ai_rooms = await self._ai_fallback_parse(text, ['rooms'])
-                if ai_rooms is None:
-                    return self._quota_response()
-                if ai_rooms.get('rooms'):
-                    params['rooms'] = ai_rooms.get('rooms')
+                # Парсим множественный выбор комнат (например, "2-3", "4-5", "1,2,3")
+                rooms_list = self._parse_rooms_text(text)
+                if rooms_list:
+                    params['rooms'] = rooms_list
                 else:
-                    response['text'] = self._random_prompt(
-                        "Количество комнат не распознал.",
-                        "Можно написать: 1, 2, 3, 4+ или 'Не важно'.",
-                        "Напиши количество комнат цифрой, например: 2."
-                    )
-                    response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
-                    return self._ensure_main_menu_button(response, state)
+                    # Пробуем через AI
+                    ai_rooms = await self._ai_fallback_parse(text, ['rooms'])
+                    if ai_rooms is None:
+                        return self._quota_response()
+                    if ai_rooms.get('rooms'):
+                        # Если AI вернул одно число, делаем список
+                        rooms_value = ai_rooms.get('rooms')
+                        if isinstance(rooms_value, list):
+                            params['rooms'] = rooms_value
+                        else:
+                            params['rooms'] = [rooms_value]
+                    else:
+                        response['text'] = self._random_prompt(
+                            "Количество комнат не распознал.",
+                            "Можно написать: 1, 2, 3, 4, 5+, 2-3, 4-5 или 'Не важно'.",
+                            "Напиши количество комнат, например: 2 или 2-3."
+                        )
+                        response['buttons'] = ['1', '2', '3', '4', '5+', '2-3', '4-5', 'Не важно']
+                        return self._ensure_main_menu_button(response, state)
 
             if params.get('edit_mode'):
                 response = await self._enter_edit_params_menu(
@@ -524,10 +515,10 @@ class EnhancedDialogManager:
 
                         response['text'] = "Вот еще варианты: 👇"
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                     else:
                         response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
-                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска']
                 else:
                     current_offset = params.get('offset', 0)
 
@@ -545,10 +536,10 @@ class EnhancedDialogManager:
 
                         response['text'] = "Вот еще варианты: 👇"
                         response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                     else:
                         response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
-                        response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                        response['buttons'] = ['Изменить параметры поиска']
 
             elif 'бюджет' in text.lower() or 'параметр' in text.lower() or 'изменить' in text.lower():
                 response = await self._enter_edit_params_menu(session, params)
@@ -604,12 +595,12 @@ class EnhancedDialogManager:
                 response['text'] = "Какой бюджет? 💰"
                 response['buttons'] = [
                     'до 30 млн', '30-40 млн', '40-50 млн',
-                    '50-60 млн', '60-70 млн', '70-80 млн'
+                    '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
                 ]
                 if params.get('bi_category') == 'commercial':
                     response['buttons'] = [
                         'до 50 млн', '50-70 млн', '70-90 млн',
-                        '90-120 млн', '120-150 млн', '150-200 млн'
+                        '90-120 млн', '120-150 млн', '150-200 млн', 'Не важно'
                     ]
             elif 'комнат' in lowered_text or 'комнаты' in lowered_text:
                 if params.get('bi_category') == 'commercial':
@@ -813,15 +804,13 @@ class EnhancedDialogManager:
                 return '1'
             if 'узнать про район' in lowered or 'узнать про районы' in lowered or lowered == 'район':
                 return '2'
-            if 'связаться с экспертом' in lowered or lowered == 'эксперт':
-                return '3'
 
         return text
 
     def _scenario_start(self, name):
         return {
             'text': f"Привет, {name}!\nЯ HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?",
-            'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы', '3. Связаться с экспертом']
+            'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы']
         }
 
     @staticmethod
@@ -923,7 +912,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска']
         elif params.get('source') == 'mixed':
             params['bi_offset'] = 0
             params['secondary_offset'] = 0
@@ -940,7 +929,7 @@ class EnhancedDialogManager:
 
                 response['text'] = self._format_intro(results, params)
                 response['objects'] = results
-                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
             else:
                 await self._update_state(session, 'NO_RESULTS', params)
                 if params.get('coordinates'):
@@ -955,7 +944,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска']
         else:
             results = await sync_to_async(
                 self.search.intelligent_search,
@@ -969,7 +958,7 @@ class EnhancedDialogManager:
 
                 response['text'] = self._format_intro(results, params)
                 response['objects'] = results
-                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска', 'Связаться с экспертом']
+                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
             else:
                 await self._update_state(session, 'NO_RESULTS', params)
                 if params.get('coordinates'):
@@ -984,7 +973,7 @@ class EnhancedDialogManager:
                         f"По запросу (до {params.get('max_price', '')} ₸) ничего не найдено. 😔\n\n"
                         "Варианты действий:"
                     )
-                response['buttons'] = ['Изменить параметры поиска', 'Связаться с экспертом']
+                response['buttons'] = ['Изменить параметры поиска']
 
         return response
 
@@ -1039,7 +1028,7 @@ class EnhancedDialogManager:
         Парсинг бюджета без AI.
         Поддержка: "до X млн", "от X млн", "X+ млн", "X-Y млн", "X млн".
         """
-        if not text:
+        if not text or text == 'Не важно':
             return {}
 
         cleaned = text.lower().replace("млн", "").replace("миллион", "").replace("миллиона", "").replace("миллионов", "")
@@ -1128,6 +1117,53 @@ class EnhancedDialogManager:
             return {"max_area": value}
 
         return {}
+
+    @staticmethod
+    def _parse_rooms_text(text: str):
+        """
+        Парсинг количества комнат с поддержкой множественного выбора.
+        Поддержка: "2-3", "4-5", "1,2,3", "1", "5+", "2,3,4"
+        Возвращает список чисел или None
+        """
+        if not text:
+            return None
+
+        cleaned = text.lower().replace(" ", "").replace("комнат", "").replace("комнаты", "").replace("комната", "")
+        
+        # Обработка диапазона (например, "2-3")
+        if "-" in cleaned:
+            parts = cleaned.split("-", 1)
+            try:
+                start = int(parts[0])
+                end_str = parts[1].replace("+", "")
+                end = int(end_str)
+                # Генерируем список от start до end включительно
+                return list(range(start, end + 1))
+            except (ValueError, IndexError):
+                return None
+        
+        # Обработка списка через запятую (например, "1,2,3")
+        if "," in cleaned:
+            try:
+                rooms_list = [int(x.strip()) for x in cleaned.split(",") if x.strip().isdigit()]
+                return rooms_list if rooms_list else None
+            except ValueError:
+                return None
+        
+        # Обработка "5+" - возвращаем [5, 6, 7, 8, 9, 10] (до 10 комнат)
+        if cleaned.endswith("+"):
+            try:
+                start = int(cleaned[:-1])
+                return list(range(start, 11))  # От указанного числа до 10
+            except ValueError:
+                return None
+        
+        # Обработка одного числа
+        try:
+            room_num = int(cleaned)
+            return [room_num]
+        except ValueError:
+            return None
 
     def _random_prompt(self, *variants):
         return random.choice([v for v in variants if v])

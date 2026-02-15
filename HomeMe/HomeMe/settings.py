@@ -123,6 +123,13 @@ GROQ_API_KEY = env('GROQ_API_KEY')
 BI_GROUP_API_URL = env('BI_GROUP_API_URL')
 TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN')
 
+# Bitrix24 CRM Integration
+BITRIX24_WEBHOOK_URL = env('BITRIX24_WEBHOOK_URL', default=None)
+BITRIX24_CALL_CENTER_NUMBER = env('BITRIX24_CALL_CENTER_NUMBER', default='360')
+# Использовать пользовательские поля в Bitrix24 (требует настройки полей в CRM)
+# Установите в .env: BITRIX24_USE_CUSTOM_FIELDS=True после создания полей
+BITRIX24_USE_CUSTOM_FIELDS = env('BITRIX24_USE_CUSTOM_FIELDS', default='False').lower() == 'true'
+
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 

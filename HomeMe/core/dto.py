@@ -5,7 +5,7 @@ Enhanced Data Transfer Objects (DTO)
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 from datetime import datetime
 from urllib.parse import quote
 
@@ -274,7 +274,7 @@ class SearchCriteria:
     """
 
     # Базовые параметры
-    rooms: Optional[int] = None
+    rooms: Optional[List[int]] = None  # Список комнат для множественного выбора (например, [2, 3] или [4, 5])
     min_price: Optional[float] = None
     max_price: Optional[float] = None
     min_area: Optional[float] = None
