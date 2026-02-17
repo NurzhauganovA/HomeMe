@@ -348,7 +348,15 @@ class SecondaryImportAPIView(View):
 
     @staticmethod
     def _extract_token(request):
+        # 1. Проверка стандартного Bearer токена
         auth = request.headers.get('Authorization') or ''
         if auth.lower().startswith('bearer '):
             return auth.split(' ', 1)[1].strip()
-        return request.headers.get('X-API-KEY')
+
+        # 2. Проверка заголовка X-API-KEY
+        api_key = request.headers.get('X-API-KEY')
+        if api_key:
+            return api_key
+
+        # 3. Добавлена поддержка заголовка x-token для совместимости с клиентом
+        return request.headers.get('x-token')
