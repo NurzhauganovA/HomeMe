@@ -235,7 +235,7 @@ class EnhancedDialogManager:
                 '30-50 млн', '50-80 млн', '80-120 млн', '120-200 млн', 'Не важно'
             }
             if text == 'Не важно':
-                parsed_budget = {'max_price': None, 'min_price': None}
+                parsed_budget = {'max_price': 1000000000000, 'min_price': 0}
             else:
                 parsed_budget = self._parse_budget_text(text)
             if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
