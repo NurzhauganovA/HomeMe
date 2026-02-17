@@ -234,7 +234,10 @@ class EnhancedDialogManager:
                 'до 50 млн', '50-70 млн', '70-90 млн', '90-120 млн', '120-150 млн', '150-200 млн',
                 '30-50 млн', '50-80 млн', '80-120 млн', '120-200 млн', 'Не важно'
             }
-            parsed_budget = self._parse_budget_text(text)
+            if text == 'Не важно':
+                parsed_budget = {'max_price': None, 'min_price': None}
+            else:
+                parsed_budget = self._parse_budget_text(text)
             if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
                 ai_budget = await self._ai_fallback_parse(text, ['min_price', 'max_price'])
                 if ai_budget is None:
