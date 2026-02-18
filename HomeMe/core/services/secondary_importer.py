@@ -21,7 +21,7 @@ class SecondaryImporter:
         skipped = 0
 
         for item in items:
-            action = item.get("action") if isinstance(item, dict) else None
+            action = item.get("action") or item.get("data").get("action")
             payload = self._extract_payload(item)
             if not payload:
                 skipped += 1
