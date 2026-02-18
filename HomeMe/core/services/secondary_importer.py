@@ -35,13 +35,24 @@ class SecondaryImporter:
                 skipped += 1
                 continue
 
-            if action == "archive":
+            if action == "archive" or action == "delete":
                 obj = SecondaryProperty.objects.filter(external_uuid=ext_uuid).first()
                 if not obj:
                     skipped += 1
                     continue
                 if obj.is_active:
                     obj.is_active = False
+                    obj.save(update_fields=["is_active"])
+                updated += 1
+                continue
+
+            if action == "restore":
+                obj = SecondaryProperty.objects.filter(external_uuid=ext_uuid).first()
+                if not obj:
+                    skipped += 1
+                    continue
+                if not obj.is_active:
+                    obj.is_active = True
                     obj.save(update_fields=["is_active"])
                 updated += 1
                 continue
