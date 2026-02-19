@@ -312,18 +312,18 @@ class EnhancedDialogManager:
                 )
                 return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
 
-            # Для жилых объектов спрашиваем класс жилья, для коммерции идем на локацию
-            if params.get('bi_category') == 'commercial':
-                await self._update_state(session, 'SETTING_LOCATION', params)
-                response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
-                response['buttons'] = self._location_buttons()
-            else:
+            # Для жилых объектов BI Group спрашиваем класс жилья, для остальных идем на локацию
+            if params.get('source') == 'bi' and params.get('bi_category') == 'residential':
                 await self._update_state(session, 'SETTING_CLASS_NAME', params)
                 response['text'] = "Какой класс жилья предпочитаете? 🏠"
                 response['buttons'] = [
                     "Стандарт", "Комфорт lite", "Комфорт", "Комфорт+",
                     "Бизнес", "Бизнес+", "Премиум", "Не важно"
                 ]
+            else:
+                await self._update_state(session, 'SETTING_LOCATION', params)
+                response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
+                response['buttons'] = self._location_buttons()
 
         elif state == 'SETTING_ROOMS':
             lowered_text = text.lower()
@@ -676,12 +676,20 @@ class EnhancedDialogManager:
                     response['text'] = "Какая площадь нужна? 📐 (Например: '45-70 м²' или 'до 60 м²')"
                     response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
             elif 'класс' in lowered_text:
-                await self._update_state(session, 'SETTING_CLASS_NAME', params)
-                response['text'] = "Какой класс жилья предпочитаете? 🏠"
-                response['buttons'] = [
-                    "Стандарт", "Комфорт lite", "Комфорт", "Комфорт+",
-                    "Бизнес", "Бизнес+", "Премиум", "Не важно"
-                ]
+                # Класс жилья может быть изменен только для BI Group жилых квартир
+                if params.get('source') == 'bi' and params.get('bi_category') == 'residential':
+                    await self._update_state(session, 'SETTING_CLASS_NAME', params)
+                    response['text'] = "Какой класс жилья предпочитаете? 🏠"
+                    response['buttons'] = [
+                        "Стандарт", "Комфорт lite", "Комфорт", "Комфорт+",
+                        "Бизнес", "Бизнес+", "Премиум", "Не важно"
+                    ]
+                else:
+                    response = await self._enter_edit_params_menu(
+                        session,
+                        params,
+                        prompt="Класс жилья доступен только для BI Group квартир. Можно изменить другие параметры."
+                    )
             elif 'район' in lowered_text or 'местополож' in lowered_text or 'локац' in lowered_text:
                 await self._update_state(session, 'SETTING_LOCATION', params)
                 response['text'] = "Есть предпочтения по району? 📍\n(Выберите район, берег или напишите ориентир)"
@@ -1260,8 +1268,11 @@ class EnhancedDialogManager:
     @staticmethod
     def _edit_params_buttons(params: dict):
         buttons = ['Изменить бюджет']
-        if params.get('bi_category') != 'commercial':
+        # Кнопка "Изменить класс жилья" только для BI Group жилых квартир
+        if params.get('source') == 'bi' and params.get('bi_category') == 'residential':
             buttons.extend(['Изменить комнаты', 'Изменить класс жилья'])
+        elif params.get('bi_category') != 'commercial':
+            buttons.append('Изменить комнаты')
         buttons.extend(['Изменить площадь', 'Изменить район', 'Искать'])
         return buttons
 
