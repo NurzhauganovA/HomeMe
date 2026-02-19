@@ -37,7 +37,7 @@ class PropertyDTO:
     # Дополнительные метаданные
     total_floors: Optional[int] = None
     building_type: Optional[str] = None  # "new", "secondary"
-    property_class: Optional[str] = None  # "Комфорт", "Бизнес", "Элит"
+    property_class: Optional[str] = None  # "Стандарт", "Комфорт lite", "Комфорт", "Комфорт+", "Бизнес", "Бизнес+", "Премиум"
     deadline: Optional[str] = None  # Срок сдачи для новостроек
 
     # Геолокация
@@ -110,6 +110,11 @@ class PropertyDTO:
                 msg += f"/{self.total_floors}"
             msg += "\n"
 
+        # Класс жилья
+        if self.property_class and self.source == 'bi_group':
+            class_icon = self._get_class_icon(self.property_class)
+            msg += f"{class_icon} <b>{self.property_class}</b>\n"
+
         # Дополнительная информация
         if self.description:
             msg += f"ℹ️ {self.description[:100]}\n"
@@ -160,6 +165,11 @@ class PropertyDTO:
             if self.total_floors:
                 msg += f"/{self.total_floors}"
             msg += "\n"
+
+        # Класс жилья
+        if self.property_class and self.source == 'bi_group':
+            class_icon = self._get_class_icon(self.property_class)
+            msg += f"{class_icon} *{self.property_class}*\n"
 
         if self.description:
             msg += f"ℹ️ {self.description[:100]}\n"
@@ -264,6 +274,19 @@ class PropertyDTO:
         if self.has_mortgage:
             items.append("Ипотека")
         return " | ".join(items)
+
+    def _get_class_icon(self, class_name: str) -> str:
+        """Возвращает иконку для класса жилья"""
+        class_icons = {
+            "Премиум": "💎",
+            "Бизнес+": "⭐",
+            "Бизнес": "✨",
+            "Комфорт+": "🌟",
+            "Комфорт": "🏠",
+            "Комфорт lite": "🏘",
+            "Стандарт": "🏢",
+        }
+        return class_icons.get(class_name, "🏠")
 
 
 @dataclass

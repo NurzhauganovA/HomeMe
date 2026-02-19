@@ -95,6 +95,11 @@ class EnhancedSearchService:
 
         queryset = complex_model.objects.filter(complex_filters)
         
+        # Фильтр по классу жилья
+        if params.get('property_class') and params.get('property_class') != 'Не важно':
+            queryset = queryset.filter(class_name=params.get('property_class'))
+            logger.info(f"🏘 CLASS FILTER (complexes): {params.get('property_class')}")
+
         logger.info(f"🔍 Total complexes after filters: {queryset.count()}")
         
         if query_vector:
@@ -158,6 +163,9 @@ class EnhancedSearchService:
             units = units.filter(room_count__in=rooms_list)
         if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
         if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
+        # Фильтр по классу жилья (берется из комплекса)
+        if params.get('property_class') and params.get('property_class') != 'Не важно':
+            units = units.filter(complex__class_name=params.get('property_class'))
 
         results = []
         for unit in units.order_by('price')[offset: offset + limit]:
@@ -446,6 +454,7 @@ class EnhancedSearchService:
             area=unit.area,
             floor=unit.floor,
             total_floors=unit.max_floor,
+            property_class=comp.class_name,
             description=desc,
             url=unit_url,
             image_url=primary_photo,
@@ -479,6 +488,7 @@ class EnhancedSearchService:
             area=unit.area,
             floor=unit.floor,
             total_floors=unit.max_floor,
+            property_class=comp.class_name,
             description=desc,
             url=unit_url,
             image_url=primary_photo,
@@ -510,6 +520,7 @@ class EnhancedSearchService:
             area=area,
             floor=0,
             total_floors=None,
+            property_class=comp.class_name,
             description=desc,
             url=comp.url,
             image_url=comp.image_url,
@@ -540,6 +551,7 @@ class EnhancedSearchService:
             area=area,
             floor=0,
             total_floors=None,
+            property_class=comp.class_name,
             description=desc,
             url=comp.url,
             image_url=comp.image_url,
