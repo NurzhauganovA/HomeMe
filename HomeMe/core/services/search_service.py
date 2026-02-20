@@ -96,8 +96,16 @@ class EnhancedSearchService:
         queryset = complex_model.objects.filter(complex_filters)
         
         # Фильтр по классу жилья
-        if params.get('property_class') and params.get('property_class') != 'Не важно':
-            queryset = queryset.filter(class_name=params.get('property_class'))
+        property_class = params.get('property_class')
+        if property_class and property_class != 'Не важно':
+            if property_class in ["Стандарт", "Комфорт lite"]:
+                queryset = queryset.filter(class_name__in=["Стандарт", "Комфорт lite"])
+            elif property_class in ["Комфорт", "Комфорт+"]:
+                queryset = queryset.filter(class_name__in=["Комфорт", "Комфорт+"])
+            elif property_class in ["Бизнес", "Бизнес+"]:
+                queryset = queryset.filter(class_name__in=["Бизнес", "Бизнес+"])
+            else:
+                queryset = queryset.filter(class_name=params.get('property_class'))
             logger.info(f"🏘 CLASS FILTER (complexes): {params.get('property_class')}")
 
         logger.info(f"🔍 Total complexes after filters: {queryset.count()}")
@@ -164,8 +172,16 @@ class EnhancedSearchService:
         if params.get('min_area'): units = units.filter(area__gte=params['min_area'])
         if params.get('max_area'): units = units.filter(area__lte=params['max_area'])
         # Фильтр по классу жилья (берется из комплекса)
-        if params.get('property_class') and params.get('property_class') != 'Не важно':
-            units = units.filter(complex__class_name=params.get('property_class'))
+        property_class = params.get('property_class')
+        if property_class and property_class != 'Не важно':
+            if property_class in ["Стандарт", "Комфорт lite"]:
+                units = units.filter(complex__class_name__in=["Стандарт", "Комфорт lite"])
+            elif property_class in ["Комфорт", "Комфорт+"]:
+                units = units.filter(complex__class_name__in=["Комфорт", "Комфорт+"])
+            elif property_class in ["Бизнес", "Бизнес+"]:
+                units = units.filter(complex__class_name__in=["Бизнес", "Бизнес+"])
+            else:
+                units = units.filter(complex__class_name=params.get('property_class'))
 
         results = []
         for unit in units.order_by('price')[offset: offset + limit]:
@@ -438,7 +454,7 @@ class EnhancedSearchService:
         tags_list = features.get('tags', [])
         tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
 
-        desc = f"📍 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
+        desc = f"📍 {side} берег | {district}\n✨ {tags}\nЗавершение строительства: {unit.deadline}"
 
         photos = unit.photos or []
         primary_photo = photos[0] if photos else comp.image_url
@@ -472,7 +488,7 @@ class EnhancedSearchService:
         tags_list = features.get('tags', [])
         tags = ", ".join(tags_list[:3]) if isinstance(tags_list, list) else ""
 
-        desc = f"🏢 {side} берег | {district}\n✨ {tags}\nСрок: {unit.deadline}"
+        desc = f"🏢 {side} берег | {district}\n✨ {tags}\nЗавершение строительства: {unit.deadline}"
 
         photos = unit.photos or []
         primary_photo = photos[0] if photos else comp.image_url
