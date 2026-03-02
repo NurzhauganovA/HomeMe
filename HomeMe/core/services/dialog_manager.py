@@ -76,8 +76,13 @@ class EnhancedDialogManager:
                     lambda: list(FavoriteProperty.objects.filter(user=user).order_by('-created_at'))
                 )()
                 if favorites:
-                    response['text'] = "⭐ Ваши избранные объекты:"
-                    response['objects'] = [PropertyDTO.from_dict(item.data) for item in favorites]
+                    response['text'] = "⭐ Ваши избранные объекты:\n\nНажмите 🗑 Удалить на карточке объекта, чтобы убрать из избранного."
+                    dtos = []
+                    for item in favorites:
+                        dto = PropertyDTO.from_dict(item.data)
+                        dto.favorite_id = str(item.id)
+                        dtos.append(dto)
+                    response['objects'] = dtos
                 else:
                     response['text'] = "⭐ Избранное пока пустое."
                 response['buttons'] = ['В главное меню']
@@ -189,6 +194,10 @@ class EnhancedDialogManager:
                 return self._ensure_main_menu_button(response, state)
             elif '2' in text or 'вторич' in text.lower():
                 params['source'] = 'secondary'
+                await self._update_state(session, 'CHOOSING_SECONDARY_CATEGORY', params)
+                response['text'] = "Что ищете на вторичном рынке?\n\n1. Квартиры 🏠\n2. Коммерческие помещения 🏢"
+                response['buttons'] = ['1. Квартиры', '2. Коммерческие помещения']
+                return self._ensure_main_menu_button(response, state)
             else:
                 params['source'] = 'mixed'
 
@@ -228,6 +237,27 @@ class EnhancedDialogManager:
                     '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
                 ]
 
+        elif state == 'CHOOSING_SECONDARY_CATEGORY':
+            lowered_text = text.lower()
+            if '2' in lowered_text or 'коммер' in lowered_text or 'офис' in lowered_text or 'помещ' in lowered_text:
+                params['secondary_category'] = 'commercial'
+                response['buttons'] = [
+                    'до 50 млн', '50-70 млн', '70-90 млн',
+                    '90-120 млн', '120-150 млн', '150-200 млн', 'Не важно'
+                ]
+            else:
+                params['secondary_category'] = 'apartment'
+                response['buttons'] = [
+                    'до 30 млн', '30-40 млн', '40-50 млн',
+                    '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
+                ]
+            await self._update_state(session, 'SETTING_BUDGET', params)
+            response['text'] = (
+                "Какой бюджет? 💰\n"
+                "Указывайте конкретный диапазон, чтобы поиск был точнее.\n"
+                "Например: 40-45 млн или 18-20 млн."
+            )
+
         elif state == 'SETTING_BUDGET':
             allowed_budgets = {
                 'до 30 млн', '30-40 млн', '40-50 млн', '50-60 млн', '60-70 млн', '70-80 млн',
@@ -255,7 +285,11 @@ class EnhancedDialogManager:
                         prompt="Бюджет обновил. Что ещё изменить? Или нажмите «Искать»."
                     )
                     return self._ensure_main_menu_button(response, 'EDITING_PARAMS_MENU')
-                if params.get('bi_category') == 'commercial':
+                is_commercial = (
+                    params.get('bi_category') == 'commercial' or
+                    params.get('secondary_category') == 'commercial'
+                )
+                if is_commercial:
                     await self._update_state(session, 'SETTING_AREA', params)
                     response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
                     response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
@@ -298,7 +332,11 @@ class EnhancedDialogManager:
                     "Ответь так: 'до 80 м²' или '100-200 м²'.",
                     "Напиши площадь цифрами, например: 120 м²."
                 )
-                if params.get('bi_category') == 'commercial':
+                is_commercial = (
+                    params.get('bi_category') == 'commercial' or
+                    params.get('secondary_category') == 'commercial'
+                )
+                if is_commercial:
                     response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
                 else:
                     response['buttons'] = ['до 40 м²', '40-60 м²', '60-80 м²', '80-100 м²', '100-120 м²', '120+ м²', 'Не важно']
@@ -562,16 +600,19 @@ class EnhancedDialogManager:
                     )
 
                     if results:
-                        results = self._filter_seen_objects(params, results)
+                        filtered = self._filter_seen_objects(params, results)
                         params['bi_offset'] = new_bi_offset
                         params['secondary_offset'] = new_secondary_offset
                         await self._update_state(session, 'BROWSING', params)
-
-                        response['text'] = "Вот еще варианты: 👇"
-                        response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                        if filtered:
+                            response['text'] = "Вот еще варианты: 👇"
+                            response['objects'] = filtered
+                            response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                        else:
+                            response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                            response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
+                        response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
                         response['buttons'] = ['Изменить параметры поиска']
                 else:
                     current_offset = params.get('offset', 0)
@@ -584,15 +625,18 @@ class EnhancedDialogManager:
 
                     if results:
                         raw_count = len(results)
-                        results = self._filter_seen_objects(params, results)
+                        filtered = self._filter_seen_objects(params, results)
                         params['offset'] = current_offset + raw_count
                         await self._update_state(session, 'BROWSING', params)
-
-                        response['text'] = "Вот еще варианты: 👇"
-                        response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                        if filtered:
+                            response['text'] = "Вот еще варианты: 👇"
+                            response['objects'] = filtered
+                            response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                        else:
+                            response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                            response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = "Варианты по этому запросу закончились. 🤷‍♂️"
+                        response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
                         response['buttons'] = ['Изменить параметры поиска']
 
             elif 'бюджет' in text.lower() or 'параметр' in text.lower() or 'изменить' in text.lower():
@@ -647,17 +691,26 @@ class EnhancedDialogManager:
             elif 'бюджет' in lowered_text:
                 await self._update_state(session, 'SETTING_BUDGET', params)
                 response['text'] = "Какой бюджет? 💰"
-                response['buttons'] = [
-                    'до 30 млн', '30-40 млн', '40-50 млн',
-                    '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
-                ]
-                if params.get('bi_category') == 'commercial':
+                is_commercial = (
+                    params.get('bi_category') == 'commercial' or
+                    params.get('secondary_category') == 'commercial'
+                )
+                if is_commercial:
                     response['buttons'] = [
                         'до 50 млн', '50-70 млн', '70-90 млн',
                         '90-120 млн', '120-150 млн', '150-200 млн', 'Не важно'
                     ]
+                else:
+                    response['buttons'] = [
+                        'до 30 млн', '30-40 млн', '40-50 млн',
+                        '50-60 млн', '60-70 млн', '70-80 млн', 'Не важно'
+                    ]
             elif 'комнат' in lowered_text or 'комнаты' in lowered_text:
-                if params.get('bi_category') == 'commercial':
+                is_commercial = (
+                    params.get('bi_category') == 'commercial' or
+                    params.get('secondary_category') == 'commercial'
+                )
+                if is_commercial:
                     response = await self._enter_edit_params_menu(
                         session,
                         params,
@@ -669,7 +722,11 @@ class EnhancedDialogManager:
                     response['buttons'] = ['1', '2', '3', '4+', 'Не важно']
             elif 'площад' in lowered_text:
                 await self._update_state(session, 'SETTING_AREA', params)
-                if params.get('bi_category') == 'commercial':
+                is_commercial = (
+                    params.get('bi_category') == 'commercial' or
+                    params.get('secondary_category') == 'commercial'
+                )
+                if is_commercial:
                     response['text'] = "Какая площадь нужна? 🏢 (Например: '50-120 м²' или 'до 80 м²')"
                     response['buttons'] = ['до 50 м²', '50-100 м²', '100-200 м²', 'Не важно']
                 else:
@@ -889,7 +946,13 @@ class EnhancedDialogManager:
         }
 
     def _format_intro(self, results, params):
-        return f"Нашел {len(results)} вариантов (сгруппировано по ЖК): 👇"
+        source = params.get('source', 'mixed')
+        secondary_category = params.get('secondary_category')
+        if source == 'secondary':
+            if secondary_category == 'commercial':
+                return f"Нашел {len(results)} коммерческих объектов на вторичном рынке: 👇"
+            return f"Нашел {len(results)} квартир на вторичном рынке: 👇"
+        return f"Нашел {len(results)} вариантов: 👇"
 
     def _has_search_intent(self, params: dict, text: str) -> bool:
         keywords = ['найди', 'поиск', 'квартира', 'жк', 'офис', 'помещение', 'вторич']
@@ -1268,10 +1331,14 @@ class EnhancedDialogManager:
     @staticmethod
     def _edit_params_buttons(params: dict):
         buttons = ['Изменить бюджет']
+        is_commercial = (
+            params.get('bi_category') == 'commercial' or
+            params.get('secondary_category') == 'commercial'
+        )
         # Кнопка "Изменить класс жилья" только для BI Group жилых квартир
         if params.get('source') == 'bi' and params.get('bi_category') == 'residential':
             buttons.extend(['Изменить комнаты', 'Изменить класс жилья'])
-        elif params.get('bi_category') != 'commercial':
+        elif not is_commercial:
             buttons.append('Изменить комнаты')
         buttons.extend(['Изменить площадь', 'Изменить район', 'Искать'])
         return buttons

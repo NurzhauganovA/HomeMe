@@ -320,15 +320,20 @@ class Command(BaseCommand):
                 msg = obj.to_telegram_message()
 
                 # Inline кнопки для действий
-                inline_keyboard = [
-                    [InlineKeyboardButton("💾 Сохранить", callback_data=f"save_{obj.source}_{idx}")]
-                ]
-                
-                # Кнопка "Контакты" только для объектов BI Group
-                if obj.source == 'bi_group':
-                    inline_keyboard[0].append(
-                        InlineKeyboardButton("👤 Контакты", callback_data=f"contact_{obj.source}_{idx}")
-                    )
+                # Если объект из избранного — показываем кнопку удаления
+                if getattr(obj, 'favorite_id', None):
+                    inline_keyboard = [
+                        [InlineKeyboardButton("🗑 Удалить из избранного", callback_data=f"delete_fav_{obj.favorite_id}")]
+                    ]
+                else:
+                    inline_keyboard = [
+                        [InlineKeyboardButton("💾 Сохранить", callback_data=f"save_{obj.source}_{idx}")]
+                    ]
+                    # Кнопка "Контакты" только для объектов BI Group
+                    if obj.source == 'bi_group':
+                        inline_keyboard[0].append(
+                            InlineKeyboardButton("👤 Контакты", callback_data=f"contact_{obj.source}_{idx}")
+                        )
                 reply_markup = InlineKeyboardMarkup(inline_keyboard)
 
                 # Отправляем с фото или без
@@ -418,7 +423,35 @@ class Command(BaseCommand):
         parts = callback_data.split('_')
         action = parts[0]
 
-        if action == 'save':
+        if action == 'delete' and len(parts) >= 3 and parts[1] == 'fav':
+            # callback_data = "delete_fav_{uuid}"
+            # UUID содержит дефисы, не подчёркивания — parts[2] будет полным UUID
+            fav_uuid = parts[2]
+            try:
+                user = query.from_user
+                bot_user = await sync_to_async(BotUser.objects.get)(
+                    user_id=str(user.id),
+                    platform='telegram'
+                )
+                deleted_count, _ = await sync_to_async(
+                    FavoriteProperty.objects.filter(id=fav_uuid, user=bot_user).delete
+                )()
+                if deleted_count:
+                    await query.message.reply_text("✅ Объект удалён из избранного.")
+                    # Редактируем кнопки исходного сообщения, чтобы убрать кнопку удаления
+                    try:
+                        await query.message.edit_reply_markup(reply_markup=None)
+                    except Exception:
+                        pass
+                else:
+                    await query.message.reply_text("Объект не найден в избранном.")
+            except BotUser.DoesNotExist:
+                await query.message.reply_text("❌ Пользователь не найден. Пожалуйста, начните с /start")
+            except Exception as e:
+                logger.error(f"Failed to delete favorite: {e}")
+                await query.message.reply_text("Не удалось удалить объект из избранного.")
+
+        elif action == 'save':
             try:
                 user = query.from_user
                 bot_user = await sync_to_async(BotUser.objects.get)(
@@ -565,7 +598,7 @@ class Command(BaseCommand):
                     parse_mode=ParseMode.HTML
                 )
 
-        else:
+        elif action not in ('delete',):
             await query.message.reply_text("Неизвестное действие")
 
     async def error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

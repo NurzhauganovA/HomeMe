@@ -65,6 +65,9 @@ class PropertyDTO:
     matched_keywords: List[str] = field(default_factory=list)
     created_at: Optional[datetime] = None
 
+    # ID записи в избранном (устанавливается только при просмотре избранного)
+    favorite_id: Optional[str] = None
+
     @property
     def price_per_sqm(self) -> float:
         """Цена за квадратный метр"""
@@ -214,7 +217,8 @@ class PropertyDTO:
             "is_new_building": self.is_new_building,
             "has_installment": self.has_installment,
             "has_mortgage": self.has_mortgage,
-            "relevance_score": self.relevance_score
+            "relevance_score": self.relevance_score,
+            "favorite_id": self.favorite_id,
         }
 
     @classmethod
@@ -249,6 +253,7 @@ class PropertyDTO:
             "created_at",
             "object_id",
             "object_kind",
+            "favorite_id",
         }
         payload = {k: v for k, v in (data or {}).items() if k in allowed}
         return cls(**payload)

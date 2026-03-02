@@ -337,6 +337,15 @@ class EnhancedSearchService:
         if source in ['secondary', 'mixed'] and len(results) < limit:
             sec_props = SecondaryProperty.objects.filter(is_active=True, deal_type='sell')
 
+            # Фильтр по категории вторичной недвижимости (apartment / commercial)
+            secondary_category = params.get('secondary_category')
+            if secondary_category == 'apartment':
+                sec_props = sec_props.filter(property_type='apartment')
+                logger.info("🏠 SECONDARY CATEGORY FILTER: apartment")
+            elif secondary_category == 'commercial':
+                sec_props = sec_props.filter(property_type='commercial')
+                logger.info("🏢 SECONDARY CATEGORY FILTER: commercial")
+
             if lat is not None and lon is not None:
                 sec_props = sec_props.filter(
                     latitude__range=(lat - lat_delta, lat + lat_delta),
@@ -347,13 +356,35 @@ class EnhancedSearchService:
             sec_props = self._apply_price_filters(
                 sec_props, params.get('min_price'), params.get('max_price')
             )
-            # Фильтр по комнатам с поддержкой множественного выбора
-            if params.get('rooms'):
+
+            # Фильтр по комнатам (только для жилой вторички)
+            if params.get('rooms') and secondary_category != 'commercial':
                 rooms_list = params['rooms'] if isinstance(params['rooms'], list) else [params['rooms']]
                 sec_props = sec_props.filter(rooms__in=rooms_list)
             if params.get('min_area'): sec_props = sec_props.filter(area__gte=params['min_area'])
             if params.get('max_area'): sec_props = sec_props.filter(area__lte=params['max_area'])
-            
+
+            # Фильтр по берегу для вторички (через районы)
+            if params.get('side'):
+                if params['side'] == 'Left':
+                    sec_side_q = (
+                        Q(district__icontains='Есильский') |
+                        Q(district__icontains='Нура') |
+                        Q(district__icontains='Нуринский')
+                    )
+                else:
+                    sec_side_q = (
+                        Q(district__icontains='Сарыарка') |
+                        Q(district__icontains='Сарыаркинский') |
+                        Q(district__icontains='Алматинский') |
+                        Q(district__icontains='Байконур') |
+                        Q(district__icontains='Байконурский') |
+                        Q(district__icontains='Сарайшык') |
+                        Q(district__icontains='Сарайшық')
+                    )
+                sec_props = sec_props.filter(sec_side_q)
+                logger.info(f"🏖 SIDE FILTER (secondary): {params['side']}")
+
             # Фильтр по району с учётом вариантов написания
             if params.get('district'):
                 district = params['district']
@@ -361,6 +392,11 @@ class EnhancedSearchService:
                 if district == 'Сарыарка':
                     sec_props = sec_props.filter(
                         Q(district__icontains='Сарыарка') | Q(district__icontains='Сарыаркинский')
+                    )
+                # Для Нура ищем и "Нура", и "Нуринский"
+                elif district == 'Нура':
+                    sec_props = sec_props.filter(
+                        Q(district__icontains='Нура') | Q(district__icontains='Нуринский')
                     )
                 else:
                     sec_props = sec_props.filter(district__icontains=district)
