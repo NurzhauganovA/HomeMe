@@ -85,12 +85,23 @@ class PropertyDTO:
         """Новостройка или нет"""
         return self.source == 'bi_group' or self.building_type == 'new'
 
+    @property
+    def is_commercial(self) -> bool:
+        """Коммерческий объект (вторичка или BI Group коммерция)"""
+        return self.building_type == 'commercial'
+
     def to_telegram_message(self) -> str:
         """
         Форматирует объект для отправки в Telegram (HTML).
         Красивый, информативный формат с эмодзи.
         """
-        icon = "🏗" if self.is_new_building else "🏠"
+        # Иконка
+        if self.is_commercial:
+            icon = "🏢"
+        elif self.is_new_building:
+            icon = "🏗"
+        else:
+            icon = "🏠"
 
         # Заголовок
         msg = f"{icon} <b>{self.title}</b>\n"
@@ -101,10 +112,22 @@ class PropertyDTO:
         # Цена
         price_mln = self.price_millions
         price_sqm = self.price_per_sqm / 1000  # в тысячах
-        msg += f"💰 <b>{price_mln:.1f} млн ₸</b> ({price_sqm:.0f}к/м²)\n"
+        if price_sqm > 0:
+            msg += f"💰 <b>{price_mln:.1f} млн ₸</b> ({price_sqm:.0f}к/м²)\n"
+        else:
+            msg += f"💰 <b>{price_mln:.1f} млн ₸</b>\n"
 
-        # Параметры
-        if self.object_kind == "complex":
+        # Параметры — отдельный формат для коммерции и для жилья
+        if self.is_commercial:
+            # Коммерческий объект: площадь + этаж (без комнат)
+            if self.area and self.area > 0:
+                msg += f"📐 Площадь: {self.area:.0f} м²\n"
+            if self.floor and self.floor > 0:
+                floor_str = f"🏗 Этаж: {self.floor}"
+                if self.total_floors:
+                    floor_str += f"/{self.total_floors}"
+                msg += floor_str + "\n"
+        elif self.object_kind == "complex":
             if self.area and self.area > 0:
                 msg += f"📐 от {self.area:.0f} м²\n"
         else:
@@ -113,14 +136,14 @@ class PropertyDTO:
                 msg += f"/{self.total_floors}"
             msg += "\n"
 
-        # Класс жилья
+        # Класс жилья (только для BI Group)
         if self.property_class and self.source == 'bi_group':
             class_icon = self._get_class_icon(self.property_class)
             msg += f"{class_icon} <b>{self.property_class}</b>\n"
 
         # Дополнительная информация
         if self.description:
-            msg += f"ℹ️ {self.description[:100]}\n"
+            msg += f"ℹ️ {self.description[:150]}\n"
 
         amenities = self._format_amenities()
         if amenities:
@@ -151,16 +174,32 @@ class PropertyDTO:
         """
         Форматирует объект для отправки в WhatsApp (Markdown).
         """
-        icon = "🏗" if self.is_new_building else "🏠"
+        if self.is_commercial:
+            icon = "🏢"
+        elif self.is_new_building:
+            icon = "🏗"
+        else:
+            icon = "🏠"
 
         msg = f"{icon} *{self.title}*\n"
         msg += f"📍 {self.address}\n"
 
         price_mln = self.price_millions
         price_sqm = self.price_per_sqm / 1000
-        msg += f"💰 *{price_mln:.1f} млн ₸* ({price_sqm:.0f}к/м²)\n"
+        if price_sqm > 0:
+            msg += f"💰 *{price_mln:.1f} млн ₸* ({price_sqm:.0f}к/м²)\n"
+        else:
+            msg += f"💰 *{price_mln:.1f} млн ₸*\n"
 
-        if self.object_kind == "complex":
+        if self.is_commercial:
+            if self.area and self.area > 0:
+                msg += f"📐 Площадь: {self.area:.0f} м²\n"
+            if self.floor and self.floor > 0:
+                floor_str = f"🏗 Этаж: {self.floor}"
+                if self.total_floors:
+                    floor_str += f"/{self.total_floors}"
+                msg += floor_str + "\n"
+        elif self.object_kind == "complex":
             if self.area and self.area > 0:
                 msg += f"📐 от {self.area:.0f} м²\n"
         else:
@@ -175,7 +214,7 @@ class PropertyDTO:
             msg += f"{class_icon} *{self.property_class}*\n"
 
         if self.description:
-            msg += f"ℹ️ {self.description[:100]}\n"
+            msg += f"ℹ️ {self.description[:150]}\n"
 
         amenities = self._format_amenities()
         if amenities:
@@ -214,10 +253,13 @@ class PropertyDTO:
             "longitude": self.longitude,
             "district": self.district,
             "city": self.city,
+            "building_type": self.building_type,
             "is_new_building": self.is_new_building,
             "has_installment": self.has_installment,
             "has_mortgage": self.has_mortgage,
             "relevance_score": self.relevance_score,
+            "owner_phone": self.owner_phone,
+            "owner_name": self.owner_name,
             "favorite_id": self.favorite_id,
         }
 

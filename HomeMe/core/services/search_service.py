@@ -635,12 +635,13 @@ class EnhancedSearchService:
     def _map_secondary_to_dto(self, item: SecondaryProperty) -> PropertyDTO:
         photos = item.photos or []
         primary_photo = photos[0] if photos else (item.image.url if item.image else "")
+        is_commercial = (item.property_type or '').lower() == 'commercial'
         return PropertyDTO(
             source="secondary",
             title=item.title,
             address=item.address,
             price=float(item.price),
-            rooms=item.rooms,
+            rooms=item.rooms if not is_commercial else 0,
             area=item.area,
             floor=item.floor,
             total_floors=item.total_floors,
@@ -654,4 +655,5 @@ class EnhancedSearchService:
             owner_name=item.owner_name,
             object_id=str(item.id),
             object_kind="secondary",
+            building_type='commercial' if is_commercial else None,
         )
