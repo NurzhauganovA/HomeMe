@@ -192,8 +192,20 @@ class SecondaryImporter:
         if prop_type == "apartment" and rooms:
             return f"{rooms}-комн, {area} м², {city}"
         if prop_type == "commercial":
-            subtype = payload.get("subtype") or "коммерция"
-            return f"{subtype} {area} м², {city}".strip()
+            raw_subtype = (payload.get("subtype") or "").strip()
+
+            # Маппинг технических/англ. значений на понятные русские названия
+            subtype_map = {
+                "free_appointment": "Коммерческое помещение",  # свободная планировка
+                "office": "Офис",
+                "store": "Магазин",
+                "shop": "Магазин",
+            }
+            # Приводим к нижнему регистру для сравнения, но показываем уже человеко‑читаемое
+            key = raw_subtype.lower()
+            subtype_label = subtype_map.get(key) or (raw_subtype or "Коммерческое помещение")
+
+            return f"{subtype_label} {area} м², {city}".strip()
         return f"{prop_type} {area} м², {city}".strip()
 
     def _resolve_coordinates(self, address: str, city_hint: str = None):
