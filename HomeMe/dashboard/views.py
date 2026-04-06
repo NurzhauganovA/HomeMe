@@ -10,12 +10,58 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
+import os
+import time
+import logging
+from logging.handlers import TimedRotatingFileHandler
+import uuid
+import gzip
+import shutil
 
 from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit
 from .models import ApiAccessToken
 from core.services.secondary_importer import SecondaryImporter
 from .forms import SecondaryPropertyForm, LeadUpdateForm
+from django.conf import settings
 
+# --- Dedicated integration logger (ILVO secondary import) ---
+# Помещаем логи строго в <BASE_DIR>/logs/integrations
+_BASE_DIR = getattr(settings, 'BASE_DIR', os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+_INTEGRATION_LOG_DIR = os.path.join(_BASE_DIR, 'logs', 'integrations')
+os.makedirs(_INTEGRATION_LOG_DIR, exist_ok=True)
+
+# Настройки логирования интеграции (можно переопределить в settings.py)
+_LOG_MAX_BODY = int(getattr(settings, 'INTEGRATION_LOG_MAX_BODY', 64 * 1024))  # 64KB
+_LOG_HEADERS = bool(getattr(settings, 'INTEGRATION_LOG_HEADERS', True))
+_LOG_SUCCESS_BODY = bool(getattr(settings, 'INTEGRATION_LOG_SUCCESS_BODY', True))
+_LOG_BACKUP_COUNT = int(getattr(settings, 'INTEGRATION_LOG_BACKUP_COUNT', 7))
+
+ilvo_logger = logging.getLogger('integrations.ilvo_secondary')
+if not ilvo_logger.handlers:
+    ilvo_logger.setLevel(logging.INFO)
+    log_file = os.path.join(_INTEGRATION_LOG_DIR, 'ilvo_secondary.log')
+    handler = TimedRotatingFileHandler(log_file, when='midnight', backupCount=_LOG_BACKUP_COUNT, encoding='utf-8', utc=False)
+
+    # Сжатие архивов в .gz после ротации
+    def _gzip_namer(default_name):
+        return default_name + ".gz"
+
+    def _gzip_rotator(source, dest):
+        with open(source, 'rb') as sf, gzip.open(dest, 'wb') as df:
+            shutil.copyfileobj(sf, df)
+        try:
+            os.remove(source)
+        except Exception:
+            pass
+
+    handler.namer = _gzip_namer
+    handler.rotator = _gzip_rotator
+    formatter = logging.Formatter(
+        '%(asctime)s | %(levelname)s | %(message)s'
+    )
+    handler.setFormatter(formatter)
+    ilvo_logger.addHandler(handler)
+    ilvo_logger.propagate = False
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Миксин для проверки прав доступа (только staff)"""
@@ -320,18 +366,53 @@ class SecondaryImportAPIView(View):
     Auth: Authorization: Bearer <token> or X-API-KEY header.
     """
     def post(self, request):
+        rid = str(uuid.uuid4())  # Correlation ID for grouping
+        started_at = time.time()
+        client_ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', 'unknown'))
+        content_length = request.META.get('CONTENT_LENGTH') or len(request.body or b'')
+        query_str = request.META.get('QUERY_STRING', '')
+        # Полный дамп хедеров
+        try:
+            headers_dump = {k: v for k, v in request.headers.items()} if _LOG_HEADERS else {}
+        except Exception:
+            headers_dump = {}
+        # Сырый body (как есть, чтобы видеть точный JSON от клиента)
+        try:
+            raw_body_full = request.body.decode('utf-8', errors='replace')
+            if _LOG_MAX_BODY and len(raw_body_full) > _LOG_MAX_BODY:
+                raw_body = raw_body_full[:_LOG_MAX_BODY] + f"\n... [truncated {len(raw_body_full) - _LOG_MAX_BODY} bytes]"
+            else:
+                raw_body = raw_body_full
+        except Exception:
+            raw_body = '<failed to decode body>'
+
         token = self._extract_token(request)
         if not token:
+            ilvo_logger.warning(f"RID={rid} | 401 | client={client_ip} | auth=missing | qs='{query_str}' | len={content_length}")
+            # Подробности плохого запроса
+            ilvo_logger.info(f"RID={rid} | REQ HEADERS: {json.dumps(headers_dump, ensure_ascii=False, default=str)}")
+            ilvo_logger.info(f"RID={rid} | REQ BODY: {raw_body}")
             return JsonResponse({'error': 'Unauthorized'}, status=401)
 
         token_obj = ApiAccessToken.objects.filter(token=token, is_active=True).first()
         if not token_obj or not token_obj.is_valid():
+            ilvo_logger.warning(f"RID={rid} | 403 | client={client_ip} | auth=invalid | qs='{query_str}' | len={content_length}")
+            ilvo_logger.info(f"RID={rid} | REQ HEADERS: {json.dumps(headers_dump, ensure_ascii=False, default=str)}")
+            ilvo_logger.info(f"RID={rid} | REQ BODY: {raw_body}")
             return JsonResponse({'error': 'Invalid or expired token'}, status=403)
 
         try:
             payload = json.loads(request.body.decode('utf-8'))
         except Exception:
+            ilvo_logger.warning(f"RID={rid} | 400 | client={client_ip} | json=parse_error | qs='{query_str}' | len={content_length}")
+            ilvo_logger.info(f"RID={rid} | REQ HEADERS: {json.dumps(headers_dump, ensure_ascii=False, default=str)}")
+            ilvo_logger.info(f"RID={rid} | REQ BODY: {raw_body}")
             return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        # Логируем валидный запрос полностью (хедеры + сырое тело), включая токены
+        if _LOG_HEADERS:
+            ilvo_logger.info(f"RID={rid} | REQ HEADERS: {json.dumps(headers_dump, ensure_ascii=False, default=str)}")
+        ilvo_logger.info(f"RID={rid} | REQ BODY: {raw_body}")
 
         do_geocode = request.GET.get('geocode', '1') == '1'
         do_embed = request.GET.get('embed', '1') == '1'
@@ -339,12 +420,39 @@ class SecondaryImportAPIView(View):
         importer = SecondaryImporter(do_geocode=do_geocode, do_embed=do_embed)
         stats = importer.import_items(payload)
 
-        return JsonResponse({
+        duration_ms = int((time.time() - started_at) * 1000)
+        # Формируем компактное резюме полезной нагрузки
+        try:
+            if isinstance(payload, list):
+                items_info = f"list[{len(payload)}]"
+            elif isinstance(payload, dict):
+                # Попробуем извлечь id/uuid если есть
+                uid = payload.get('uuid') or payload.get('external_uuid') or payload.get('id')
+                items_info = f"dict[{uid or '1 item'}]"
+            else:
+                items_info = type(payload).__name__
+        except Exception:
+            items_info = 'unknown'
+
+        ilvo_logger.info(
+            f"RID={rid} | 200 | client={client_ip} | qs='{query_str}' | len={content_length} | "
+            f"payload={items_info} | created={stats['created']} | updated={stats['updated']} | "
+            f"skipped={stats['skipped']} | geocode={int(do_geocode)} | embed={int(do_embed)} | "
+            f"t={duration_ms}ms"
+        )
+
+        response_payload = {
             'status': 'ok',
             'created': stats['created'],
             'updated': stats['updated'],
             'skipped': stats['skipped'],
-        })
+        }
+        # Логируем ответ сервера
+        if _LOG_SUCCESS_BODY:
+            ilvo_logger.info(f"RID={rid} | RESP BODY: {json.dumps(response_payload, ensure_ascii=False, default=str)}")
+        ilvo_logger.info(f"RID={rid} | " + "-" * 80)
+
+        return JsonResponse(response_payload)
 
     @staticmethod
     def _extract_token(request):

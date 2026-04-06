@@ -110,10 +110,8 @@ class EnhancedSearchService:
 
         logger.info(f"🔍 Total complexes after filters: {queryset.count()}")
         
-        if query_vector:
-            queryset = queryset.alias(
-                distance=CosineDistance('embedding', query_vector)
-            ).order_by('distance')
+        # Сортировка: всегда последние обновления первыми
+        queryset = queryset.order_by('-updated_at')
 
         results = []
         processed = 0
@@ -280,11 +278,8 @@ class EnhancedSearchService:
             
             logger.info(f"🔍 Total BI complexes after filters: {target_complexes.count()}")
 
-            # Если есть вектор, сортируем ЖК по смысловой близости
-            if query_vector:
-                target_complexes = target_complexes.alias(
-                    distance=CosineDistance('embedding', query_vector)
-                ).order_by('distance')
+            # Сортировка по дате обновления комплекса
+            target_complexes = target_complexes.order_by('-updated_at')
 
             # Для пагинации с группировкой нужно взять ЖК с запасом
             # (Offset применяем к списку ЖК, а не квартир)
@@ -402,11 +397,8 @@ class EnhancedSearchService:
                     sec_props = sec_props.filter(district__icontains=district)
                 logger.info(f"🏘 DISTRICT FILTER (secondary): {district}")
 
-            # Вектор
-            if query_vector:
-                sec_props = sec_props.alias(distance=CosineDistance('embedding', query_vector)).order_by('distance')
-            else:
-                sec_props = sec_props.order_by('-created_at')
+            # Всегда показываем самые свежие
+            sec_props = sec_props.order_by('-created_at')
 
             logger.info(f"🔍 Total secondary after filters: {sec_props.count()}")
 

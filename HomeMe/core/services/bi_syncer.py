@@ -404,11 +404,11 @@ class BISyncService:
 
             logger.warning(
                 f"Embedding dimension mismatch (gemini-embedding-001): {len(embedding)}. "
-                "Falling back to text-embedding-004."
+                "Falling back to text-embedding-001."
             )
 
             fallback = genai.embed_content(
-                model="models/text-embedding-004",
+                model="models/text-embedding-001",
                 content=text,
                 task_type="retrieval_document"
             )
@@ -419,7 +419,7 @@ class BISyncService:
             fallback_embedding = list(fallback_embedding)
             if len(fallback_embedding) != 768:
                 logger.error(
-                    f"Embedding dimension mismatch (text-embedding-004): {len(fallback_embedding)}. "
+                    f"Embedding dimension mismatch (text-embedding-001): {len(fallback_embedding)}. "
                     "Skipping embedding."
                 )
                 return None
