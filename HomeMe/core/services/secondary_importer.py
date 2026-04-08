@@ -21,7 +21,13 @@ class SecondaryImporter:
         skipped = 0
 
         for item in items:
-            action = item.get("action") or item.get("data").get("action")
+            if not isinstance(item, dict):
+                skipped += 1
+                continue
+
+            action = item.get("action")
+            if not action and isinstance(item.get("data"), dict):
+                action = item.get("data", {}).get("action")
             payload = self._extract_payload(item)
             if not payload:
                 skipped += 1
@@ -70,17 +76,17 @@ class SecondaryImporter:
             title = self._build_title(payload)
             address = payload.get("address_note") or self._build_address(payload)
 
-            phones = payload.get("phones") or []
-            owner_phone = str(phones[0].get("number")) if phones else ""
-            owner_name = phones[0].get("name") if phones else ""
+            owner_phone, owner_name = self._extract_contact(payload)
 
             facilities = payload.get("facilities") or []
             has_parking = "covered_parking" in facilities or "parking" in facilities
             has_balcony = bool(payload.get("balcony"))
             has_renovation = bool(payload.get("repair"))
 
-            photos = payload.get("_photos") or []
-            photos = [p for p in photos if p]
+            photos = self._extract_photos(payload)
+            payload_latitude = self._to_float(payload.get("latitude"))
+            payload_longitude = self._to_float(payload.get("longitude"))
+            has_payload_coordinates = payload_latitude is not None and payload_longitude is not None
 
             defaults = {
                 "title": title,
@@ -98,16 +104,29 @@ class SecondaryImporter:
                 "has_parking": has_parking,
                 "has_balcony": has_balcony,
                 "has_renovation": has_renovation,
+                "latitude": payload_latitude,
+                "longitude": payload_longitude,
+                "coordinates_source": "payload" if has_payload_coordinates else None,
                 "external_uuid": ext_uuid,
                 "external_id": payload.get("id"),
                 "property_type": payload.get("type"),
+                "subtype": payload.get("subtype"),
                 "deal_type": payload.get("category"),
+                "rent_type": payload.get("rent_type"),
+                "currency": payload.get("currency"),
                 "condition": payload.get("condition"),
                 "repair": payload.get("repair"),
                 "construction_year": payload.get("construction_year"),
+                "ceiling_height": self._to_float(payload.get("ceiling_height")),
                 "material": payload.get("material") or [],
                 "address_note": payload.get("address_note"),
-                "source_url": payload.get("source_url") or "",
+                "source_url": payload.get("source_url") or payload.get("external_link") or "",
+                "prices": payload.get("prices") if isinstance(payload.get("prices"), dict) else {},
+                "prices_m2": payload.get("prices_m2") if isinstance(payload.get("prices_m2"), dict) else {},
+                "rooms_total": self._to_int(payload.get("rooms_total")),
+                "area_living": self._to_float(payload.get("area_living")),
+                "area_kitchen": self._to_float(payload.get("area_kitchen")),
+                "city_micro_district": payload.get("city_micro_district"),
                 "photos": photos,
                 "raw_data": payload,
                 "is_active": True,
@@ -124,7 +143,8 @@ class SecondaryImporter:
                     if coords:
                         obj.latitude = coords[0]
                         obj.longitude = coords[1]
-                        obj.save(update_fields=["latitude", "longitude"])
+                        obj.coordinates_source = "geocoded"
+                        obj.save(update_fields=["latitude", "longitude", "coordinates_source"])
 
             if self.do_embed and obj.embedding is None and self.ai_service:
                 text = obj.get_full_text()
@@ -207,6 +227,80 @@ class SecondaryImporter:
 
             return f"{subtype_label} {area} м², {city}".strip()
         return f"{prop_type} {area} м², {city}".strip()
+
+    @staticmethod
+    def _extract_photos(payload):
+        """
+        ILVO может присылать фото как `photos`, а старые источники как `_photos`.
+        Поддерживаем оба формата и сохраняем только непустые URL.
+        """
+        photos = payload.get("photos")
+        if photos is None:
+            photos = payload.get("_photos")
+        if not isinstance(photos, list):
+            return []
+        return [p for p in photos if isinstance(p, str) and p.strip()]
+
+    @staticmethod
+    def _extract_contact(payload):
+        """
+        Поддержка нескольких форматов контактов:
+        1) phones: [{"number": "...", "name": "..."}]
+        2) phones: ["7700..."]
+        3) responsible: {"first_name": "...", "last_name": "...", "phones": ["7700..."]}
+        """
+        owner_phone = ""
+        owner_name = ""
+
+        phones = payload.get("phones")
+        if isinstance(phones, list) and phones:
+            first_phone = phones[0]
+            if isinstance(first_phone, dict):
+                owner_phone = str(first_phone.get("number") or "").strip()
+                owner_name = str(first_phone.get("name") or "").strip()
+            elif isinstance(first_phone, str):
+                owner_phone = first_phone.strip()
+
+        responsible = payload.get("responsible")
+        if isinstance(responsible, dict):
+            if not owner_name:
+                first_name = str(responsible.get("first_name") or "").strip()
+                last_name = str(responsible.get("last_name") or "").strip()
+                owner_name = " ".join([p for p in [first_name, last_name] if p]).strip()
+
+            if not owner_phone:
+                resp_phones = responsible.get("phones")
+                if isinstance(resp_phones, list) and resp_phones:
+                    first_resp_phone = resp_phones[0]
+                    if isinstance(first_resp_phone, str):
+                        owner_phone = first_resp_phone.strip()
+                    elif isinstance(first_resp_phone, dict):
+                        owner_phone = str(first_resp_phone.get("number") or "").strip()
+
+        if owner_phone:
+            owner_phone = owner_phone.replace(" ", "")[:20]
+        if owner_name:
+            owner_name = owner_name[:100]
+
+        return owner_phone, owner_name
+
+    @staticmethod
+    def _to_float(value):
+        if value is None or value == "":
+            return None
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _to_int(value):
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
 
     def _resolve_coordinates(self, address: str, city_hint: str = None):
         if not self.location_resolver:

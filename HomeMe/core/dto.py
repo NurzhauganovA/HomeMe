@@ -54,6 +54,12 @@ class PropertyDTO:
     # Контакты (только для вторички)
     owner_phone: Optional[str] = None
     owner_name: Optional[str] = None
+    subtype: Optional[str] = None
+    deal_type: Optional[str] = None
+    rent_type: Optional[str] = None
+    currency: Optional[str] = None
+    ceiling_height: Optional[float] = None
+    city_micro_district: Optional[str] = None
 
     # Удобства
     has_parking: bool = False
@@ -141,9 +147,14 @@ class PropertyDTO:
             class_icon = self._get_class_icon(self.property_class)
             msg += f"{class_icon} <b>{self.property_class}</b>\n"
 
-        # Дополнительная информация
+        if self.source == "secondary":
+            details = self._format_secondary_details()
+            if details:
+                msg += f"{details}\n"
+
+        # Дополнительная информация (показываем полное описание)
         if self.description:
-            msg += f"ℹ️ {self.description[:150]}\n"
+            msg += f"ℹ️ {self.description}\n"
 
         amenities = self._format_amenities()
         if amenities:
@@ -158,13 +169,8 @@ class PropertyDTO:
         if self.url:
             msg += f"<a href='{self.url}'>🔗 Подробнее на сайте</a>"
 
-        if self.address:
-            query = quote(f"{self.title}, {self.address}")
-            link = f"https://2gis.kz/astana/search/{query}"
-            prefix = "\n" if self.url else ""
-            msg += f"{prefix}<a href='{link}'>🗺 2GIS</a>"
-        elif self.latitude is not None and self.longitude is not None:
-            link = f"https://2gis.kz/astana/geo/{self.latitude},{self.longitude}"
+        link = self._build_2gis_link()
+        if link:
             prefix = "\n" if self.url else ""
             msg += f"{prefix}<a href='{link}'>🗺 2GIS</a>"
 
@@ -213,8 +219,14 @@ class PropertyDTO:
             class_icon = self._get_class_icon(self.property_class)
             msg += f"{class_icon} *{self.property_class}*\n"
 
+        if self.source == "secondary":
+            details = self._format_secondary_details()
+            if details:
+                msg += f"{details}\n"
+
+        # Показываем полное описание без обрезки
         if self.description:
-            msg += f"ℹ️ {self.description[:150]}\n"
+            msg += f"ℹ️ {self.description}\n"
 
         amenities = self._format_amenities()
         if amenities:
@@ -260,6 +272,12 @@ class PropertyDTO:
             "relevance_score": self.relevance_score,
             "owner_phone": self.owner_phone,
             "owner_name": self.owner_name,
+            "subtype": self.subtype,
+            "deal_type": self.deal_type,
+            "rent_type": self.rent_type,
+            "currency": self.currency,
+            "ceiling_height": self.ceiling_height,
+            "city_micro_district": self.city_micro_district,
             "favorite_id": self.favorite_id,
         }
 
@@ -290,6 +308,12 @@ class PropertyDTO:
             "mortgage_banks",
             "owner_phone",
             "owner_name",
+            "subtype",
+            "deal_type",
+            "rent_type",
+            "currency",
+            "ceiling_height",
+            "city_micro_district",
             "relevance_score",
             "matched_keywords",
             "created_at",
@@ -334,6 +358,60 @@ class PropertyDTO:
             "Стандарт": "🏢",
         }
         return class_icons.get(class_name, "🏠")
+
+    def _format_secondary_details(self) -> str:
+        """Краткий блок ключевых данных для карточек вторички."""
+        details = []
+        if self.subtype:
+            details.append(f"🧩 Тип: {self.subtype}")
+        if self.deal_type:
+            details.append(f"🤝 Сделка: {self.deal_type}")
+        if self.rent_type:
+            details.append(f"⏱ Аренда: {self.rent_type}")
+        if self.city_micro_district:
+            details.append(f"📌 Микрорайон: {self.city_micro_district}")
+        if self.ceiling_height:
+            details.append(f"📏 Потолки: {self.ceiling_height:g} м")
+        if self.currency and self.currency != "KZT":
+            details.append(f"💱 Валюта источника: {self.currency}")
+        return "\n".join(details)
+
+    def _build_2gis_link(self) -> str:
+        """
+        Строит ссылку 2GIS.
+        Приоритет: координаты (точнее), затем поиск по текстовому адресу.
+        """
+        city_slug = self._get_2gis_city_slug()
+        base = f"https://2gis.kz/{city_slug}" if city_slug else "https://2gis.kz"
+
+        if self.latitude is not None and self.longitude is not None:
+            # Для web-ссылок 2GIS формат карты: m=lon,lat/zoom
+            return f"{base}?m={self.longitude:.6f}%2C{self.latitude:.6f}%2F17"
+
+        if self.address:
+            query_text = ", ".join([p for p in [self.address, self.city] if p])
+            query = quote(query_text or self.address)
+            return f"{base}/search/{query}"
+
+        return ""
+
+    def _get_2gis_city_slug(self) -> str:
+        """Нормализует город в slug 2GIS."""
+        city = (self.city or "").strip().lower()
+        city_map = {
+            "астана": "astana",
+            "astana": "astana",
+            "нурсултан": "astana",
+            "nur-sultan": "astana",
+            "нур-султан": "astana",
+            "алматы": "almaty",
+            "almaty": "almaty",
+            "шымкент": "shymkent",
+            "shymkent": "shymkent",
+            "атырау": "atyrau",
+            "atyrau": "atyrau",
+        }
+        return city_map.get(city, "")
 
 
 @dataclass
