@@ -632,6 +632,7 @@ class EnhancedSearchService:
             source="secondary",
             title=item.title,
             address=item.address,
+            city=item.city,
             price=float(item.price),
             rooms=item.rooms if not is_commercial else 0,
             area=item.area,

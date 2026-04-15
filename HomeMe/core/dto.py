@@ -378,25 +378,6 @@ class PropertyDTO:
             details.append(f"💱 Валюта источника: {self.currency}")
         return "\n".join(details)
 
-    def _build_2gis_link(self) -> str:
-        """
-        Строит ссылку 2GIS.
-        Приоритет: координаты (точнее), затем поиск по текстовому адресу.
-        """
-        city_slug = self._get_2gis_city_slug()
-        base = f"https://2gis.kz/{city_slug}" if city_slug else "https://2gis.kz"
-
-        if self.latitude is not None and self.longitude is not None:
-            # Для web-ссылок 2GIS формат карты: m=lon,lat/zoom
-            return f"{base}?m={self.longitude:.6f}%2C{self.latitude:.6f}%2F17"
-
-        if self.address:
-            query_text = ", ".join([p for p in [self.address, self.city] if p])
-            query = quote(query_text or self.address)
-            return f"{base}/search/{query}"
-
-        return ""
-
     def _get_2gis_city_slug(self) -> str:
         """Нормализует город в slug 2GIS."""
         city = (self.city or "").strip().lower()
@@ -414,6 +395,67 @@ class PropertyDTO:
             "atyrau": "atyrau",
         }
         return city_map.get(city, "")
+
+    def _infer_2gis_slug_from_address(self, addr: str) -> str:
+        low = addr.lower()
+        if any(
+            x in low
+            for x in ("астана", "astana", "нур-султан", "нурсултан", "nur-sultan")
+        ):
+            return "astana"
+        if "алматы" in low or "almaty" in low:
+            return "almaty"
+        if "шымкент" in low or "shymkent" in low:
+            return "shymkent"
+        if "атырау" in low or "atyrau" in low:
+            return "atyrau"
+        return ""
+
+    def _resolve_2gis_city_slug(self) -> str:
+        slug = self._get_2gis_city_slug()
+        if slug:
+            return slug
+        slug = self._infer_2gis_slug_from_address(self.address or "")
+        if slug:
+            return slug
+        if self.source == "secondary":
+            return "astana"
+        return ""
+
+    def _has_reliable_coordinates(self) -> bool:
+        if self.latitude is None or self.longitude is None:
+            return False
+        try:
+            lat = float(self.latitude)
+            lon = float(self.longitude)
+        except (TypeError, ValueError):
+            return False
+        if abs(lat) < 1e-9 and abs(lon) < 1e-9:
+            return False
+        return True
+
+    def _build_2gis_link(self) -> str:
+        """
+        Ссылка 2GIS.
+        Вторичка: поиск по адресу из карточки (self.address), без опоры на координаты.
+        Прочие источники: при валидных координатах — точка на карте, иначе поиск по адресу.
+        """
+        city_slug = self._resolve_2gis_city_slug()
+        base = f"https://2gis.kz/{city_slug}" if city_slug else "https://2gis.kz"
+
+        addr = (self.address or "").strip()
+        secondary_address = self.source == "secondary" and addr
+
+        if secondary_address:
+            return f"{base}/search/{quote(addr, safe='')}"
+
+        if self._has_reliable_coordinates():
+            return f"{base}?m={float(self.longitude):.6f}%2C{float(self.latitude):.6f}%2F17"
+
+        if addr:
+            return f"{base}/search/{quote(addr, safe='')}"
+
+        return ""
 
 
 @dataclass
