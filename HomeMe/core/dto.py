@@ -165,13 +165,15 @@ class PropertyDTO:
                 contact_name = f" ({self.owner_name})" if self.owner_name else ""
                 msg += f"📞 {self.owner_phone}{contact_name}\n"
 
-        # Ссылка
-        if self.url:
+        show_source_link = bool(
+            self.url and not (self.source == "secondary" and self.is_commercial)
+        )
+        if show_source_link:
             msg += f"<a href='{self.url}'>🔗 Подробнее на сайте</a>"
 
         link = self._build_2gis_link()
         if link:
-            prefix = "\n" if self.url else ""
+            prefix = "\n" if show_source_link else ""
             msg += f"{prefix}<a href='{link}'>🗺 2GIS</a>"
 
         return msg
@@ -237,7 +239,7 @@ class PropertyDTO:
                 contact_name = f" ({self.owner_name})" if self.owner_name else ""
                 msg += f"📞 {self.owner_phone}{contact_name}\n"
 
-        if self.url:
+        if self.url and not (self.source == "secondary" and self.is_commercial):
             msg += f"\n🔗 Подробнее: {self.url}"
 
         return msg
