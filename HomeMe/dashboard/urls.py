@@ -29,6 +29,16 @@ urlpatterns = [
     # Пользователи
     path('users/', views.BotUserListView.as_view(), name='user_list'),
     path('users/<uuid:pk>/', views.BotUserDetailView.as_view(), name='user_detail'),
+    path('users/<uuid:pk>/assign-role/', views.AssignRoleView.as_view(), name='user_assign_role'),
+
+    # Роли
+    path('roles/', views.RoleListView.as_view(), name='role_list'),
+    path('roles/create/', views.RoleCreateView.as_view(), name='role_create'),
+    path('roles/<int:pk>/edit/', views.RoleUpdateView.as_view(), name='role_update'),
+    path('roles/<int:pk>/delete/', views.RoleDeleteView.as_view(), name='role_delete'),
+
+    # Разрешения
+    path('permissions/', views.PermissionListView.as_view(), name='permission_list'),
 
     # Выход
     path('logout/', LogoutView.as_view(next_page='/admin/login/'), name='logout'),

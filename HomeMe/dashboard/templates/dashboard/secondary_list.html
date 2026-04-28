@@ -3,53 +3,112 @@
 {% block page_title %}Вторичная недвижимость{% endblock %}
 
 {% block content %}
-<!-- Actions and Filters -->
-<div class="row mb-4">
-    <div class="col-lg-8">
-        <div class="table-card">
-            <div class="p-3">
-                <form method="get" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold text-muted">Город</label>
-                        <select name="city" class="form-select" onchange="this.form.submit()">
-                            <option value="">Все города</option>
-                            {% for city in cities %}
-                                {% if city %}
-                                    <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>
-                                        {{ city }}
-                                    </option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-muted">Поиск</label>
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control"
-                                   placeholder="Название, адрес, описание..."
-                                   value="{{ request.GET.search }}">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-2">
-                        <a href="{% url 'dashboard:secondary_list' %}" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-redo"></i>
-                        </a>
-                    </div>
-                </form>
-            </div>
+<!-- Расширенные фильтры -->
+<div class="table-card mb-4">
+    <div class="table-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Фильтры — Вторичный рынок</h5>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard:secondary_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-redo me-1"></i>Сбросить
+            </a>
+            <a href="{% url 'dashboard:secondary_create' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>Добавить
+            </a>
         </div>
     </div>
+    <div class="p-3">
+        <form method="get" id="filter-form">
+            <div class="row g-3">
+                <!-- Строка 1 -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Поиск</label>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Название, адрес, владелец..."
+                           value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">Город</label>
+                    <select name="city" class="form-select">
+                        <option value="">Все города</option>
+                        {% for city in cities %}
+                            {% if city %}
+                                <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>
+                                    {{ city }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Район</label>
+                    <select name="district" class="form-select">
+                        <option value="">Все районы</option>
+                        {% for d in districts %}
+                            <option value="{{ d }}" {% if request.GET.district == d %}selected{% endif %}>
+                                {{ d }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">Тип объекта</label>
+                    <select name="property_type" class="form-select">
+                        <option value="">Все типы</option>
+                        {% for pt in property_types %}
+                            <option value="{{ pt }}" {% if request.GET.property_type == pt %}selected{% endif %}>
+                                {{ pt }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">Комнат</label>
+                    <select name="rooms" class="form-select">
+                        <option value="">Любое кол-во</option>
+                        {% for r in rooms_choices %}
+                            <option value="{{ r }}" {% if request.GET.rooms == r|stringformat:"s" %}selected{% endif %}>
+                                {% if r == 0 %}Студия{% else %}{{ r }}-комн.{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-    <div class="col-lg-4 text-end">
-        <a href="{% url 'dashboard:secondary_create' %}" class="btn btn-primary btn-lg">
-            <i class="fas fa-plus-circle me-2"></i>
-            Добавить объект
-        </a>
+                <!-- Строка 2: диапазон площади и цены -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Площадь, м²</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="area_min" class="form-control" placeholder="от"
+                               value="{{ request.GET.area_min }}" min="0" step="1">
+                        <span class="input-group-text">—</span>
+                        <input type="number" name="area_max" class="form-control" placeholder="до"
+                               value="{{ request.GET.area_max }}" min="0" step="1">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-muted">Бюджет, ₸</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="price_min" class="form-control" placeholder="от"
+                               value="{{ request.GET.price_min }}" min="0" step="500000">
+                        <span class="input-group-text">—</span>
+                        <input type="number" name="price_max" class="form-control" placeholder="до"
+                               value="{{ request.GET.price_max }}" min="0" step="500000">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">Статус</label>
+                    <select name="is_verified" class="form-select">
+                        <option value="">Все</option>
+                        <option value="1" {% if request.GET.is_verified == '1' %}selected{% endif %}>Проверенные</option>
+                        <option value="0" {% if request.GET.is_verified == '0' %}selected{% endif %}>На проверке</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Применить фильтры
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -205,33 +264,21 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                            Первая
-                        </a>
+                        <a class="page-link" href="?page=1{% for k, v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Первая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                            &laquo;
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for k, v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">&laquo;</a>
                     </li>
                 {% endif %}
-
                 <li class="page-item active">
-                    <span class="page-link">
-                        {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-                    </span>
+                    <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
                 </li>
-
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                            &raquo;
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for k, v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">&raquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                            Последняя
-                        </a>
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for k, v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Последняя</a>
                     </li>
                 {% endif %}
             </ul>

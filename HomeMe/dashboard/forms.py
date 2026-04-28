@@ -5,6 +5,7 @@ Dashboard Forms
 
 from django import forms
 from telegram_bot.models import SecondaryProperty, Lead
+from .models import Role, Permission
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Div, Field
 
@@ -101,6 +102,45 @@ class SecondaryPropertyForm(forms.ModelForm):
         self.fields['area'].widget.attrs.update({'min': '0', 'step': '0.1'})
         self.fields['floor'].widget.attrs.update({'min': '0'})
         self.fields['total_floors'].widget.attrs.update({'min': '1'})
+
+
+class RoleForm(forms.ModelForm):
+    """Форма создания/редактирования роли с конструктором разрешений"""
+
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all().order_by('category', 'name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Разрешения"
+    )
+
+    class Meta:
+        model = Role
+        fields = [
+            'name', 'description', 'is_active', 'permissions',
+            'limit_total_daily', 'limit_apartments_daily',
+            'limit_commercial_daily', 'limit_primary_daily', 'limit_secondary_daily',
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['limit_total_daily', 'limit_apartments_daily',
+                      'limit_commercial_daily', 'limit_primary_daily', 'limit_secondary_daily']:
+            self.fields[field].widget.attrs.update({'min': '0', 'class': 'form-control'})
+
+
+class AssignRoleForm(forms.Form):
+    """Форма назначения роли пользователю бота"""
+
+    role = forms.ModelChoiceField(
+        queryset=Role.objects.filter(is_active=True),
+        required=False,
+        empty_label="— Без роли —",
+        label="Роль"
+    )
 
 
 class LeadUpdateForm(forms.ModelForm):

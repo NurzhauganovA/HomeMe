@@ -367,13 +367,29 @@
             </li>
             
             <li class="nav-item">
-                <a href="{% url 'dashboard:user_list' %}" class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'dashboard:user_list' %}" class="nav-link {% if 'user' in request.resolver_match.url_name and 'role' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-user-friends"></i>
                     <span>Пользователи</span>
                 </a>
             </li>
-            
-            <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 1rem 0.75rem;">
+
+            <hr style="border-color: var(--gray-200); margin: 0.75rem 0.75rem;">
+
+            <li class="nav-item">
+                <a href="{% url 'dashboard:role_list' %}" class="nav-link {% if 'role' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-user-tag"></i>
+                    <span>Роли</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'dashboard:permission_list' %}" class="nav-link {% if 'permission' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Разрешения</span>
+                </a>
+            </li>
+
+            <hr style="border-color: var(--gray-200); margin: 0.75rem 0.75rem;">
             
             <li class="nav-item">
                 <a href="{% url 'dashboard:logout' %}" class="nav-link">

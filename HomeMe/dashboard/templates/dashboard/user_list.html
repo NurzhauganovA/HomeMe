@@ -13,9 +13,9 @@
     </div>
     <div class="p-3">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small fw-semibold text-muted">Платформа</label>
-                <select name="platform" class="form-select" onchange="this.form.submit()">
+                <select name="platform" class="form-select">
                     <option value="">Все платформы</option>
                     {% for value, label in platform_choices %}
                         <option value="{{ value }}" {% if request.GET.platform == value %}selected{% endif %}>
@@ -25,11 +25,24 @@
                 </select>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Роль</label>
+                <select name="role" class="form-select">
+                    <option value="">Все роли</option>
+                    <option value="0" {% if request.GET.role == '0' %}selected{% endif %}>— Без роли</option>
+                    {% for role in roles %}
+                        <option value="{{ role.pk }}" {% if request.GET.role == role.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ role.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
                 <label class="form-label small fw-semibold text-muted">Поиск</label>
                 <div class="input-group">
                     <input type="text" name="search" class="form-control"
-                           placeholder="Имя или ID пользователя..."
+                           placeholder="Имя, ID или @username..."
                            value="{{ request.GET.search }}">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i>
@@ -114,11 +127,11 @@
                     <th>Пользователь</th>
                     <th>Платформа</th>
                     <th style="width: 150px;">ID / Телефон</th>
-                    <th style="width: 100px;">Поисков</th>
-                    <th style="width: 100px;">Сообщений</th>
+                    <th style="width: 130px;">Роль</th>
+                    <th style="width: 90px;">Поисков</th>
+                    <th style="width: 90px;">Сообщений</th>
                     <th style="width: 120px;">Язык</th>
-                    <th style="width: 150px;">Регистрация</th>
-                    <th style="width: 150px;">Последняя активность</th>
+                    <th style="width: 130px;">Последняя активность</th>
                 </tr>
             </thead>
             <tbody>
@@ -166,10 +179,19 @@
                                     {{ user.user_id }}
                                 </a>
                             {% else %}
-                                <span class="text-muted">
+                                <span class="text-muted small">
                                     <i class="fab fa-telegram me-1"></i>
-                                    @{{ user.user_id }}
+                                    {% if user.username %}@{{ user.username }}{% else %}{{ user.user_id }}{% endif %}
                                 </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.role %}
+                                <span class="badge bg-primary" title="{{ user.role.description }}">
+                                    <i class="fas fa-user-tag me-1"></i>{{ user.role.name }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-muted border">Без роли</span>
                             {% endif %}
                         </td>
                         <td>
@@ -186,41 +208,20 @@
                         </td>
                         <td>
                             <span class="badge bg-light text-dark">
-                                {% if user.language == 'ru' %}
-                                    🇷🇺 Русский
-                                {% elif user.language == 'kk' %}
-                                    🇰🇿 Қазақ
-                                {% elif user.language == 'en' %}
-                                    🇬🇧 English
-                                {% else %}
-                                    {{ user.language|upper }}
-                                {% endif %}
+                                {% if user.language == 'ru' %}🇷🇺 Рус
+                                {% elif user.language == 'kk' %}🇰🇿 Қаз
+                                {% elif user.language == 'en' %}🇬🇧 Eng
+                                {% else %}{{ user.language|upper }}{% endif %}
                             </span>
                         </td>
                         <td>
-                            <div class="small">{{ user.created_at|date:"d.m.Y" }}</div>
-                            <div class="text-muted" style="font-size: 0.75rem;">
-                                {{ user.created_at|time:"H:i" }}
-                            </div>
-                        </td>
-                        <td>
                             <div class="small">{{ user.last_active_at|date:"d.m.Y" }}</div>
-                            <div class="text-muted" style="font-size: 0.75rem;">
-                                {{ user.last_active_at|time:"H:i" }}
-                            </div>
-                            <div class="mt-1">
-                                {% now "U" as current_time %}
-                                {% if user.last_active_at|timesince|slice:":1" == "0" %}
-                                    <span class="badge bg-success small">Онлайн</span>
-                                {% elif user.last_active_at|timesince|slice:":1" == "1" %}
-                                    <span class="badge bg-warning text-dark small">Недавно</span>
-                                {% endif %}
-                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ user.last_active_at|time:"H:i" }}</div>
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-5">
+                        <td colspan="10" class="text-center py-5">
                             <i class="fas fa-user-friends fa-3x mb-3 text-muted opacity-25"></i>
                             <p class="text-muted">Пользователи не найдены</p>
                             <a href="{% url 'dashboard:user_list' %}" class="btn btn-sm btn-outline-primary">

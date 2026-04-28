@@ -18,10 +18,10 @@ import uuid
 import gzip
 import shutil
 
-from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit
-from .models import ApiAccessToken
+from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit, BICommercialComplex, BICommercialUnit, DailyUsageLog
+from .models import ApiAccessToken, Role, Permission
 from core.services.secondary_importer import SecondaryImporter
-from .forms import SecondaryPropertyForm, LeadUpdateForm
+from .forms import SecondaryPropertyForm, LeadUpdateForm, RoleForm, AssignRoleForm
 from django.conf import settings
 
 # --- Dedicated integration logger (ILVO secondary import) ---
@@ -183,7 +183,7 @@ class LeadStatusUpdateView(StaffRequiredMixin, View):
 
 
 class SecondaryPropertyListView(StaffRequiredMixin, ListView):
-    """Список объектов вторички"""
+    """Список объектов вторички с расширенной фильтрацией"""
     model = SecondaryProperty
     template_name = 'dashboard/secondary_list.html'
     context_object_name = 'properties'
@@ -192,25 +192,73 @@ class SecondaryPropertyListView(StaffRequiredMixin, ListView):
     def get_queryset(self):
         queryset = SecondaryProperty.objects.filter(is_active=True).order_by('-created_at')
 
-        # Фильтр по городу
+        # Город
         city = self.request.GET.get('city')
         if city:
             queryset = queryset.filter(city=city)
 
-        # Поиск
+        # Район
+        district = self.request.GET.get('district')
+        if district:
+            queryset = queryset.filter(district=district)
+
+        # Тип недвижимости (property_type из внешней системы)
+        property_type = self.request.GET.get('property_type')
+        if property_type:
+            queryset = queryset.filter(property_type__icontains=property_type)
+
+        # Количество комнат
+        rooms = self.request.GET.get('rooms')
+        if rooms:
+            queryset = queryset.filter(rooms=rooms)
+
+        # Площадь (диапазон)
+        area_min = self.request.GET.get('area_min')
+        area_max = self.request.GET.get('area_max')
+        if area_min:
+            queryset = queryset.filter(area__gte=area_min)
+        if area_max:
+            queryset = queryset.filter(area__lte=area_max)
+
+        # Бюджет (диапазон цен)
+        price_min = self.request.GET.get('price_min')
+        price_max = self.request.GET.get('price_max')
+        if price_min:
+            queryset = queryset.filter(price__gte=price_min)
+        if price_max:
+            queryset = queryset.filter(price__lte=price_max)
+
+        # Статус проверки
+        is_verified = self.request.GET.get('is_verified')
+        if is_verified == '1':
+            queryset = queryset.filter(is_verified=True)
+        elif is_verified == '0':
+            queryset = queryset.filter(is_verified=False)
+
+        # Поиск по тексту
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
                 Q(title__icontains=search) |
                 Q(address__icontains=search) |
-                Q(description__icontains=search)
+                Q(description__icontains=search) |
+                Q(owner_name__icontains=search)
             )
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cities'] = SecondaryProperty.objects.values_list('city', flat=True).distinct()
+        base_qs = SecondaryProperty.objects.filter(is_active=True)
+        context['cities'] = base_qs.values_list('city', flat=True).distinct().order_by('city')
+        context['districts'] = base_qs.exclude(district__isnull=True).exclude(district='').values_list(
+            'district', flat=True).distinct().order_by('district')
+        context['property_types'] = base_qs.exclude(property_type__isnull=True).exclude(property_type='').values_list(
+            'property_type', flat=True).distinct().order_by('property_type')
+        context['rooms_choices'] = list(range(0, 7))
+        agg = base_qs.aggregate(min_price=Min('price'), max_price=Max('price'),
+                                min_area=Min('area'), max_area=Max('area'))
+        context.update(agg)
         return context
 
 
@@ -259,20 +307,54 @@ class SecondaryPropertyDetailView(StaffRequiredMixin, DetailView):
 
 
 class BIComplexListView(StaffRequiredMixin, ListView):
-    """Список ЖК BI Group"""
+    """Список ЖК BI Group с фильтрацией (первичный рынок — квартиры)"""
     model = BIComplex
     template_name = 'dashboard/bi_complex_list.html'
     context_object_name = 'complexes'
     paginate_by = 20
 
     def get_queryset(self):
-        return BIComplex.objects.annotate(
+        queryset = BIComplex.objects.annotate(
             units_count=Count('units', filter=Q(units__is_active=True))
         ).order_by('-updated_at')
+
+        # Фильтр по городу (city_uuid — но у нас нет name, ищем по address/name)
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(address__icontains=search) |
+                Q(description__icontains=search)
+            )
+
+        # Фильтр по диапазону цен
+        price_min = self.request.GET.get('price_min')
+        price_max = self.request.GET.get('price_max')
+        if price_min:
+            queryset = queryset.filter(min_price__gte=price_min)
+        if price_max:
+            queryset = queryset.filter(min_price__lte=price_max)
+
+        # Фильтр по площади (min_area / max_area в комплексе)
+        area_min = self.request.GET.get('area_min')
+        area_max = self.request.GET.get('area_max')
+        if area_min:
+            queryset = queryset.filter(max_area__gte=area_min)
+        if area_max:
+            queryset = queryset.filter(min_area__lte=area_max)
+
+        # Фильтр по классу ЖК
+        class_name = self.request.GET.get('class_name')
+        if class_name:
+            queryset = queryset.filter(class_name__icontains=class_name)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_units'] = BIUnit.objects.filter(is_active=True).count()
+        context['class_names'] = BIComplex.objects.exclude(class_name='').values_list(
+            'class_name', flat=True).distinct().order_by('class_name')
         return context
 
 
@@ -315,34 +397,47 @@ class BISyncView(StaffRequiredMixin, View):
 
 
 class BotUserListView(StaffRequiredMixin, ListView):
-    """Список пользователей бота"""
+    """Список пользователей бота с фильтрацией и управлением ролями"""
     model = BotUser
     template_name = 'dashboard/user_list.html'
     context_object_name = 'users'
     paginate_by = 30
 
     def get_queryset(self):
-        queryset = BotUser.objects.order_by('-last_active_at')
+        queryset = BotUser.objects.select_related('role').order_by('-last_active_at')
 
         # Фильтр по платформе
         platform = self.request.GET.get('platform')
         if platform:
             queryset = queryset.filter(platform=platform)
 
+        # Фильтр по роли
+        role_id = self.request.GET.get('role')
+        if role_id == '0':
+            queryset = queryset.filter(role__isnull=True)
+        elif role_id:
+            queryset = queryset.filter(role_id=role_id)
+
+        # Поиск
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(user_id__icontains=search) |
+                Q(username__icontains=search)
+            )
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['platform_choices'] = BotUser.PLATFORM_CHOICES
+        context['roles'] = Role.objects.filter(is_active=True)
         context['telegram_users_count'] = BotUser.objects.filter(platform='telegram').count()
         context['whatsapp_users_count'] = BotUser.objects.filter(platform='whatsapp').count()
         context['active_today_count'] = BotUser.objects.filter(
             last_active_at__date=timezone.now().date()
         ).count()
-        return context
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['platform_choices'] = BotUser.PLATFORM_CHOICES
         return context
 
 
@@ -354,9 +449,191 @@ class BotUserDetailView(StaffRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Добавляем статистику пользователя
         context['user_leads'] = Lead.objects.filter(user=self.object).order_by('-created_at')[:10]
+        context['available_roles'] = Role.objects.filter(is_active=True)
+
+        # Суточная статистика выдачи
+        today = timezone.now().date()
+        today_log = DailyUsageLog.objects.filter(user=self.object, date=today).first()
+        context['today_usage'] = today_log
+        context['today_date'] = today
+
+        # Лимиты роли
+        role = self.object.role
+        if role:
+            context['role_limits'] = {
+                'total': role.limit_total_daily,
+                'apartments': role.limit_apartments_daily,
+                'commercial': role.limit_commercial_daily,
+                'primary': role.limit_primary_daily,
+                'secondary': role.limit_secondary_daily,
+            }
+            used = today_log.objects_shown if today_log else 0
+            context['remaining_today'] = max(0, role.limit_total_daily - used)
+        else:
+            context['role_limits'] = None
+            context['remaining_today'] = None
+
+        # История выдачи (последние 7 дней)
+        context['usage_history'] = DailyUsageLog.objects.filter(
+            user=self.object
+        ).order_by('-date')[:7]
+
         return context
+
+
+class RoleListView(StaffRequiredMixin, ListView):
+    """Список ролей"""
+    model = Role
+    template_name = 'dashboard/role_list.html'
+    context_object_name = 'roles'
+
+    def get_queryset(self):
+        return Role.objects.prefetch_related('permissions').order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_permissions'] = Permission.objects.count()
+        return context
+
+
+def _permission_groups_context(form):
+    """Формирует список групп разрешений с флагами checked для шаблона."""
+    selected_ids = set()
+    if form.instance.pk:
+        selected_ids = set(form.instance.permissions.values_list('id', flat=True))
+    # Если форма уже была сабмитнута с ошибками — берём из POST
+    if form.data:
+        try:
+            selected_ids = set(int(v) for v in form.data.getlist('permissions'))
+        except (ValueError, AttributeError):
+            pass
+
+    groups = []
+    icons = {
+        'properties': ('fas fa-building', 'text-primary'),
+        'market': ('fas fa-store', 'text-success'),
+        'bot': ('fas fa-robot', 'text-info'),
+        'contacts': ('fas fa-address-book', 'text-warning'),
+        'data': ('fas fa-chart-bar', 'text-danger'),
+    }
+    for cat_code, cat_label in Permission.CATEGORY_CHOICES:
+        perms = Permission.objects.filter(category=cat_code)
+        if perms.exists():
+            icon_class, icon_color = icons.get(cat_code, ('fas fa-circle', 'text-muted'))
+            groups.append({
+                'label': cat_label,
+                'icon': icon_class,
+                'icon_color': icon_color,
+                'permissions': [
+                    {'obj': p, 'checked': p.id in selected_ids}
+                    for p in perms
+                ]
+            })
+    return groups
+
+
+class RoleCreateView(StaffRequiredMixin, CreateView):
+    """Создание новой роли"""
+    model = Role
+    form_class = RoleForm
+    template_name = 'dashboard/role_form.html'
+    success_url = reverse_lazy('dashboard:role_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Роль «{form.instance.name}» успешно создана')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['permission_groups'] = _permission_groups_context(context['form'])
+        context['is_create'] = True
+        return context
+
+
+class RoleUpdateView(StaffRequiredMixin, UpdateView):
+    """Редактирование роли"""
+    model = Role
+    form_class = RoleForm
+    template_name = 'dashboard/role_form.html'
+    success_url = reverse_lazy('dashboard:role_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Роль «{form.instance.name}» успешно обновлена')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['permission_groups'] = _permission_groups_context(context['form'])
+        context['is_create'] = False
+        return context
+
+
+class RoleDeleteView(StaffRequiredMixin, View):
+    """Удаление роли"""
+
+    def post(self, request, pk):
+        role = get_object_or_404(Role, pk=pk)
+        name = role.name
+        users_count = role.bot_users.count()
+        if users_count > 0:
+            messages.error(request, f'Нельзя удалить роль «{name}»: она назначена {users_count} пользователям')
+            return redirect('dashboard:role_list')
+        role.delete()
+        messages.success(request, f'Роль «{name}» удалена')
+        return redirect('dashboard:role_list')
+
+
+class PermissionListView(StaffRequiredMixin, ListView):
+    """Список всех разрешений в системе"""
+    model = Permission
+    template_name = 'dashboard/permission_list.html'
+    context_object_name = 'permissions'
+
+    def get_queryset(self):
+        return Permission.objects.order_by('category', 'name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        icons = {
+            'properties': ('fas fa-building', 'text-primary'),
+            'market': ('fas fa-store', 'text-success'),
+            'bot': ('fas fa-robot', 'text-info'),
+            'contacts': ('fas fa-address-book', 'text-warning'),
+            'data': ('fas fa-chart-bar', 'text-danger'),
+        }
+        groups = []
+        for cat_code, cat_label in Permission.CATEGORY_CHOICES:
+            perms = Permission.objects.filter(category=cat_code)
+            if perms.exists():
+                icon_class, icon_color = icons.get(cat_code, ('fas fa-circle', 'text-muted'))
+                groups.append({
+                    'label': cat_label,
+                    'icon': icon_class,
+                    'icon_color': icon_color,
+                    'permissions': perms,
+                })
+        context['permission_groups'] = groups
+        return context
+
+
+class AssignRoleView(StaffRequiredMixin, View):
+    """Назначение/изменение роли пользователю бота"""
+
+    def post(self, request, pk):
+        user = get_object_or_404(BotUser, pk=pk)
+        form = AssignRoleForm(request.POST)
+        if form.is_valid():
+            role = form.cleaned_data.get('role')
+            user.role = role
+            user.save(update_fields=['role'])
+            if role:
+                messages.success(request, f'Роль «{role.name}» назначена пользователю {user.name or user.user_id}')
+            else:
+                messages.success(request, f'Роль снята с пользователя {user.name or user.user_id}')
+        else:
+            messages.error(request, 'Ошибка при назначении роли')
+        return redirect('dashboard:user_detail', pk=pk)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

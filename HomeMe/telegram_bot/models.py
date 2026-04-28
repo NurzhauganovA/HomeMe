@@ -41,6 +41,26 @@ class BotUser(models.Model):
     total_searches = models.IntegerField(default=0)
     total_messages = models.IntegerField(default=0)
 
+    # Telegram username (без @)
+    username = models.CharField(
+        "Username",
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Telegram @username без символа @"
+    )
+
+    # Роль пользователя (система доступа)
+    role = models.ForeignKey(
+        'dashboard.Role',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='bot_users',
+        verbose_name="Роль"
+    )
+
     # Настройки
     is_active = models.BooleanField(default=True)
     language = models.CharField(
@@ -619,3 +639,41 @@ class BICommercialUnit(BaseBIUnit):
         verbose_name = "Офис/Помещение"
         verbose_name_plural = "Офисы/Помещения"
         db_table = 'bi_commercial_units'
+
+
+class DailyUsageLog(models.Model):
+    """
+    Суточный счётчик показанных объектов для каждого пользователя.
+    Используется для применения лимитов роли.
+    """
+    user = models.ForeignKey(
+        BotUser,
+        on_delete=models.CASCADE,
+        related_name='daily_usage',
+        verbose_name="Пользователь"
+    )
+    date = models.DateField("Дата", db_index=True)
+
+    # Общий счётчик (главный)
+    objects_shown = models.IntegerField("Объектов показано (итого)", default=0)
+
+    # Счётчики по категориям
+    apartments_shown = models.IntegerField("Квартир показано", default=0)
+    commercial_shown = models.IntegerField("Коммерческих показано", default=0)
+    primary_shown = models.IntegerField("Первичного рынка показано", default=0)
+    secondary_shown = models.IntegerField("Вторичного рынка показано", default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Суточная статистика выдачи"
+        verbose_name_plural = "Суточная статистика выдачи"
+        unique_together = [('user', 'date')]
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} — {self.date}: {self.objects_shown} объектов"

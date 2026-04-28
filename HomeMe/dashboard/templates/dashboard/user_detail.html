@@ -171,6 +171,134 @@
 
     <!-- Sidebar -->
     <div class="col-lg-4">
+
+        <!-- Назначение роли -->
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0"><i class="fas fa-user-tag me-2"></i>Роль пользователя</h5>
+            </div>
+            <div class="p-4">
+                {% if bot_user.role %}
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-primary fs-6 px-3 py-2">
+                            <i class="fas fa-user-tag me-1"></i>{{ bot_user.role.name }}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1">Лимиты в сутки</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-light text-dark border" title="Квартиры">
+                                <i class="fas fa-home me-1"></i>{{ bot_user.role.limit_apartments_daily }}
+                            </span>
+                            <span class="badge bg-light text-dark border" title="Коммерческие">
+                                <i class="fas fa-store me-1"></i>{{ bot_user.role.limit_commercial_daily }}
+                            </span>
+                            <span class="badge bg-light text-dark border" title="Всего">
+                                <i class="fas fa-list me-1"></i>{{ bot_user.role.limit_total_daily }} (total)
+                            </span>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-3">Роль не назначена. Пользователь работает без ограничений по умолчанию.</p>
+                {% endif %}
+
+                <form method="post" action="{% url 'dashboard:user_assign_role' bot_user.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Изменить роль</label>
+                        <select name="role" class="form-select">
+                            <option value="">— Без роли —</option>
+                            {% for role in available_roles %}
+                                <option value="{{ role.pk }}"
+                                    {% if bot_user.role and bot_user.role.pk == role.pk %}selected{% endif %}>
+                                    {{ role.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-1"></i>Назначить роль
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Суточные лимиты и использование -->
+        <div class="table-card mb-4">
+            <div class="table-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Лимиты сегодня</h5>
+                <span class="badge bg-light text-muted border small">{{ today_date }}</span>
+            </div>
+            <div class="p-3">
+                {% if role_limits %}
+                    {% with used=today_usage.objects_shown|default:0 %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small fw-semibold mb-1">
+                            <span>Показано / Лимит</span>
+                            <span class="{% if remaining_today == 0 %}text-danger{% elif remaining_today <= 3 %}text-warning{% else %}text-success{% endif %}">
+                                {{ used }} / {{ role_limits.total }}
+                            </span>
+                        </div>
+                        {% with pct=used|floatformat:0 %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar
+                                {% if remaining_today == 0 %}bg-danger{% elif remaining_today <= 3 %}bg-warning{% else %}bg-primary{% endif %}"
+                                style="width: {% widthratio used role_limits.total 100 %}%">
+                            </div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mt-2">
+                        <span>Осталось сегодня:</span>
+                        <strong class="{% if remaining_today == 0 %}text-danger{% else %}text-success{% endif %}">
+                            {% if remaining_today == 0 %}
+                                <i class="fas fa-ban me-1"></i>Лимит исчерпан
+                            {% else %}
+                                {{ remaining_today }} объектов
+                            {% endif %}
+                        </strong>
+                    </div>
+                    {% if today_usage %}
+                    <hr class="my-2">
+                    <div class="row g-1 text-center" style="font-size:0.78rem;">
+                        <div class="col-6">
+                            <div class="text-muted">Квартиры</div>
+                            <div class="fw-bold">{{ today_usage.apartments_shown }}<span class="text-muted">/{{ role_limits.apartments }}</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted">Коммерч.</div>
+                            <div class="fw-bold">{{ today_usage.commercial_shown }}<span class="text-muted">/{{ role_limits.commercial }}</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted">Первичный</div>
+                            <div class="fw-bold">{{ today_usage.primary_shown }}<span class="text-muted">/{{ role_limits.primary }}</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted">Вторичный</div>
+                            <div class="fw-bold">{{ today_usage.secondary_shown }}<span class="text-muted">/{{ role_limits.secondary }}</span></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <div class="text-muted small text-center py-2">
+                        <i class="fas fa-infinity me-1"></i>Роль не назначена — лимиты не применяются
+                    </div>
+                {% endif %}
+
+                {% if usage_history %}
+                <hr class="my-2">
+                <div class="small text-muted fw-semibold mb-1">История выдачи (7 дней)</div>
+                {% for log in usage_history %}
+                <div class="d-flex justify-content-between align-items-center py-1 border-bottom" style="font-size:0.78rem;">
+                    <span class="text-muted">{{ log.date|date:"d.m" }}</span>
+                    <span class="fw-semibold">{{ log.objects_shown }} объектов</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Timeline -->
         <div class="table-card mb-4">
             <div class="table-header">

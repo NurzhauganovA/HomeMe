@@ -10,6 +10,7 @@ from telegram_bot.models import BotUser, UserSession, Lead, FavoriteProperty
 from core.dto import PropertyDTO
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
+from core.services.limit_service import LimitService
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class EnhancedDialogManager:
                 return self._quota_response()
             params = voice_params
             if self._has_search_intent(params, text):
-                response = await self._run_search_with_params(session, params)
+                response = await self._run_search_with_params(session, params, user)
                 return self._ensure_main_menu_button(response, state)
 
         if self._is_edit_params_command(text):
@@ -122,65 +123,8 @@ class EnhancedDialogManager:
                 params['offset'] = 0
                 params['city'] = 'Astana'
 
-                if params.get('source') == 'bi':
-                    complex_offset = params.get('complex_offset', 0)
-                    search_result = await sync_to_async(
-                        self.search.search_complexes,
-                        thread_sensitive=False
-                    )(params, offset=complex_offset, limit=5)
-                    complexes, next_offset = self._unpack_complexes_result(search_result, complex_offset)
-
-                    if complexes:
-                        params['complex_offset'] = next_offset
-                        response['objects'] = await sync_to_async(
-                            self.search.map_complexes_to_dto,
-                            thread_sensitive=False
-                        )(params, complexes)
-                        params['complex_candidates'] = self._merge_complex_candidates(
-                            params.get('complex_candidates'),
-                            self._serialize_complexes(complexes)
-                        )
-                        await self._update_state(session, 'COMPLEX_RESULTS', params)
-                        response['text'] = self._format_complexes_intro(params)
-                        response['buttons'] = self._complex_action_buttons(params)
-                    else:
-                        await self._update_state(session, 'NO_RESULTS', params)
-                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска']
-                elif params.get('source') == 'mixed':
-                    params['bi_offset'] = 0
-                    params['secondary_offset'] = 0
-                    results, new_bi_offset, new_secondary_offset = await sync_to_async(
-                        self.search.intelligent_search_mixed,
-                        thread_sensitive=False
-                    )(params, bi_offset=0, secondary_offset=0)
-                    if results:
-                        results = self._filter_seen_objects(params, results)
-                        params['bi_offset'] = new_bi_offset
-                        params['secondary_offset'] = new_secondary_offset
-                        await self._update_state(session, 'BROWSING', params)
-                        response['text'] = self._format_intro(results, params)
-                        response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
-                    else:
-                        await self._update_state(session, 'NO_RESULTS', params)
-                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска']
-                else:
-                    results = await sync_to_async(
-                        self.search.intelligent_search,
-                        thread_sensitive=False
-                    )(params, offset=0)
-                    if results:
-                        params['offset'] = len(results)
-                        await self._update_state(session, 'BROWSING', params)
-                        response['text'] = self._format_intro(results, params)
-                        response['objects'] = results
-                        response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
-                    else:
-                        await self._update_state(session, 'NO_RESULTS', params)
-                        response['text'] = "По запросу ничего не найдено. 😔\n\nВарианты действий:"
-                        response['buttons'] = ['Изменить параметры поиска']
+                # Быстрый старт идёт через _run_search_with_params для единообразия лимитов
+                response = await self._run_search_with_params(session, params, user)
 
             else:
                 return self._scenario_start(user.name)
@@ -510,7 +454,7 @@ class EnhancedDialogManager:
                     prompt="Локацию обновил. Что ещё изменить? Или нажмите «Искать»."
                 )
             else:
-                response = await self._run_search_with_params(session, params)
+                response = await self._run_search_with_params(session, params, user)
 
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
@@ -589,6 +533,14 @@ class EnhancedDialogManager:
 
         elif state == 'BROWSING':
             if text.lower() in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
+                # Проверяем лимит перед "Показать ещё"
+                remaining_before = await sync_to_async(LimitService.get_remaining_total)(user)
+                if remaining_before <= 0:
+                    msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                    response['text'] = msg
+                    response['buttons'] = ['В главное меню']
+                    return self._ensure_main_menu_button(response, state)
+
                 if params.get('source') == 'mixed':
                     results, new_bi_offset, new_secondary_offset = await sync_to_async(
                         self.search.intelligent_search_mixed,
@@ -605,9 +557,17 @@ class EnhancedDialogManager:
                         params['secondary_offset'] = new_secondary_offset
                         await self._update_state(session, 'BROWSING', params)
                         if filtered:
-                            response['text'] = "Вот еще варианты: 👇"
-                            response['objects'] = filtered
-                            response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                            # Применяем лимит
+                            filtered, remaining, _ = await sync_to_async(
+                                LimitService.apply_limit)(user, filtered, params)
+                            if filtered:
+                                response['text'] = "Вот еще варианты: 👇"
+                                response['objects'] = filtered
+                                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                            else:
+                                msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                                response['text'] = msg
+                                response['buttons'] = ['В главное меню']
                         else:
                             response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
                             response['buttons'] = ['Изменить параметры поиска']
@@ -629,9 +589,17 @@ class EnhancedDialogManager:
                         params['offset'] = current_offset + raw_count
                         await self._update_state(session, 'BROWSING', params)
                         if filtered:
-                            response['text'] = "Вот еще варианты: 👇"
-                            response['objects'] = filtered
-                            response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                            # Применяем лимит
+                            filtered, remaining, _ = await sync_to_async(
+                                LimitService.apply_limit)(user, filtered, params)
+                            if filtered:
+                                response['text'] = "Вот еще варианты: 👇"
+                                response['objects'] = filtered
+                                response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                            else:
+                                msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                                response['text'] = msg
+                                response['buttons'] = ['В главное меню']
                         else:
                             response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
                             response['buttons'] = ['Изменить параметры поиска']
@@ -687,7 +655,7 @@ class EnhancedDialogManager:
             lowered_text = text.lower()
             if lowered_text in ['искать', 'поиск', 'начать поиск', 'показать варианты', 'покажи варианты']:
                 params.pop('edit_mode', None)
-                response = await self._run_search_with_params(session, params)
+                response = await self._run_search_with_params(session, params, user)
             elif 'бюджет' in lowered_text:
                 await self._update_state(session, 'SETTING_BUDGET', params)
                 response['text'] = "Какой бюджет? 💰"
@@ -998,12 +966,21 @@ class EnhancedDialogManager:
 
         return params
 
-    async def _run_search_with_params(self, session, params):
+    async def _run_search_with_params(self, session, params, user=None):
         response = {'text': '', 'buttons': [], 'objects': []}
 
         params['offset'] = 0
         params['city'] = 'Astana'
         params['seen_object_ids'] = []
+
+        # Проверяем лимит ДО поиска
+        if user is not None:
+            remaining = await sync_to_async(LimitService.get_remaining_total)(user)
+            if remaining <= 0:
+                msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                response['text'] = msg
+                response['buttons'] = ['В главное меню']
+                return response
 
         if params.get('source') == 'bi':
             complex_offset = params.get('complex_offset', 0)
@@ -1020,6 +997,17 @@ class EnhancedDialogManager:
                     thread_sensitive=False
                 )(params, complexes)
                 mapped = self._filter_seen_objects(params, mapped)
+
+                # Применяем лимит
+                if user is not None:
+                    mapped, remaining, blocked = await sync_to_async(
+                        LimitService.apply_limit)(user, mapped, params)
+                    if blocked or not mapped:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return response
+
                 response['objects'] = mapped
                 allowed_ids = {obj.object_id for obj in mapped if obj.object_id}
                 complexes_for_candidates = [c for c in complexes if c.bi_uuid in allowed_ids]
@@ -1055,6 +1043,17 @@ class EnhancedDialogManager:
 
             if results:
                 results = self._filter_seen_objects(params, results)
+
+                # Применяем лимит
+                if user is not None:
+                    results, remaining, blocked = await sync_to_async(
+                        LimitService.apply_limit)(user, results, params)
+                    if blocked or not results:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return response
+
                 params['bi_offset'] = new_bi_offset
                 params['secondary_offset'] = new_secondary_offset
                 await self._update_state(session, 'BROWSING', params)
@@ -1085,6 +1084,17 @@ class EnhancedDialogManager:
 
             if results:
                 results = self._filter_seen_objects(params, results)
+
+                # Применяем лимит
+                if user is not None:
+                    results, remaining, blocked = await sync_to_async(
+                        LimitService.apply_limit)(user, results, params)
+                    if blocked or not results:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return response
+
                 params['offset'] = len(results)
                 await self._update_state(session, 'BROWSING', params)
 
