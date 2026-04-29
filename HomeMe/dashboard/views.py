@@ -9,6 +9,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.core.paginator import Paginator, InvalidPage
 import json
 import os
 import time
@@ -745,3 +746,272 @@ class SecondaryImportAPIView(View):
 
         # 3. Добавлена поддержка заголовка x-token для совместимости с клиентом
         return request.headers.get('x-token')
+
+
+# ---------------------------------------------------------------------------
+# Вспомогательная функция — общая проверка токена для API
+# ---------------------------------------------------------------------------
+
+def _authenticate_api_request(request):
+    """
+    Извлекает и проверяет API-токен из запроса.
+    Возвращает (token_obj, error_response) — один из них всегда None.
+    """
+    auth = request.headers.get('Authorization') or ''
+    if auth.lower().startswith('bearer '):
+        raw_token = auth.split(' ', 1)[1].strip()
+    else:
+        raw_token = (
+            request.headers.get('X-API-KEY')
+            or request.headers.get('x-token')
+            or ''
+        )
+
+    if not raw_token:
+        return None, JsonResponse({'error': 'Unauthorized', 'detail': 'Token is missing'}, status=401)
+
+    token_obj = ApiAccessToken.objects.filter(token=raw_token, is_active=True).first()
+    if not token_obj or not token_obj.is_valid():
+        return None, JsonResponse({'error': 'Forbidden', 'detail': 'Invalid or expired token'}, status=403)
+
+    return token_obj, None
+
+
+# ---------------------------------------------------------------------------
+# API: GET /api/secondary/commercial/
+# Выдача коммерческой вторичной недвижимости (property_type='commercial')
+# ---------------------------------------------------------------------------
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SecondaryCommercialAPIView(View):
+    """
+    REST API для получения коммерческих объектов вторичной недвижимости.
+
+    Auth:  Authorization: Bearer <token>  |  X-API-KEY: <token>
+    Method: GET
+
+    Query params:
+      city          — фильтр по городу (exact, case-insensitive)
+      district      — фильтр по району (contains)
+      deal_type     — тип сделки: sell | rent
+      subtype       — подтип (contains)
+      price_min     — цена от (₸)
+      price_max     — цена до (₸)
+      area_min      — площадь от (м²)
+      area_max      — площадь до (м²)
+      floor_min     — этаж от
+      floor_max     — этаж до
+      is_verified   — проверен: true | false
+      search        — текстовый поиск (title, address, description)
+      ordering      — сортировка: price | -price | area | -area | created_at | -created_at
+      page          — номер страницы (default: 1)
+      page_size     — записей на странице (default: 20, max: 100)
+
+    Response 200:
+      {
+        "count": <int>,          — всего записей по фильтрам
+        "total_pages": <int>,
+        "page": <int>,
+        "page_size": <int>,
+        "results": [ { ...all fields + raw_data } ]
+      }
+    """
+
+    DEFAULT_PAGE_SIZE = 20
+    MAX_PAGE_SIZE = 100
+    ALLOWED_ORDERINGS = {
+        'price': 'price',
+        '-price': '-price',
+        'area': 'area',
+        '-area': '-area',
+        'created_at': 'created_at',
+        '-created_at': '-created_at',
+        'floor': 'floor',
+        '-floor': '-floor',
+    }
+
+    def get(self, request):
+        # --- Auth ---
+        token_obj, err = _authenticate_api_request(request)
+        if err:
+            return err
+
+        # --- Base queryset: строго commercial ---
+        qs = SecondaryProperty.objects.filter(
+            property_type='commercial',
+            is_active=True,
+        )
+
+        # --- Filters ---
+        city = request.GET.get('city', '').strip()
+        if city:
+            qs = qs.filter(city__iexact=city)
+
+        district = request.GET.get('district', '').strip()
+        if district:
+            qs = qs.filter(district__icontains=district)
+
+        deal_type = request.GET.get('deal_type', '').strip()
+        if deal_type:
+            qs = qs.filter(deal_type__iexact=deal_type)
+
+        subtype = request.GET.get('subtype', '').strip()
+        if subtype:
+            qs = qs.filter(subtype__icontains=subtype)
+
+        price_min = request.GET.get('price_min', '').strip()
+        if price_min:
+            try:
+                qs = qs.filter(price__gte=float(price_min))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'price_min must be numeric'}, status=400)
+
+        price_max = request.GET.get('price_max', '').strip()
+        if price_max:
+            try:
+                qs = qs.filter(price__lte=float(price_max))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'price_max must be numeric'}, status=400)
+
+        area_min = request.GET.get('area_min', '').strip()
+        if area_min:
+            try:
+                qs = qs.filter(area__gte=float(area_min))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'area_min must be numeric'}, status=400)
+
+        area_max = request.GET.get('area_max', '').strip()
+        if area_max:
+            try:
+                qs = qs.filter(area__lte=float(area_max))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'area_max must be numeric'}, status=400)
+
+        floor_min = request.GET.get('floor_min', '').strip()
+        if floor_min:
+            try:
+                qs = qs.filter(floor__gte=int(floor_min))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'floor_min must be integer'}, status=400)
+
+        floor_max = request.GET.get('floor_max', '').strip()
+        if floor_max:
+            try:
+                qs = qs.filter(floor__lte=int(floor_max))
+            except ValueError:
+                return JsonResponse({'error': 'Bad Request', 'detail': 'floor_max must be integer'}, status=400)
+
+        is_verified = request.GET.get('is_verified', '').strip().lower()
+        if is_verified == 'true':
+            qs = qs.filter(is_verified=True)
+        elif is_verified == 'false':
+            qs = qs.filter(is_verified=False)
+
+        search = request.GET.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search)
+                | Q(address__icontains=search)
+                | Q(description__icontains=search)
+                | Q(subtype__icontains=search)
+            )
+
+        # --- Ordering ---
+        ordering_param = request.GET.get('ordering', '-created_at').strip()
+        ordering = self.ALLOWED_ORDERINGS.get(ordering_param, '-created_at')
+        qs = qs.order_by(ordering)
+
+        # --- Pagination ---
+        try:
+            page_size = min(int(request.GET.get('page_size', self.DEFAULT_PAGE_SIZE)), self.MAX_PAGE_SIZE)
+        except (ValueError, TypeError):
+            page_size = self.DEFAULT_PAGE_SIZE
+
+        paginator = Paginator(qs, page_size)
+        try:
+            page_number = int(request.GET.get('page', 1))
+        except (ValueError, TypeError):
+            page_number = 1
+
+        try:
+            page_obj = paginator.page(page_number)
+        except InvalidPage:
+            return JsonResponse({'error': 'Bad Request', 'detail': f'Page {page_number} does not exist'}, status=400)
+
+        # --- Serialise ---
+        results = [self._serialize(obj) for obj in page_obj.object_list]
+
+        return JsonResponse({
+            'count': paginator.count,
+            'total_pages': paginator.num_pages,
+            'page': page_obj.number,
+            'page_size': page_size,
+            'filters_applied': {
+                'property_type': 'commercial',
+                'city': city or None,
+                'district': district or None,
+                'deal_type': deal_type or None,
+                'subtype': subtype or None,
+                'price_min': price_min or None,
+                'price_max': price_max or None,
+                'area_min': area_min or None,
+                'area_max': area_max or None,
+                'floor_min': floor_min or None,
+                'floor_max': floor_max or None,
+                'is_verified': is_verified or None,
+                'search': search or None,
+                'ordering': ordering_param,
+            },
+            'results': results,
+        }, json_dumps_params={'ensure_ascii': False, 'default': str})
+
+    @staticmethod
+    def _serialize(obj: SecondaryProperty) -> dict:
+        return {
+            'id': str(obj.id),
+            'external_uuid': obj.external_uuid,
+            'external_id': obj.external_id,
+            'property_type': obj.property_type,
+            'subtype': obj.subtype,
+            'deal_type': obj.deal_type,
+            'rent_type': obj.rent_type,
+            'currency': obj.currency,
+            'condition': obj.condition,
+            'repair': obj.repair,
+            'construction_year': obj.construction_year,
+            'ceiling_height': obj.ceiling_height,
+            'rooms_total': obj.rooms_total,
+            'area_living': obj.area_living,
+            'area_kitchen': obj.area_kitchen,
+            'material': obj.material,
+            'prices': obj.prices,
+            'prices_m2': obj.prices_m2,
+            'title': obj.title,
+            'description': obj.description,
+            'address': obj.address,
+            'address_note': obj.address_note,
+            'city': obj.city,
+            'district': obj.district,
+            'city_micro_district': obj.city_micro_district,
+            'price': str(obj.price),
+            'rooms': obj.rooms,
+            'area': obj.area,
+            'floor': obj.floor,
+            'total_floors': obj.total_floors,
+            'latitude': obj.latitude,
+            'longitude': obj.longitude,
+            'has_parking': obj.has_parking,
+            'has_balcony': obj.has_balcony,
+            'has_renovation': obj.has_renovation,
+            'source_url': obj.source_url,
+            'photos': obj.photos,
+            'owner_phone': obj.owner_phone,
+            'owner_name': obj.owner_name,
+            'is_active': obj.is_active,
+            'is_verified': obj.is_verified,
+            'views_count': obj.views_count,
+            'created_at': obj.created_at.isoformat(),
+            'updated_at': obj.updated_at.isoformat(),
+            # raw_data — полностью, без купюр
+            'raw_data': obj.raw_data,
+        }

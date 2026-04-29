@@ -3,4 +3,5 @@ from . import views
 
 urlpatterns = [
     path('secondary/import/', views.SecondaryImportAPIView.as_view(), name='secondary_import_api'),
+    path('secondary/commercial/', views.SecondaryCommercialAPIView.as_view(), name='secondary_commercial_api'),
 ]
