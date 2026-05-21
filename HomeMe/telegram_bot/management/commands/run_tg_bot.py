@@ -29,7 +29,12 @@ from telegram.constants import ParseMode, ChatAction
 
 from core.services.dialog_manager import EnhancedDialogManager
 from core.services.bitrix24_service import Bitrix24Service
-from telegram_bot.models import BotUser, UserSession, FavoriteProperty
+from core.services.bigroup_lead_service import BIGroupLeadService
+from core.services.bot_text_service import BotTextService
+from core.services.permission_service import PermissionService
+from core.services.product_analytics_service import ProductAnalyticsService
+from core.services.lead_context import snapshot_for_bi_contact
+from telegram_bot.models import BotUser, UserSession, FavoriteProperty, BotProductEvent, Lead
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,6 +50,7 @@ class Command(BaseCommand):
         super().__init__()
         self.dialog_manager = None
         self.bitrix24_service = Bitrix24Service()
+        self.bigroup_lead_service = BIGroupLeadService()
 
     async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик голосовых сообщений"""
@@ -60,7 +66,8 @@ class Command(BaseCommand):
             user_id=user.id,
             platform='telegram',
             voice_file_object=voice_file,
-            user_name=user.first_name
+            user_name=user.first_name,
+            telegram_username=user.username,
         )
 
         await self.send_response(update, response)
@@ -213,7 +220,8 @@ class Command(BaseCommand):
                 user_id=user.id,
                 platform='telegram',
                 text=text,
-                user_name=user.first_name
+                user_name=user.first_name,
+                telegram_username=user.username,
             )
 
             # Показываем typing если AI еще думает
@@ -310,6 +318,14 @@ class Command(BaseCommand):
 
         logger.info(f"📤 Sending {len(objects)} property cards...")
 
+        try:
+            bot_user_for_analytics = await sync_to_async(BotUser.objects.get)(
+                user_id=str(update.effective_user.id),
+                platform='telegram'
+            )
+        except BotUser.DoesNotExist:
+            bot_user_for_analytics = None
+
         for idx, obj in enumerate(objects, 1):
             try:
                 # Показываем прогресс для больших списков
@@ -403,6 +419,19 @@ class Command(BaseCommand):
                         disable_web_page_preview=False
                     )
 
+                if bot_user_for_analytics:
+                    sp = {'source': getattr(obj, 'source', '') or ''}
+                    await sync_to_async(ProductAnalyticsService.record)(
+                        bot_user_for_analytics,
+                        BotProductEvent.EVENT_OBJECT_CARD,
+                        payload={
+                            'object_id': getattr(obj, 'object_id', None),
+                            'title': (getattr(obj, 'title', None) or '')[:200],
+                            'object_kind': getattr(obj, 'object_kind', None),
+                        },
+                        search_params=sp,
+                    )
+
                 # Небольшая задержка между отправками
                 if idx < len(objects):
                     await asyncio.sleep(0.3)
@@ -433,10 +462,22 @@ class Command(BaseCommand):
                     user_id=str(user.id),
                     platform='telegram'
                 )
+                has_permission = await sync_to_async(PermissionService.has_permission)(
+                    bot_user, 'manage_favorites'
+                )
+                if not has_permission:
+                    await query.message.reply_text(PermissionService.denied_message('manage_favorites'))
+                    return
                 deleted_count, _ = await sync_to_async(
                     FavoriteProperty.objects.filter(id=fav_uuid, user=bot_user).delete
                 )()
                 if deleted_count:
+                    await sync_to_async(ProductAnalyticsService.record)(
+                        bot_user,
+                        BotProductEvent.EVENT_FAVORITE_REMOVE,
+                        payload={'favorite_id': fav_uuid},
+                        search_params={},
+                    )
                     await query.message.reply_text("✅ Объект удалён из избранного.")
                     # Редактируем кнопки исходного сообщения, чтобы убрать кнопку удаления
                     try:
@@ -458,6 +499,12 @@ class Command(BaseCommand):
                     user_id=str(user.id),
                     platform='telegram'
                 )
+                has_permission = await sync_to_async(PermissionService.has_permission)(
+                    bot_user, 'manage_favorites'
+                )
+                if not has_permission:
+                    await query.message.reply_text(PermissionService.denied_message('manage_favorites'))
+                    return
                 session = await sync_to_async(UserSession.objects.get)(user=bot_user)
                 params = session.search_params or {}
                 last_objects = params.get('last_objects') or []
@@ -483,12 +530,22 @@ class Command(BaseCommand):
                 )
 
                 if created:
+                    await sync_to_async(ProductAnalyticsService.record)(
+                        bot_user,
+                        BotProductEvent.EVENT_FAVORITE_ADD,
+                        payload={'object_id': object_id, 'source': data.get('source')},
+                        search_params=params,
+                    )
                     await query.message.reply_text(
-                        "✅ Объект добавлен в избранное!\n"
-                        "Все сохраненные объекты доступны в разделе 'Избранное'"
+                        BotTextService.get(
+                            "favorites.saved",
+                            fallback="✅ Объект добавлен в избранное!\nВсе сохраненные объекты доступны в разделе 'Избранное'",
+                        )
                     )
                 else:
-                    await query.message.reply_text("⭐ Этот объект уже в избранном.")
+                    await query.message.reply_text(
+                        BotTextService.get("favorites.already_saved", fallback="⭐ Этот объект уже в избранном.")
+                    )
             except Exception as e:
                 logger.error(f"Failed to save favorite: {e}")
                 await query.message.reply_text("Не удалось сохранить объект.")
@@ -500,6 +557,12 @@ class Command(BaseCommand):
                     user_id=str(user.id),
                     platform='telegram'
                 )
+                has_permission = await sync_to_async(PermissionService.has_permission)(
+                    bot_user, 'view_contacts'
+                )
+                if not has_permission:
+                    await query.message.reply_text(PermissionService.denied_message('view_contacts'))
+                    return
                 session = await sync_to_async(UserSession.objects.get)(user=bot_user)
                 params = session.search_params or {}
                 last_objects = params.get('last_objects') or []
@@ -527,7 +590,22 @@ class Command(BaseCommand):
                 user_id = str(user.id)
                 user_username = getattr(user, 'username', None)  # Username из Telegram (@username), может быть None
 
-                # Создаем заявку в Bitrix24
+                # 1. Отправляем лид в CRM BI Group (siteApplications) — первичный рынок
+                bigroup_result = await sync_to_async(
+                    self.bigroup_lead_service.send_lead,
+                    thread_sensitive=False
+                )(
+                    user_name=user_name,
+                    user_phone=user_phone,
+                    # object_id в DTO хранит UUID ЖК/юнита из BI Group API
+                    complex_uuid=property_data.get('object_id'),
+                    complex_name=property_data.get('title'),
+                    property_data=property_data,
+                    user_tg_username=user_username,
+                    user_tg_id=user_id,
+                )
+
+                # 2. Создаем заявку в Bitrix24 (внутренняя CRM — параллельно)
                 bitrix_result = await sync_to_async(
                     self.bitrix24_service.create_lead,
                     thread_sensitive=False
@@ -542,27 +620,57 @@ class Command(BaseCommand):
 
                 # Получаем номер call center
                 call_center_number = self.bitrix24_service.get_call_center_number()
-                
-                # Формируем сообщение
-                if bitrix_result and bitrix_result.get('success'):
-                    message_text = (
-                        f"✅ <b>Заявка отправлена!</b>\n\n"
-                        f"📋 Ваша заявка по объекту <b>{property_data.get('title', 'недвижимости')}</b> "
-                        f"успешно отправлена в CRM систему.\n\n"
-                        f"📞 <b>Моментальный звонок:</b>\n"
-                        f"Позвоните в call center застройщика BI Group:\n"
-                        f"<b>{call_center_number}</b>\n\n"
-                        f"Наш менеджер свяжется с вами в ближайшее время!"
+
+                # Формируем сообщение — успех если хоть одна CRM приняла лид
+                crm_ok = (bigroup_result.get('success') or
+                          (bitrix_result and bitrix_result.get('success')))
+
+                snap = snapshot_for_bi_contact(params, property_data)
+                req = f"Заявка на объект BI Group: {property_data.get('title', '')}"
+                await sync_to_async(Lead.objects.create)(
+                    user=bot_user,
+                    request_text=req,
+                    status='new',
+                    search_params=params,
+                    **snap,
+                )
+                await sync_to_async(ProductAnalyticsService.record)(
+                    bot_user,
+                    BotProductEvent.EVENT_LEAD_BI_CONTACT,
+                    payload={'title': property_data.get('title'), 'crm_ok': crm_ok},
+                    search_params=params,
+                )
+
+                prop_title = property_data.get('title', 'недвижимости')
+                if crm_ok:
+                    message_text = BotTextService.get(
+                        "bigroup.lead_sent",
+                        fallback=(
+                            "✅ <b>Заявка отправлена!</b>\n\n"
+                            "📋 Ваша заявка по объекту <b>{title}</b> "
+                            "успешно передана застройщику BI Group.\n\n"
+                            "📞 <b>Моментальный звонок:</b>\n"
+                            "Позвоните в call center застройщика BI Group:\n"
+                            "<b>{phone}</b>\n\n"
+                            "Наш менеджер свяжется с вами в ближайшее время!"
+                        ),
+                        title=prop_title,
+                        phone=call_center_number,
                     )
                 else:
-                    # Если Bitrix24 не настроен или произошла ошибка, все равно показываем контакты
-                    message_text = (
-                        f"📞 <b>Контакты по объекту</b>\n\n"
-                        f"Объект: <b>{property_data.get('title', 'недвижимость')}</b>\n\n"
-                        f"Для получения информации и моментального звонка:\n"
-                        f"Позвоните в call center застройщика BI Group:\n"
-                        f"<b>{call_center_number}</b>\n\n"
-                        f"Наш менеджер поможет вам с выбором!"
+                    # Ошибка CRM — всё равно показываем контакты пользователю
+                    message_text = BotTextService.get(
+                        "bigroup.lead_fallback",
+                        fallback=(
+                            "📞 <b>Контакты по объекту</b>\n\n"
+                            "Объект: <b>{title}</b>\n\n"
+                            "Для получения информации и моментального звонка:\n"
+                            "Позвоните в call center застройщика BI Group:\n"
+                            "<b>{phone}</b>\n\n"
+                            "Наш менеджер поможет вам с выбором!"
+                        ),
+                        title=prop_title,
+                        phone=call_center_number,
                     )
 
                 # Создаем кнопку для звонка

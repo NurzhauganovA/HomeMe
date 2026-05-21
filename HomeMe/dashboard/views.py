@@ -4,7 +4,10 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q, Count, Min, Max
-from django.http import JsonResponse
+from django.db.models.functions import TruncDate
+
+from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit, BICommercialComplex, BICommercialUnit, DailyUsageLog, BotProductEvent, FavoriteProperty
+from .models import ApiAccessToken, Role, Permission, FeedbackSurvey, FeedbackSurveyQuestion, BotText, BIGroupLeadLog
 from datetime import timedelta
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -19,11 +22,12 @@ import uuid
 import gzip
 import shutil
 
-from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit, BICommercialComplex, BICommercialUnit, DailyUsageLog
-from .models import ApiAccessToken, Role, Permission
+from django.db import models
+
 from core.services.secondary_importer import SecondaryImporter
 from .forms import SecondaryPropertyForm, LeadUpdateForm, RoleForm, AssignRoleForm
 from django.conf import settings
+from core.services.survey_service import SurveyService
 
 # --- Dedicated integration logger (ILVO secondary import) ---
 # Помещаем логи строго в <BASE_DIR>/logs/integrations
@@ -73,36 +77,122 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 
 class DashboardIndexView(StaffRequiredMixin, TemplateView):
-    """Главная страница дашборда со статистикой"""
+    """Управленческий дашборд (ТЗ п.5) + фильтры."""
+
     template_name = 'dashboard/index.html'
+
+    def _parse_date_range(self):
+        today = timezone.localdate()
+        default_from = today - timedelta(days=30)
+        df = self.request.GET.get('date_from') or default_from.isoformat()
+        dt = self.request.GET.get('date_to') or today.isoformat()
+        try:
+            date_from = timezone.datetime.fromisoformat(df).date()
+        except ValueError:
+            date_from = default_from
+        try:
+            date_to = timezone.datetime.fromisoformat(dt).date()
+        except ValueError:
+            date_to = today
+        if date_from > date_to:
+            date_from, date_to = date_to, date_from
+        start_dt = timezone.make_aware(timezone.datetime.combine(date_from, timezone.datetime.min.time()))
+        end_dt = timezone.make_aware(timezone.datetime.combine(date_to, timezone.datetime.max.time()))
+        return date_from, date_to, start_dt, end_dt
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        date_from, date_to, start_dt, end_dt = self._parse_date_range()
 
-        # Статистика
+        role_id = self.request.GET.get('role') or ''
+        platform = self.request.GET.get('platform') or ''
+        prop_type = self.request.GET.get('property_type') or ''
+        market_type = self.request.GET.get('market_type') or ''
+
+        users_qs = BotUser.objects.filter(created_at__lte=end_dt)
+        events_qs = BotProductEvent.objects.filter(created_at__range=(start_dt, end_dt))
+        leads_qs = Lead.objects.filter(created_at__range=(start_dt, end_dt))
+        fav_qs = FavoriteProperty.objects.filter(created_at__range=(start_dt, end_dt))
+        bi_leads_qs = BIGroupLeadLog.objects.filter(created_at__range=(start_dt, end_dt))
+
+        if role_id.isdigit():
+            users_qs = users_qs.filter(role_id=int(role_id))
+            events_qs = events_qs.filter(user__role_id=int(role_id))
+            leads_qs = leads_qs.filter(user__role_id=int(role_id))
+            fav_qs = fav_qs.filter(user__role_id=int(role_id))
+        if platform:
+            users_qs = users_qs.filter(platform=platform)
+            events_qs = events_qs.filter(user__platform=platform)
+            leads_qs = leads_qs.filter(user__platform=platform)
+            fav_qs = fav_qs.filter(user__platform=platform)
+        if prop_type:
+            events_qs = events_qs.filter(property_type=prop_type)
+        if market_type:
+            events_qs = events_qs.filter(market_type=market_type)
+
+        new_users = users_qs.filter(created_at__range=(start_dt, end_dt)).count()
+        active_users = users_qs.filter(last_active_at__range=(start_dt, end_dt)).distinct().count()
+
+        search_events = events_qs.filter(event_type=BotProductEvent.EVENT_SEARCH).count()
+        show_more = events_qs.filter(event_type=BotProductEvent.EVENT_SHOW_MORE).count()
+        no_results = events_qs.filter(event_type=BotProductEvent.EVENT_NO_RESULTS).count()
+        card_views = events_qs.filter(event_type=BotProductEvent.EVENT_OBJECT_CARD).count()
+        favorites = events_qs.filter(event_type=BotProductEvent.EVENT_FAVORITE_ADD).count()
+        starts = events_qs.filter(event_type=BotProductEvent.EVENT_BOT_START).count()
+        referrals_join = events_qs.filter(event_type='referral_join').count()
+
+        leads_crm = leads_qs.count()
+        leads_bi_log = bi_leads_qs.filter(success=True).count()
+
         context['stats'] = {
-            'new_leads': Lead.objects.filter(status='new').count(),
+            'new_users': new_users,
+            'active_users': active_users,
+            'searches': search_events,
+            'show_more': show_more,
+            'no_results': no_results,
+            'object_views': card_views,
+            'favorites': favorites,
+            'bot_starts': starts,
+            'referrals_join': referrals_join,
+            'leads_total': leads_crm + leads_bi_log,
+            'leads_crm': leads_crm,
+            'leads_bi_ok': leads_bi_log,
+            'new_leads_open': Lead.objects.filter(status='new').count(),
             'active_properties': SecondaryProperty.objects.filter(is_active=True).count(),
             'total_users': BotUser.objects.count(),
             'bi_complexes': BIComplex.objects.count(),
         }
 
-        # Последние лиды
-        context['recent_leads'] = Lead.objects.select_related('user').order_by('-created_at')[:5]
+        context['recent_leads'] = Lead.objects.select_related('user').order_by('-created_at')[:8]
 
-        # Данные для графика (лиды за последние 7 дней)
-        week_ago = timezone.now() - timedelta(days=7)
-        leads_by_day = []
-        for i in range(7):
-            day = week_ago + timedelta(days=i)
-            count = Lead.objects.filter(
-                created_at__date=day.date()
-            ).count()
-            leads_by_day.append({
-                'date': day.strftime('%d.%m'),
-                'count': count
-            })
-        context['chart_data'] = leads_by_day
+        chart_qs = leads_qs.annotate(day=TruncDate('created_at')).values('day').annotate(c=Count('id')).order_by('day')
+        context['chart_data'] = [
+            {'date': row['day'].strftime('%d.%m') if row['day'] else '', 'count': row['c']}
+            for row in chart_qs
+        ]
+        if not context['chart_data']:
+            context['chart_data'] = [{'date': date_from.strftime('%d.%m'), 'count': 0}]
+
+        context['chart_data_json'] = json.dumps(context['chart_data'], ensure_ascii=False)
+        context['filter_date_to'] = date_to.isoformat()
+        context['filter_role'] = role_id
+        context['filter_role_id'] = int(role_id) if role_id.isdigit() else None
+        context['filter_platform'] = platform
+        context['filter_property_type'] = prop_type
+        context['filter_market_type'] = market_type
+        context['roles'] = Role.objects.filter(is_active=True).order_by('name')
+
+        # Одноразовые vs возвращающиеся (упрощённо по числу /start за период)
+        repeat_users = (
+            events_qs.filter(event_type=BotProductEvent.EVENT_BOT_START)
+            .values('user_id')
+            .annotate(n=Count('id'))
+            .filter(n__gte=2)
+            .count()
+        )
+        context['user_behavior'] = {
+            'returning_distinct': repeat_users,
+        }
 
         return context
 
@@ -462,6 +552,7 @@ class BotUserDetailView(StaffRequiredMixin, DetailView):
         # Лимиты роли
         role = self.object.role
         if role:
+            context['role_permissions'] = list(role.permissions.values('codename', 'name'))
             context['role_limits'] = {
                 'total': role.limit_total_daily,
                 'apartments': role.limit_apartments_daily,
@@ -472,6 +563,7 @@ class BotUserDetailView(StaffRequiredMixin, DetailView):
             used = today_log.objects_shown if today_log else 0
             context['remaining_today'] = max(0, role.limit_total_daily - used)
         else:
+            context['role_permissions'] = []
             context['role_limits'] = None
             context['remaining_today'] = None
 
@@ -635,6 +727,26 @@ class AssignRoleView(StaffRequiredMixin, View):
         else:
             messages.error(request, 'Ошибка при назначении роли')
         return redirect('dashboard:user_detail', pk=pk)
+
+
+class SurveyAnalyticsView(StaffRequiredMixin, TemplateView):
+    """Аналитика прохождения анкет и ответов."""
+    template_name = 'dashboard/survey_analytics.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        survey_id = self.request.GET.get('survey_id')
+        try:
+            survey_id = int(survey_id) if survey_id else None
+        except ValueError:
+            survey_id = None
+
+        snapshot = SurveyService.analytics_snapshot(survey_id)
+
+        context['surveys'] = FeedbackSurvey.objects.all().order_by('-updated_at')
+        context['selected_survey_id'] = survey_id
+        context['snapshot'] = snapshot
+        return context
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1015,3 +1127,350 @@ class SecondaryCommercialAPIView(View):
             # raw_data — полностью, без купюр
             'raw_data': obj.raw_data,
         }
+
+
+# ======================================================================
+# Анкеты обратной связи (UI-конструктор)
+# ======================================================================
+
+
+class SurveyListView(StaffRequiredMixin, ListView):
+    model = FeedbackSurvey
+    template_name = 'dashboard/survey_list.html'
+    context_object_name = 'surveys'
+    ordering = ['-updated_at']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.annotate(
+            total_submissions=Count('submissions'),
+            completed_count=Count('submissions', filter=Q(submissions__status='completed')),
+        )
+
+
+class SurveyDetailView(StaffRequiredMixin, DetailView):
+    model = FeedbackSurvey
+    template_name = 'dashboard/survey_detail.html'
+    context_object_name = 'survey'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        survey = self.get_object()
+        ctx['questions'] = survey.questions.filter(is_active=True).order_by('order')
+        ctx['analytics'] = SurveyService.analytics_snapshot(survey.id)
+        ctx['total_submissions'] = survey.submissions.count()
+        ctx['completed_submissions'] = survey.submissions.filter(status='completed').count()
+        return ctx
+
+
+class SurveyCreateView(StaffRequiredMixin, View):
+    template_name = 'dashboard/survey_form.html'
+
+    def get(self, request):
+        return self._render(request)
+
+    def post(self, request):
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        motivation_text = request.POST.get('motivation_text', '').strip()
+        bonus_extra_limit = int(request.POST.get('bonus_extra_limit', 0) or 0)
+        trigger_type = request.POST.get('trigger_type', 'manual')
+        trigger_search_count = int(request.POST.get('trigger_search_count', 0) or 0)
+        trigger_objects_count = int(request.POST.get('trigger_objects_count', 0) or 0)
+
+        if not title:
+            messages.error(request, 'Название анкеты обязательно.')
+            return self._render(request)
+
+        survey = FeedbackSurvey.objects.create(
+            title=title,
+            description=description,
+            motivation_text=motivation_text,
+            bonus_extra_limit=bonus_extra_limit,
+            trigger_type=trigger_type,
+            trigger_search_count=trigger_search_count,
+            trigger_objects_count=trigger_objects_count,
+        )
+        messages.success(request, f'Анкета «{survey.title}» создана.')
+        return redirect('dashboard:survey_detail', pk=survey.pk)
+
+    def _render(self, request, **extra):
+        return self._render_template(
+            request,
+            self.template_name,
+            {'action': 'create', 'survey': None, **extra},
+        )
+
+    @staticmethod
+    def _render_template(request, template, ctx):
+        from django.shortcuts import render
+        return render(request, template, ctx)
+
+
+class SurveyEditView(StaffRequiredMixin, View):
+    template_name = 'dashboard/survey_form.html'
+
+    def get(self, request, pk):
+        survey = get_object_or_404(FeedbackSurvey, pk=pk)
+        from django.shortcuts import render
+        return render(request, self.template_name, {'action': 'edit', 'survey': survey})
+
+    def post(self, request, pk):
+        survey = get_object_or_404(FeedbackSurvey, pk=pk)
+        survey.title = request.POST.get('title', survey.title).strip()
+        survey.description = request.POST.get('description', survey.description).strip()
+        survey.motivation_text = request.POST.get('motivation_text', survey.motivation_text).strip()
+        survey.bonus_extra_limit = int(request.POST.get('bonus_extra_limit', survey.bonus_extra_limit) or 0)
+        survey.trigger_type = request.POST.get('trigger_type', survey.trigger_type)
+        survey.trigger_search_count = int(request.POST.get('trigger_search_count', 0) or 0)
+        survey.trigger_objects_count = int(request.POST.get('trigger_objects_count', 0) or 0)
+        survey.save()
+        messages.success(request, 'Анкета обновлена.')
+        return redirect('dashboard:survey_detail', pk=survey.pk)
+
+
+class SurveyDeleteView(StaffRequiredMixin, View):
+    def post(self, request, pk):
+        survey = get_object_or_404(FeedbackSurvey, pk=pk)
+        title = survey.title
+        survey.delete()
+        messages.success(request, f'Анкета «{title}» удалена.')
+        return redirect('dashboard:survey_list')
+
+
+class SurveyToggleView(StaffRequiredMixin, View):
+    def post(self, request, pk):
+        survey = get_object_or_404(FeedbackSurvey, pk=pk)
+        survey.is_active = not survey.is_active
+        survey.save(update_fields=['is_active'])
+        status = 'активирована' if survey.is_active else 'деактивирована'
+        messages.success(request, f'Анкета «{survey.title}» {status}.')
+        return redirect('dashboard:survey_detail', pk=survey.pk)
+
+
+class QuestionCreateView(StaffRequiredMixin, View):
+    def post(self, request, survey_pk):
+        survey = get_object_or_404(FeedbackSurvey, pk=survey_pk)
+        text = request.POST.get('text', '').strip()
+        if not text:
+            messages.error(request, 'Текст вопроса обязателен.')
+            return redirect('dashboard:survey_detail', pk=survey_pk)
+
+        question_type = request.POST.get('question_type', 'text')
+        options_raw = request.POST.get('options', '').strip()
+        is_required = request.POST.get('is_required') == 'on'
+
+        # Парсим варианты ответов (по одному на строку)
+        options = [o.strip() for o in options_raw.splitlines() if o.strip()] if options_raw else []
+
+        # Следующий порядковый номер
+        last_order = survey.questions.aggregate(m=models.Max('order'))['m'] or 0
+
+        FeedbackSurveyQuestion.objects.create(
+            survey=survey,
+            text=text,
+            question_type=question_type,
+            options=options,
+            order=last_order + 1,
+            is_required=is_required,
+        )
+        messages.success(request, 'Вопрос добавлен.')
+        return redirect('dashboard:survey_detail', pk=survey_pk)
+
+
+class QuestionEditView(StaffRequiredMixin, View):
+    def post(self, request, survey_pk, pk):
+        question = get_object_or_404(FeedbackSurveyQuestion, pk=pk, survey_id=survey_pk)
+        question.text = request.POST.get('text', question.text).strip()
+        question.question_type = request.POST.get('question_type', question.question_type)
+        options_raw = request.POST.get('options', '').strip()
+        question.options = [o.strip() for o in options_raw.splitlines() if o.strip()]
+        question.is_required = request.POST.get('is_required') == 'on'
+        question.save()
+        messages.success(request, 'Вопрос обновлён.')
+        return redirect('dashboard:survey_detail', pk=survey_pk)
+
+
+class QuestionDeleteView(StaffRequiredMixin, View):
+    def post(self, request, survey_pk, pk):
+        question = get_object_or_404(FeedbackSurveyQuestion, pk=pk, survey_id=survey_pk)
+        question.delete()
+        # Перенумеровываем оставшиеся вопросы
+        for i, q in enumerate(
+            FeedbackSurveyQuestion.objects.filter(survey_id=survey_pk).order_by('order'), 1
+        ):
+            q.order = i
+            q.save(update_fields=['order'])
+        messages.success(request, 'Вопрос удалён.')
+        return redirect('dashboard:survey_detail', pk=survey_pk)
+
+
+class QuestionReorderView(StaffRequiredMixin, View):
+    """AJAX endpoint: принимает JSON [{id: N, order: M}, ...]"""
+    def post(self, request, survey_pk):
+        try:
+            data = json.loads(request.body)
+            for item in data:
+                FeedbackSurveyQuestion.objects.filter(
+                    pk=item['id'], survey_id=survey_pk
+                ).update(order=item['order'])
+            return JsonResponse({'ok': True})
+        except Exception as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+
+
+# ======================================================================
+# Тексты бота (BotText)
+# ======================================================================
+
+class BotTextListView(StaffRequiredMixin, ListView):
+    model = BotText
+    template_name = 'dashboard/bot_text_list.html'
+    context_object_name = 'bot_texts'
+    ordering = ['key', 'channel', 'locale']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(Q(key__icontains=q) | Q(text__icontains=q) | Q(description__icontains=q))
+        return qs
+
+
+class BotTextEditView(StaffRequiredMixin, View):
+    template_name = 'dashboard/bot_text_edit.html'
+
+    def get(self, request, pk):
+        bot_text = get_object_or_404(BotText, pk=pk)
+        from django.shortcuts import render
+        return render(request, self.template_name, {'bot_text': bot_text})
+
+    def post(self, request, pk):
+        bot_text = get_object_or_404(BotText, pk=pk)
+        bot_text.text = request.POST.get('text', bot_text.text)
+        bot_text.description = request.POST.get('description', bot_text.description)
+        bot_text.is_active = request.POST.get('is_active') == 'on'
+        bot_text.save()
+
+        # Инвалидируем кэш для этого ключа
+        from django.core.cache import cache
+        from core.services.bot_text_service import BotTextService
+        cache.delete(BotTextService._cache_key(bot_text.key, bot_text.channel, bot_text.locale))
+
+        messages.success(request, f'Текст «{bot_text.key}» обновлён и применён немедленно.')
+        return redirect('dashboard:bot_text_list')
+
+
+# ======================================================================
+# Логи лидов BI Group CRM
+# ======================================================================
+
+class LeadAnalyticsView(StaffRequiredMixin, TemplateView):
+    """Аналитика лидов (ТЗ п.6)."""
+
+    template_name = 'dashboard/lead_analytics.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        default_from = today - timedelta(days=90)
+        df = self.request.GET.get('date_from') or default_from.isoformat()
+        dt = self.request.GET.get('date_to') or today.isoformat()
+        try:
+            date_from = timezone.datetime.fromisoformat(df).date()
+        except ValueError:
+            date_from = default_from
+        try:
+            date_to = timezone.datetime.fromisoformat(dt).date()
+        except ValueError:
+            date_to = today
+        if date_from > date_to:
+            date_from, date_to = date_to, date_from
+        start_dt = timezone.make_aware(timezone.datetime.combine(date_from, timezone.datetime.min.time()))
+        end_dt = timezone.make_aware(timezone.datetime.combine(date_to, timezone.datetime.max.time()))
+
+        leads = (
+            Lead.objects.filter(created_at__range=(start_dt, end_dt))
+            .select_related('user')
+            .order_by('-created_at')[:500]
+        )
+        ctx['leads'] = leads
+        ctx['total_leads'] = Lead.objects.filter(created_at__range=(start_dt, end_dt)).count()
+        ctx['by_developer'] = (
+            Lead.objects.filter(created_at__range=(start_dt, end_dt))
+            .exclude(developer='')
+            .values('developer')
+            .annotate(c=Count('id'))
+            .order_by('-c')[:25]
+        )
+        ctx['by_complex'] = (
+            Lead.objects.filter(created_at__range=(start_dt, end_dt))
+            .exclude(residential_complex='')
+            .values('residential_complex')
+            .annotate(c=Count('id'))
+            .order_by('-c')[:25]
+        )
+        ctx['bi_log'] = BIGroupLeadLog.objects.filter(created_at__range=(start_dt, end_dt)).order_by('-created_at')[:200]
+        ctx['bi_log_total'] = BIGroupLeadLog.objects.filter(created_at__range=(start_dt, end_dt)).count()
+        ctx['chart_leads'] = (
+            Lead.objects.filter(created_at__range=(start_dt, end_dt))
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(c=Count('id'))
+            .order_by('day')
+        )
+        ctx['filter_date_from'] = date_from.isoformat()
+        ctx['filter_date_to'] = date_to.isoformat()
+        return ctx
+
+
+class ReferralAnalyticsView(StaffRequiredMixin, TemplateView):
+    """Аналитика рефералов (ТЗ п.10)."""
+
+    template_name = 'dashboard/referral_analytics.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['total_invited'] = BotUser.objects.exclude(invited_by__isnull=True).count()
+        ctx['referral_join_events'] = BotProductEvent.objects.filter(event_type='referral_join').count()
+        ctx['top_referrers'] = (
+            BotUser.objects.annotate(invited_count=Count('referrals'))
+            .filter(invited_count__gt=0)
+            .select_related('role')
+            .order_by('-invited_count')[:40]
+        )
+        ctx['recent_invited'] = (
+            BotUser.objects.exclude(invited_by__isnull=True)
+            .select_related('invited_by', 'role')
+            .order_by('-created_at')[:50]
+        )
+        return ctx
+
+
+class BIGroupLeadLogView(StaffRequiredMixin, ListView):
+    model = BIGroupLeadLog
+    template_name = 'dashboard/bigroup_lead_log.html'
+    context_object_name = 'logs'
+    paginate_by = 50
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        status = self.request.GET.get('status')
+        if status == 'success':
+            qs = qs.filter(success=True)
+        elif status == 'fail':
+            qs = qs.filter(success=False)
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(phone__icontains=q) | Q(complex_name__icontains=q))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['total'] = BIGroupLeadLog.objects.count()
+        ctx['success_count'] = BIGroupLeadLog.objects.filter(success=True).count()
+        ctx['fail_count'] = BIGroupLeadLog.objects.filter(success=False).count()
+        ctx['filter_status'] = self.request.GET.get('status', '')
+        ctx['filter_q'] = self.request.GET.get('q', '')
+        return ctx

@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Редактировать текст — {{ bot_text.key }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <a href="{% url 'dashboard:bot_text_list' %}" class="btn btn-outline-secondary btn-sm me-3"><i class="fas fa-arrow-left"></i></a>
+    <div>
+        <h1 class="h3 mb-0">Редактировать текст</h1>
+        <small class="text-muted"><code>{{ bot_text.key }}</code> | канал: {{ bot_text.channel }} | язык: {{ bot_text.locale }}</small>
+    </div>
+</div>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm" style="max-width:800px">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Текст сообщения</label>
+                <textarea name="text" class="form-control font-monospace" rows="8" placeholder="Текст бота...">{{ bot_text.text }}</textarea>
+                <small class="text-muted">
+                    Поддерживаются форматные плейсхолдеры: <code>{name}</code>, <code>{count}</code>, <code>{title}</code>, <code>{phone}</code>, <code>{bonus}</code>, <code>{category}</code> и т.д.
+                    Изменения применяются немедленно (кэш сбрасывается автоматически).
+                </small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Описание (внутреннее)</label>
+                <input type="text" name="description" class="form-control" value="{{ bot_text.description }}" placeholder="Для чего используется этот текст">
+            </div>
+            <div class="form-check mb-4">
+                <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {% if bot_text.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="isActive">Активен (используется в боте)</label>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Сохранить и применить</button>
+                <a href="{% url 'dashboard:bot_text_list' %}" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

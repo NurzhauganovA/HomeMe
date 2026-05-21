@@ -6,11 +6,18 @@ from shutil import which
 from pydub import AudioSegment
 
 from core.location_resolver import DynamicLocationResolver
-from telegram_bot.models import BotUser, UserSession, Lead, FavoriteProperty
+from telegram_bot.models import BotUser, UserSession, Lead, FavoriteProperty, BotProductEvent
 from core.dto import PropertyDTO
 from core.services.ai_service import EnhancedAIService
 from core.services.search_service import EnhancedSearchService
 from core.services.limit_service import LimitService
+from core.services.permission_service import PermissionService
+from core.services.bot_text_service import BotTextService
+from core.services.survey_service import SurveyService
+from core.services.product_analytics_service import ProductAnalyticsService
+from core.services import referral_service
+from core.services.lead_context import snapshot_for_expert_lead
+from dashboard.models import FeedbackSurveySubmission
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +28,66 @@ class EnhancedDialogManager:
         self.search = EnhancedSearchService(self.ai)
         self.location_resolver = DynamicLocationResolver(self.ai)
 
-    async def process_message(self, user_id, platform, text, user_name=None, is_voice: bool = False):
-        user, _ = await sync_to_async(BotUser.objects.get_or_create)(
+    async def _check_permission(self, user, codename: str):
+        allowed, message = await sync_to_async(PermissionService.assert_permission)(user, codename)
+        if allowed:
+            return True, None
+        return False, {
+            'text': message,
+            'buttons': ['В главное меню']
+        }
+
+    async def process_message(self, user_id, platform, text, user_name=None, is_voice: bool = False, telegram_username=None):
+        user, created = await sync_to_async(BotUser.objects.get_or_create)(
             user_id=str(user_id),
             platform=platform,
             defaults={'name': user_name}
         )
+        if telegram_username and getattr(user, 'username', None) != telegram_username:
+            user.username = (telegram_username or '')[:100]
+            await sync_to_async(user.save)(update_fields=['username'])
+
+        await sync_to_async(referral_service.ensure_referral_code)(user)
+
+        start_arg = referral_service.parse_start_argument(text)
+        if start_arg:
+            attached = await sync_to_async(referral_service.try_attach_referrer)(user, start_arg)
+            if attached:
+                await sync_to_async(ProductAnalyticsService.record)(
+                    user, 'referral_join',
+                    payload={'start_arg': start_arg},
+                    search_params=None,
+                )
+
         session, _ = await sync_to_async(UserSession.objects.get_or_create)(user=user)
+
+        has_bot_access, denied_response = await self._check_permission(user, 'use_bot')
+        if not has_bot_access:
+            return denied_response
 
         state = session.current_intent or 'START'
         params = session.search_params or {}
 
         response = {'text': '', 'buttons': [], 'objects': []}
 
-        # Глобальные команды
-        if text.lower() in ['/start', 'привет', 'меню', 'start', 'reset', 'в главное меню']:
+        # Глобальные команды (/start с аргументом реферала — тоже сюда)
+        raw_cmd = (text or '').strip()
+        low_cmd = raw_cmd.lower()
+        is_root_menu = low_cmd in ['/start', 'привет', 'меню', 'start', 'reset', 'в главное меню'] or low_cmd.startswith('/start')
+        if is_root_menu:
+            await sync_to_async(ProductAnalyticsService.record)(
+                user,
+                BotProductEvent.EVENT_BOT_START,
+                payload={'is_new_user': created, 'cmd': raw_cmd[:120]},
+                search_params=None,
+            )
             await self._update_state(session, 'START', {})
             return self._scenario_start(user.name or 'друг')
+
+        # Ветка прохождения анкеты обратной связи
+        if state == 'SURVEY_IN_PROGRESS':
+            survey_response = await self._handle_survey_step(user, session, text)
+            return self._ensure_main_menu_button(survey_response, state)
 
         # Голосовые сообщения: используем AI для извлечения параметров
         if is_voice:
@@ -68,16 +118,38 @@ class EnhancedDialogManager:
                 response['text'] = "Про какой район рассказать? (Выберите район или берег)"
                 response['buttons'] = self._location_buttons()
 
+            elif 'поделиться' in lowered_text or 'реферал' in lowered_text or 'приглас' in lowered_text or '🔗' in text:
+                code = await sync_to_async(referral_service.ensure_referral_code)(user)
+                link = referral_service.build_telegram_referral_link(code)
+                response['text'] = BotTextService.get(
+                    'referral.invite',
+                    fallback='👥 Поделитесь ботом с друзьями.\nВаша персональная ссылка:\n{link}',
+                    link=link,
+                )
+                response['buttons'] = ['В главное меню']
+
             elif text == '3' or 'эксперт' in lowered_text:
+                allowed, denied = await self._check_permission(user, 'request_consultation')
+                if not allowed:
+                    return denied
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = "Я соединю тебя с экспертом. Как к тебе обращаться?"
+                response['text'] = BotTextService.get(
+                    "lead.ask_name",
+                    fallback="Я соединю тебя с экспертом. Как к тебе обращаться?",
+                )
 
             elif 'избран' in lowered_text:
+                allowed, denied = await self._check_permission(user, 'manage_favorites')
+                if not allowed:
+                    return denied
                 favorites = await sync_to_async(
                     lambda: list(FavoriteProperty.objects.filter(user=user).order_by('-created_at'))
                 )()
                 if favorites:
-                    response['text'] = "⭐ Ваши избранные объекты:\n\nНажмите 🗑 Удалить на карточке объекта, чтобы убрать из избранного."
+                    response['text'] = BotTextService.get(
+                        "favorites.list",
+                        fallback="⭐ Ваши избранные объекты:\n\nНажмите 🗑 Удалить на карточке объекта, чтобы убрать из избранного.",
+                    )
                     dtos = []
                     for item in favorites:
                         dto = PropertyDTO.from_dict(item.data)
@@ -85,7 +157,10 @@ class EnhancedDialogManager:
                         dtos.append(dto)
                     response['objects'] = dtos
                 else:
-                    response['text'] = "⭐ Избранное пока пустое."
+                    response['text'] = BotTextService.get(
+                        "favorites.empty",
+                        fallback="⭐ Избранное пока пустое.",
+                    )
                 response['buttons'] = ['В главное меню']
                 await self._update_state(session, 'START', params)
 
@@ -459,6 +534,9 @@ class EnhancedDialogManager:
         elif state == 'COMPLEX_RESULTS':
             lowered_text = text.lower()
             if lowered_text in ['показать еще', 'показать ещё', 'еще', 'ещё', 'показать больше']:
+                allowed, denied = await self._check_permission(user, 'search_properties')
+                if not allowed:
+                    return denied
                 search_result = await sync_to_async(
                     self.search.search_complexes,
                     thread_sensitive=False
@@ -475,6 +553,14 @@ class EnhancedDialogManager:
                         thread_sensitive=False
                     )(params, complexes)
                     mapped = self._filter_seen_objects(params, mapped)
+                    mapped, _, blocked = await sync_to_async(
+                        LimitService.apply_limit
+                    )(user, mapped, params)
+                    if blocked or not mapped:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return response
                     response['objects'] = mapped
                     allowed_ids = {obj.object_id for obj in mapped if obj.object_id}
                     complexes_for_candidates = [c for c in complexes if c.bi_uuid in allowed_ids]
@@ -485,6 +571,7 @@ class EnhancedDialogManager:
                     await self._update_state(session, 'COMPLEX_RESULTS', params)
                     response['text'] = "Еще варианты: 👇"
                     response['buttons'] = self._complex_action_buttons(params)
+                    await self._emit_show_more(user, params)
                 else:
                     response['text'] = "Больше вариантов нет. Можешь выбрать ЖК/БЦ из списка."
                     response['buttons'] = self._complex_action_buttons(params)
@@ -521,6 +608,14 @@ class EnhancedDialogManager:
                 if results:
                     raw_count = len(results)
                     results = self._filter_seen_objects(params, results)
+                    results, _, blocked = await sync_to_async(
+                        LimitService.apply_limit
+                    )(user, results, params)
+                    if blocked or not results:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return response
                     params['offset'] = raw_count
                     await self._update_state(session, 'BROWSING_UNITS', params)
                     response['text'] = f"Вот варианты по {selected.get('name')}:"
@@ -561,18 +656,19 @@ class EnhancedDialogManager:
                             filtered, remaining, _ = await sync_to_async(
                                 LimitService.apply_limit)(user, filtered, params)
                             if filtered:
-                                response['text'] = "Вот еще варианты: 👇"
+                                response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
                                 response['objects'] = filtered
                                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                                await self._emit_show_more(user, params)
                             else:
                                 msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
                                 response['text'] = msg
                                 response['buttons'] = ['В главное меню']
                         else:
-                            response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                            response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                             response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                        response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                         response['buttons'] = ['Изменить параметры поиска']
                 else:
                     current_offset = params.get('offset', 0)
@@ -593,32 +689,42 @@ class EnhancedDialogManager:
                             filtered, remaining, _ = await sync_to_async(
                                 LimitService.apply_limit)(user, filtered, params)
                             if filtered:
-                                response['text'] = "Вот еще варианты: 👇"
+                                response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
                                 response['objects'] = filtered
                                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
+                                await self._emit_show_more(user, params)
                             else:
                                 msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
                                 response['text'] = msg
                                 response['buttons'] = ['В главное меню']
                         else:
-                            response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                            response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                             response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = "Больше вариантов по вашему запросу нет. 🤷‍♂️"
+                        response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                         response['buttons'] = ['Изменить параметры поиска']
 
             elif 'бюджет' in text.lower() or 'параметр' in text.lower() or 'изменить' in text.lower():
                 response = await self._enter_edit_params_menu(session, params)
 
             elif 'эксперт' in text.lower():
+                allowed, denied = await self._check_permission(user, 'request_consultation')
+                if not allowed:
+                    return denied
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = "Как к тебе обращаться?"
+                response['text'] = BotTextService.get(
+                    "lead.ask_name",
+                    fallback="Я соединю тебя с экспертом. Как к тебе обращаться?",
+                )
             else:
                 return self._scenario_start(user.name)
 
         elif state == 'BROWSING_UNITS':
             lowered_text = text.lower()
             if lowered_text in ['показать еще', 'показать ещё', 'еще', 'дальше', 'ещё']:
+                allowed, denied = await self._check_permission(user, 'search_properties')
+                if not allowed:
+                    return denied
                 current_offset = params.get('offset', 0)
                 selected_id = params.get('selected_complex_id')
 
@@ -630,13 +736,22 @@ class EnhancedDialogManager:
                 if results:
                     raw_count = len(results)
                     results = self._filter_seen_objects(params, results)
+                    results, _, blocked = await sync_to_async(
+                        LimitService.apply_limit
+                    )(user, results, params)
+                    if blocked or not results:
+                        msg = await sync_to_async(LimitService.limit_exceeded_message)(user)
+                        response['text'] = msg
+                        response['buttons'] = ['В главное меню']
+                        return self._ensure_main_menu_button(response, state)
                     params['offset'] = current_offset + raw_count
                     await self._update_state(session, 'BROWSING_UNITS', params)
-                    response['text'] = "Вот еще варианты: 👇"
+                    response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
                     response['objects'] = results
                     response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры поиска']
+                    await self._emit_show_more(user, params)
                 else:
-                    response['text'] = "Варианты по этому ЖК/БЦ закончились. 🤷‍♂️"
+                    response['text'] = BotTextService.get("search.no_more", fallback="Варианты по этому ЖК/БЦ закончились. 🤷‍♂️")
                     response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры поиска']
 
             elif 'другой' in lowered_text:
@@ -725,17 +840,36 @@ class EnhancedDialogManager:
         elif state == 'NO_RESULTS':
             if 'эксперт' in text.lower():
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = "Как тебя зовут?"
+                response['text'] = BotTextService.get(
+                    "lead.ask_name",
+                    fallback="Как тебя зовут?",
+                )
             else:
                 response = await self._enter_edit_params_menu(session, params)
 
         elif state == 'LEAD_NAME':
+            allowed, denied = await self._check_permission(user, 'request_consultation')
+            if not allowed:
+                return denied
+            snap = snapshot_for_expert_lead(session.search_params or {})
             await sync_to_async(Lead.objects.create)(
                 user=user,
                 request_text=f"Заявка на эксперта. Контекст поиска: {session.search_params}",
-                status='new'
+                status='new',
+                search_params=session.search_params or {},
+                **snap,
             )
-            response['text'] = f"Спасибо, {text}! Менеджер скоро свяжется. 📞"
+            await sync_to_async(ProductAnalyticsService.record)(
+                user,
+                'lead_expert_request',
+                payload={'client_name': (text or '')[:120]},
+                search_params=session.search_params or {},
+            )
+            response['text'] = BotTextService.get(
+                "lead.submitted",
+                fallback="Спасибо, {name}! Менеджер скоро свяжется. 📞",
+                name=text,
+            )
             response['buttons'] = ['В главное меню']
             await self._update_state(session, 'START', {})
 
@@ -754,7 +888,78 @@ class EnhancedDialogManager:
         if response.get('objects'):
             await self._cache_last_objects(session, response['objects'])
 
+            # Автоматический триггер показа анкеты после выдачи объектов
+            should_start = await SurveyService.should_start_survey(user)
+            if should_start:
+                submission = await SurveyService.start_survey(user)
+                if submission:
+                    params = session.search_params or {}
+                    params['survey_submission_id'] = submission.id
+                    await self._update_state(session, 'SURVEY_IN_PROGRESS', params)
+                    question = await SurveyService.get_next_question(submission)
+                    if question:
+                        response['text'] = (
+                            f"{response.get('text', '')}\n\n"
+                            f"📝 {submission.survey.motivation_text or 'Ответьте на короткую анкету, пожалуйста.'}\n\n"
+                            f"{SurveyService.question_prompt(question)}"
+                        ).strip()
+                        response['buttons'] = SurveyService.question_buttons(question) + ['В главное меню']
+
         return self._ensure_main_menu_button(response, state)
+
+    async def _handle_survey_step(self, user, session, text):
+        params = session.search_params or {}
+        submission_id = params.get('survey_submission_id')
+        if not submission_id:
+            await self._update_state(session, 'START', params)
+            return self._scenario_start(user.name or 'друг')
+
+        submission = await sync_to_async(
+            lambda: FeedbackSurveySubmission.objects.select_related('survey').filter(id=submission_id, user=user).first()
+        )()
+        if not submission:
+            await self._update_state(session, 'START', params)
+            return self._scenario_start(user.name or 'друг')
+
+        question = await SurveyService.get_next_question(submission)
+        if not question:
+            await SurveyService.complete_survey(submission)
+            params.pop('survey_submission_id', None)
+            await self._update_state(session, 'START', params)
+            bonus = submission.survey.bonus_extra_limit
+            bonus_text = ""
+            if bonus > 0:
+                bonus_text = f"\n🎁 Бонус начислен: +{bonus} к суточному лимиту."
+            return {
+                'text': f"Спасибо! Анкета завершена.{bonus_text}",
+                'buttons': ['В главное меню']
+            }
+
+        ok, error = await SurveyService.save_answer(submission, question, text)
+        if not ok:
+            return {
+                'text': error,
+                'buttons': SurveyService.question_buttons(question) + ['В главное меню']
+            }
+
+        next_question = await SurveyService.get_next_question(submission)
+        if not next_question:
+            await SurveyService.complete_survey(submission)
+            params.pop('survey_submission_id', None)
+            await self._update_state(session, 'START', params)
+            bonus = submission.survey.bonus_extra_limit
+            bonus_text = ""
+            if bonus > 0:
+                bonus_text = f"\n🎁 Бонус начислен: +{bonus} к суточному лимиту."
+            return {
+                'text': f"Спасибо! Анкета завершена.{bonus_text}",
+                'buttons': ['В главное меню']
+            }
+
+        return {
+            'text': SurveyService.question_prompt(next_question),
+            'buttons': SurveyService.question_buttons(next_question) + ['В главное меню']
+        }
 
     async def _cache_last_objects(self, session, objects):
         if not objects:
@@ -788,7 +993,7 @@ class EnhancedDialogManager:
         complexes = search_result or []
         return complexes, fallback_offset + len(complexes)
 
-    async def process_voice(self, user_id, platform, voice_file_object, user_name=None):
+    async def process_voice(self, user_id, platform, voice_file_object, user_name=None, telegram_username=None):
         """
         Обрабатывает голосовое сообщение:
         1. Скачивает байты.
@@ -841,7 +1046,9 @@ class EnhancedDialogManager:
             logger.info(f"🗣 Voice recognized as: '{text}' -> '{normalized_text}' -> Delegating to process_message")
 
             # Добавляем пометку (🎤), чтобы юзер видел, как мы его поняли
-            response = await self.process_message(user_id, platform, normalized_text, user_name, is_voice=True)
+            response = await self.process_message(
+                user_id, platform, normalized_text, user_name, is_voice=True, telegram_username=telegram_username
+            )
 
             # Модифицируем ответ, добавляя расшифровку
             original_text = response.get('text', '')
@@ -903,14 +1110,26 @@ class EnhancedDialogManager:
 
     def _scenario_start(self, name):
         return {
-            'text': f"Привет, {name}!\nЯ HomeMe - ИИ-агент по недвижимости в Астане 🏠.\nПомогу подобрать новостройки BI Group и вторичку, а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?",
-            'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы']
+            'text': BotTextService.get(
+                "start.welcome",
+                fallback=(
+                    "Привет, {name}!\n"
+                    "Я HomeMe - ИИ-агент по недвижимости в Астане 🏠.\n"
+                    "Помогу подобрать новостройки BI Group и вторичку, "
+                    "а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?"
+                ),
+                name=name,
+            ),
+            'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы', '🔗 Поделиться с другом']
         }
 
     @staticmethod
     def _quota_response():
         return {
-            'text': "Лимит запросов к AI исчерпан. 😔 Попробуйте позже или напишите текстом."
+            'text': BotTextService.get(
+                "error.ai_quota_exceeded",
+                fallback="Лимит запросов к AI исчерпан. 😔 Попробуйте позже или напишите текстом.",
+            )
         }
 
     def _format_intro(self, results, params):
@@ -918,9 +1137,21 @@ class EnhancedDialogManager:
         secondary_category = params.get('secondary_category')
         if source == 'secondary':
             if secondary_category == 'commercial':
-                return f"Нашел {len(results)} коммерческих объектов на вторичном рынке: 👇"
-            return f"Нашел {len(results)} квартир на вторичном рынке: 👇"
-        return f"Нашел {len(results)} вариантов: 👇"
+                return BotTextService.get(
+                    "search.results.secondary_commercial",
+                    fallback="Нашел {count} коммерческих объектов на вторичном рынке: 👇",
+                    count=len(results),
+                )
+            return BotTextService.get(
+                "search.results.secondary_apartments",
+                fallback="Нашел {count} квартир на вторичном рынке: 👇",
+                count=len(results),
+            )
+        return BotTextService.get(
+            "search.results.default",
+            fallback="Нашел {count} вариантов: 👇",
+            count=len(results),
+        )
 
     def _has_search_intent(self, params: dict, text: str) -> bool:
         keywords = ['найди', 'поиск', 'квартира', 'жк', 'офис', 'помещение', 'вторич']
@@ -972,6 +1203,11 @@ class EnhancedDialogManager:
         params['offset'] = 0
         params['city'] = 'Astana'
         params['seen_object_ids'] = []
+
+        if user is not None:
+            allowed, denied = await self._check_permission(user, 'search_properties')
+            if not allowed:
+                return denied
 
         # Проверяем лимит ДО поиска
         if user is not None:
@@ -1117,7 +1353,41 @@ class EnhancedDialogManager:
                     )
                 response['buttons'] = ['Изменить параметры поиска']
 
+        if user is not None:
+            await self._emit_search_analytics(user, params, response)
         return response
+
+    async def _emit_show_more(self, user, params):
+        await sync_to_async(ProductAnalyticsService.record)(
+            user,
+            BotProductEvent.EVENT_SHOW_MORE,
+            payload={},
+            search_params=params,
+        )
+
+    async def _emit_search_analytics(self, user, params, response):
+        text = (response.get('text') or '').lower()
+        objs = response.get('objects') or []
+        n = len(objs)
+        raw = response.get('text') or ''
+        if 'лимит' in text or 'исчерп' in text or '⛔' in raw:
+            await sync_to_async(ProductAnalyticsService.record)(
+                user, 'limit_hit', payload={}, search_params=params)
+            return
+        if n > 0:
+            await sync_to_async(ProductAnalyticsService.record)(
+                user,
+                BotProductEvent.EVENT_SEARCH,
+                payload={'results_count': n},
+                search_params=params,
+            )
+        elif 'ничего не найдено' in text or 'не удалось найти' in text:
+            await sync_to_async(ProductAnalyticsService.record)(
+                user,
+                BotProductEvent.EVENT_NO_RESULTS,
+                payload={},
+                search_params=params,
+            )
 
     @staticmethod
     def _serialize_complexes(complexes):

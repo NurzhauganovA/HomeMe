@@ -106,6 +106,63 @@
             </div>
         </div>
 
+        {% if lead.lead_source or lead.developer or lead.residential_complex or lead.district or lead.property_type_label or lead.market_type_label or lead.budget_display %}
+        <div class="table-card mb-4">
+            <div class="table-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-briefcase me-2"></i>
+                    CRM-снимок (на момент заявки)
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    {% if lead.lead_source %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Источник</div>
+                        <div class="fw-semibold">{{ lead.lead_source }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.developer %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Застройщик</div>
+                        <div class="fw-semibold">{{ lead.developer }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.residential_complex %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">ЖК / объект</div>
+                        <div class="fw-semibold">{{ lead.residential_complex }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.district %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Район</div>
+                        <div class="fw-semibold">{{ lead.district }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.property_type_label %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Тип недвижимости</div>
+                        <div class="fw-semibold">{{ lead.property_type_label }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.market_type_label %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Рынок</div>
+                        <div class="fw-semibold">{{ lead.market_type_label }}</div>
+                    </div>
+                    {% endif %}
+                    {% if lead.budget_display %}
+                    <div class="col-md-6">
+                        <div class="text-muted small mb-1">Бюджет</div>
+                        <div class="fw-semibold">{{ lead.budget_display }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Search Parameters Card -->
         {% if lead.search_params %}
         <div class="table-card">

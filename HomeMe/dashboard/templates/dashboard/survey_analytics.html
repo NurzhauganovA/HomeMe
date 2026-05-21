@@ -1,0 +1,87 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Анкеты и аналитика{% endblock %}
+
+{% block content %}
+<div class="table-card mb-4">
+    <div class="table-header">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Выбор анкеты</h5>
+    </div>
+    <div class="p-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label small fw-semibold text-muted">Анкета</label>
+                <select class="form-select" name="survey_id" onchange="this.form.submit()">
+                    <option value="">Последняя активная анкета</option>
+                    {% for s in surveys %}
+                        <option value="{{ s.id }}" {% if selected_survey_id == s.id %}selected{% endif %}>
+                            {{ s.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'dashboard:survey_analytics' %}" class="btn btn-outline-secondary w-100">Сбросить</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if snapshot %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Анкета</div>
+                <div class="stat-value" style="font-size:1.3rem;">{{ snapshot.survey.title }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Начато</div>
+                <div class="stat-value">{{ snapshot.started_count }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-label">Завершено</div>
+                <div class="stat-value">{{ snapshot.completed_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-header">
+            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Распределение ответов</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Вопрос</th>
+                        <th>Ответ</th>
+                        <th>Количество</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in snapshot.distribution %}
+                    <tr>
+                        <td>{{ row.question__text }}</td>
+                        <td>{{ row.answer_text|default:"(пусто)" }}</td>
+                        <td><span class="badge bg-primary">{{ row.count }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">Ответов пока нет</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="table-card text-center py-5">
+        <i class="fas fa-poll fa-3x text-muted opacity-25 mb-3"></i>
+        <p class="text-muted mb-0">Нет активной анкеты или данных для отображения.</p>
+    </div>
+{% endif %}
+{% endblock %}

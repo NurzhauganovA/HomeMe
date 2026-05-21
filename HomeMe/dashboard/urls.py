@@ -40,6 +40,32 @@ urlpatterns = [
     # Разрешения
     path('permissions/', views.PermissionListView.as_view(), name='permission_list'),
 
+    # Анкеты (UI-конструктор)
+    path('surveys/', views.SurveyListView.as_view(), name='survey_list'),
+    path('surveys/create/', views.SurveyCreateView.as_view(), name='survey_create'),
+    path('surveys/<int:pk>/', views.SurveyDetailView.as_view(), name='survey_detail'),
+    path('surveys/<int:pk>/edit/', views.SurveyEditView.as_view(), name='survey_edit'),
+    path('surveys/<int:pk>/delete/', views.SurveyDeleteView.as_view(), name='survey_delete'),
+    path('surveys/<int:pk>/toggle/', views.SurveyToggleView.as_view(), name='survey_toggle'),
+    path('surveys/<int:survey_pk>/questions/add/', views.QuestionCreateView.as_view(), name='question_create'),
+    path('surveys/<int:survey_pk>/questions/<int:pk>/edit/', views.QuestionEditView.as_view(), name='question_edit'),
+    path('surveys/<int:survey_pk>/questions/<int:pk>/delete/', views.QuestionDeleteView.as_view(), name='question_delete'),
+    path('surveys/<int:survey_pk>/questions/reorder/', views.QuestionReorderView.as_view(), name='question_reorder'),
+
+    # Аналитика анкет
+    path('survey-analytics/', views.SurveyAnalyticsView.as_view(), name='survey_analytics'),
+
+    # Тексты бота
+    path('bot-texts/', views.BotTextListView.as_view(), name='bot_text_list'),
+    path('bot-texts/<int:pk>/edit/', views.BotTextEditView.as_view(), name='bot_text_edit'),
+
+    # Аналитика (ТЗ)
+    path('analytics/leads/', views.LeadAnalyticsView.as_view(), name='lead_analytics'),
+    path('analytics/referrals/', views.ReferralAnalyticsView.as_view(), name='referral_analytics'),
+
+    # Логи BI Group CRM
+    path('bigroup-leads/', views.BIGroupLeadLogView.as_view(), name='bigroup_lead_log'),
+
     # Выход
     path('logout/', LogoutView.as_view(next_page='/admin/login/'), name='logout'),
 ]

@@ -1,0 +1,78 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if action == 'edit' %}Редактировать анкету{% else %}Новая анкета{% endif %} — HomeMe{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <a href="{% url 'dashboard:survey_list' %}" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="h3 mb-0">{% if action == 'edit' %}Редактировать: {{ survey.title }}{% else %}Новая анкета{% endif %}</h1>
+</div>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Название <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" required value="{{ survey.title|default:'' }}" placeholder="Например: Обратная связь о поиске">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Описание (внутреннее)</label>
+                    <textarea name="description" class="form-control" rows="2" placeholder="Для чего эта анкета...">{{ survey.description|default:'' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Текст мотивации (показывается пользователю)</label>
+                    <textarea name="motivation_text" class="form-control" rows="2" placeholder="Ответьте на 3 вопроса и получите бонус!">{{ survey.motivation_text|default:'' }}</textarea>
+                    <small class="text-muted">Этот текст отображается перед первым вопросом в боте.</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Бонус за прохождение (объектов)</label>
+                    <input type="number" name="bonus_extra_limit" class="form-control" min="0" value="{{ survey.bonus_extra_limit|default:0 }}">
+                    <small class="text-muted">0 = без бонуса</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Момент показа</label>
+                    <select name="trigger_type" class="form-select" id="triggerType">
+                        {% with t=survey.trigger_type|default:'manual' %}
+                        <option value="manual" {% if t == 'manual' %}selected{% endif %}>Только вручную</option>
+                        <option value="search_count" {% if t == 'search_count' %}selected{% endif %}>После N поисков</option>
+                        <option value="objects_count" {% if t == 'objects_count' %}selected{% endif %}>После N объектов</option>
+                        {% endwith %}
+                    </select>
+                </div>
+                <div class="col-md-2" id="searchCountBlock" style="display:none">
+                    <label class="form-label fw-semibold">После N поисков</label>
+                    <input type="number" name="trigger_search_count" class="form-control" min="0" value="{{ survey.trigger_search_count|default:0 }}">
+                </div>
+                <div class="col-md-2" id="objectsCountBlock" style="display:none">
+                    <label class="form-label fw-semibold">После N объектов</label>
+                    <input type="number" name="trigger_objects_count" class="form-control" min="0" value="{{ survey.trigger_objects_count|default:0 }}">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-save me-1"></i> Сохранить
+                </button>
+                <a href="{% url 'dashboard:survey_list' %}" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateTriggerBlocks() {
+    const val = document.getElementById('triggerType').value;
+    document.getElementById('searchCountBlock').style.display = val === 'search_count' ? '' : 'none';
+    document.getElementById('objectsCountBlock').style.display = val === 'objects_count' ? '' : 'none';
+}
+document.getElementById('triggerType').addEventListener('change', updateTriggerBlocks);
+updateTriggerBlocks();
+</script>
+{% endblock %}

@@ -61,6 +61,25 @@ class BotUser(models.Model):
         verbose_name="Роль"
     )
 
+    # Реферальная система (ТЗ п.10)
+    referral_code = models.CharField(
+        "Реферальный код",
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Уникальный код для ссылки t.me/bot?start=ref_CODE",
+    )
+    invited_by = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="referrals",
+        verbose_name="Пригласивший",
+    )
+
     # Настройки
     is_active = models.BooleanField(default=True)
     language = models.CharField(
@@ -234,6 +253,21 @@ class Lead(models.Model):
         help_text="0 = обычный, 5 = срочный"
     )
 
+    # Журнал для аналитики лидов (ТЗ п.6.1) — денормализация для отчётов
+    lead_source = models.CharField(
+        "Источник лида",
+        max_length=40,
+        blank=True,
+        db_index=True,
+        help_text="expert_request, bi_primary_contact и т.п.",
+    )
+    developer = models.CharField("Застройщик", max_length=120, blank=True)
+    residential_complex = models.CharField("ЖК / объект", max_length=255, blank=True)
+    district = models.CharField("Район", max_length=120, blank=True)
+    property_type_label = models.CharField("Тип недвижимости", max_length=80, blank=True)
+    market_type_label = models.CharField("Тип рынка", max_length=80, blank=True)
+    budget_display = models.CharField("Бюджет (текст)", max_length=160, blank=True)
+
     class Meta:
         verbose_name = "Лид"
         verbose_name_plural = "Лиды"
@@ -402,6 +436,57 @@ class SecondaryProperty(models.Model):
     def get_full_text(self) -> str:
         """Возвращает полный текст для векторизации"""
         return f"{self.title}. {self.description}. Адрес: {self.address}. {self.city or ''}. {self.district or ''}"
+
+
+class BotProductEvent(models.Model):
+    """
+    Продуктовая аналитика (ТЗ п.4) — события в боте.
+    """
+
+    EVENT_BOT_START = "bot_start"
+    EVENT_SEARCH = "search"
+    EVENT_SHOW_MORE = "show_more"
+    EVENT_NO_RESULTS = "no_results"
+    EVENT_OBJECT_CARD = "object_card"
+    EVENT_FAVORITE_ADD = "favorite_add"
+    EVENT_FAVORITE_REMOVE = "favorite_remove"
+    EVENT_LEAD_BI_CONTACT = "lead_bi_contact"
+
+    user = models.ForeignKey(
+        BotUser,
+        on_delete=models.CASCADE,
+        related_name="product_events",
+        verbose_name="Пользователь",
+    )
+    event_type = models.CharField("Тип события", max_length=40, db_index=True)
+    payload = models.JSONField("Данные", default=dict, blank=True)
+    property_type = models.CharField(
+        "Тип недвижимости",
+        max_length=32,
+        blank=True,
+        db_index=True,
+        help_text="apartments / commercial / mixed",
+    )
+    market_type = models.CharField(
+        "Тип рынка",
+        max_length=32,
+        blank=True,
+        db_index=True,
+        help_text="primary / secondary / mixed",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Событие аналитики"
+        verbose_name_plural = "События аналитики"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["event_type", "-created_at"]),
+            models.Index(fields=["user", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} @ {self.created_at:%Y-%m-%d %H:%M}"
 
 
 class SearchLog(models.Model):
@@ -656,6 +741,7 @@ class DailyUsageLog(models.Model):
 
     # Общий счётчик (главный)
     objects_shown = models.IntegerField("Объектов показано (итого)", default=0)
+    bonus_limit_daily = models.IntegerField("Бонус к суточному лимиту", default=0)
 
     # Счётчики по категориям
     apartments_shown = models.IntegerField("Квартир показано", default=0)
