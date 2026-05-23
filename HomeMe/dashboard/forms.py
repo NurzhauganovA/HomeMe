@@ -16,7 +16,7 @@ class SecondaryPropertyForm(forms.ModelForm):
     class Meta:
         model = SecondaryProperty
         fields = [
-            'title', 'description', 'address', 'city', 'district',
+            'title', 'description', 'public_description', 'address', 'city', 'district',
             'price', 'rooms', 'area', 'floor', 'total_floors',
             'latitude', 'longitude',
             'owner_phone', 'owner_name',
@@ -24,7 +24,8 @@ class SecondaryPropertyForm(forms.ModelForm):
             'image', 'is_active', 'is_verified'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
+            'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Внутреннее — только для сотрудников'}),
+            'public_description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Для рекламы и ILVO'}),
             'address': forms.TextInput(attrs={'placeholder': 'ул. Достык, 123'}),
             'title': forms.TextInput(attrs={'placeholder': '3-комн квартира в центре'}),
         }
@@ -42,6 +43,7 @@ class SecondaryPropertyForm(forms.ModelForm):
                     Column('city', css_class='col-md-4'),
                 ),
                 'description',
+                'public_description',
                 Row(
                     Column('address', css_class='col-md-8'),
                     Column('district', css_class='col-md-4'),

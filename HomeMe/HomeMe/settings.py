@@ -138,6 +138,12 @@ BI_GROUP_LEAD_API_URL = env('BI_GROUP_LEAD_API_URL', default='https://apigw.bi.g
 BI_GROUP_LEAD_API_TOKEN = env('BI_GROUP_LEAD_API_TOKEN', default=None)
 BI_GROUP_LEAD_SOURCE = env('BI_GROUP_LEAD_SOURCE', default='telegram_bot')
 
+# ILVO API: если public_description пуст, подставлять внутреннее description в рекламное поле.
+# По умолчанию False — оставлять public_description пустым (рекомендация ILVO).
+ILVO_EXPORT_PUBLIC_DESCRIPTION_FALLBACK = (
+    env('ILVO_EXPORT_PUBLIC_DESCRIPTION_FALLBACK', default='False').lower() == 'true'
+)
+
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 

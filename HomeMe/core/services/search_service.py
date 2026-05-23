@@ -638,7 +638,7 @@ class EnhancedSearchService:
             area=item.area,
             floor=item.floor,
             total_floors=item.total_floors,
-            description=item.description,
+            description=item.get_display_description(),
             image_url=primary_photo,
             image_urls=photos,
             url=item.source_url or "",

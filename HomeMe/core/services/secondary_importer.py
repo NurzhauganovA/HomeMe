@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from telegram_bot.models import SecondaryProperty
 from core.location_resolver import DynamicLocationResolver
 from core.services.ai_service import EnhancedAIService
+from core.services.ilvo_description import descriptions_from_payload
 
 
 class SecondaryImporter:
@@ -88,9 +89,12 @@ class SecondaryImporter:
             payload_longitude = self._to_float(payload.get("longitude"))
             has_payload_coordinates = payload_latitude is not None and payload_longitude is not None
 
+            internal_desc, public_desc = descriptions_from_payload(payload)
+
             defaults = {
                 "title": title,
-                "description": payload.get("description") or "",
+                "description": internal_desc,
+                "public_description": public_desc,
                 "address": address,
                 "price": price,
                 "rooms": rooms,

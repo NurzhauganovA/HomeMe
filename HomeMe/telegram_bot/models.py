@@ -327,7 +327,16 @@ class SecondaryProperty(models.Model):
     photos = models.JSONField("Фотографии", default=list, blank=True)
     raw_data = models.JSONField("Raw данные", default=dict, blank=True)
     title = models.CharField("Заголовок", max_length=200, db_index=True)
-    description = models.TextField("Описание")
+    description = models.TextField(
+        "Внутреннее описание",
+        blank=True,
+        help_text="Для сотрудников; в API ILVO уходит как description",
+    )
+    public_description = models.TextField(
+        "Описание для рекламы",
+        blank=True,
+        help_text="Публичный текст для ILVO (public_description); может быть пустым",
+    )
     address = models.CharField("Адрес", max_length=255, db_index=True)
 
     # Параметры
@@ -433,9 +442,22 @@ class SecondaryProperty(models.Model):
         self.views_count += 1
         self.save(update_fields=['views_count'])
 
+    def get_display_description(self) -> str:
+        """Рекламное описание для бота; если пусто — внутреннее."""
+        from core.services.ilvo_description import display_description
+
+        return display_description(self.description, self.public_description)
+
+    def get_public_description_for_ilvo(self) -> str:
+        """Рекламное поле для выгрузки в API ILVO."""
+        from core.services.ilvo_description import public_description_for_ilvo_export
+
+        return public_description_for_ilvo_export(self.description, self.public_description)
+
     def get_full_text(self) -> str:
         """Возвращает полный текст для векторизации"""
-        return f"{self.title}. {self.description}. Адрес: {self.address}. {self.city or ''}. {self.district or ''}"
+        desc = self.get_display_description()
+        return f"{self.title}. {desc}. Адрес: {self.address}. {self.city or ''}. {self.district or ''}"
 
 
 class BotProductEvent(models.Model):

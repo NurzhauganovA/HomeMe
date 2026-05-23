@@ -333,6 +333,7 @@ class SecondaryPropertyListView(StaffRequiredMixin, ListView):
                 Q(title__icontains=search) |
                 Q(address__icontains=search) |
                 Q(description__icontains=search) |
+                Q(public_description__icontains=search) |
                 Q(owner_name__icontains=search)
             )
 
@@ -914,7 +915,7 @@ class SecondaryCommercialAPIView(View):
       floor_min     — этаж от
       floor_max     — этаж до
       is_verified   — проверен: true | false
-      search        — текстовый поиск (title, address, description)
+      search        — текстовый поиск (title, address, description, public_description)
       ordering      — сортировка: price | -price | area | -area | created_at | -created_at
       page          — номер страницы (default: 1)
       page_size     — записей на странице (default: 20, max: 100)
@@ -925,7 +926,7 @@ class SecondaryCommercialAPIView(View):
         "total_pages": <int>,
         "page": <int>,
         "page_size": <int>,
-        "results": [ { ...all fields + raw_data } ]
+        "results": [ { description — внутреннее, public_description — для рекламы, ... } ]
       }
     """
 
@@ -1025,6 +1026,7 @@ class SecondaryCommercialAPIView(View):
                 Q(title__icontains=search)
                 | Q(address__icontains=search)
                 | Q(description__icontains=search)
+                | Q(public_description__icontains=search)
                 | Q(subtype__icontains=search)
             )
 
@@ -1100,6 +1102,7 @@ class SecondaryCommercialAPIView(View):
             'prices_m2': obj.prices_m2,
             'title': obj.title,
             'description': obj.description,
+            'public_description': obj.get_public_description_for_ilvo(),
             'address': obj.address,
             'address_note': obj.address_note,
             'city': obj.city,

@@ -50,10 +50,16 @@
                     {% endif %}
                 </div>
 
+                {% if property.public_description %}
+                <div class="border-top pt-4">
+                    <h5 class="mb-3">Описание для рекламы</h5>
+                    <p style="white-space: pre-line; line-height: 1.6;">{{ property.public_description }}</p>
+                </div>
+                {% endif %}
                 {% if property.description %}
                 <div class="border-top pt-4">
-                    <h5 class="mb-3">Описание</h5>
-                    <p style="white-space: pre-line; line-height: 1.6;">{{ property.description }}</p>
+                    <h5 class="mb-3">Внутреннее описание</h5>
+                    <p style="white-space: pre-line; line-height: 1.6;" class="text-muted">{{ property.description }}</p>
                 </div>
                 {% endif %}
             </div>
