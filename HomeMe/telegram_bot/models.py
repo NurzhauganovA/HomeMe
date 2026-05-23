@@ -10,7 +10,18 @@ from pgvector.django import VectorField
 import uuid
 
 
-class BotUser(models.Model):
+class PgManagedModel(models.Model):
+    """
+    Таблицы создаются и меняются в PostgreSQL (pgAdmin), не через migrate.
+    Django использует модели только как ORM.
+    """
+
+    class Meta:
+        abstract = True
+        managed = False
+
+
+class BotUser(PgManagedModel):
     """
     Унифицированный пользователь для всех платформ (Telegram, WhatsApp).
     Хранит базовую информацию и настройки.
@@ -113,7 +124,7 @@ class BotUser(models.Model):
         self.save(update_fields=['total_messages', 'last_active_at'])
 
 
-class UserSession(models.Model):
+class UserSession(PgManagedModel):
     """
     Сессия пользователя - хранит контекст диалога и параметры поиска.
     """
@@ -193,7 +204,7 @@ class UserSession(models.Model):
         self.save(update_fields=['search_params', 'updated_at'])
 
 
-class Lead(models.Model):
+class Lead(PgManagedModel):
     """
     Лид - запрос на связь с экспертом.
     """
@@ -297,7 +308,7 @@ class Lead(models.Model):
         self.save()
 
 
-class SecondaryProperty(models.Model):
+class SecondaryProperty(PgManagedModel):
     """
     Объект вторичной недвижимости с поддержкой векторного поиска.
     """
@@ -460,7 +471,7 @@ class SecondaryProperty(models.Model):
         return f"{self.title}. {desc}. Адрес: {self.address}. {self.city or ''}. {self.district or ''}"
 
 
-class BotProductEvent(models.Model):
+class BotProductEvent(PgManagedModel):
     """
     Продуктовая аналитика (ТЗ п.4) — события в боте.
     """
@@ -511,7 +522,7 @@ class BotProductEvent(models.Model):
         return f"{self.event_type} @ {self.created_at:%Y-%m-%d %H:%M}"
 
 
-class SearchLog(models.Model):
+class SearchLog(PgManagedModel):
     """
     Лог поисковых запросов для аналитики и улучшения AI.
     """
@@ -558,7 +569,7 @@ class SearchLog(models.Model):
         return f"Search: {self.query_text[:50]} ({self.results_count} results)"
 
 
-class UserFeedback(models.Model):
+class UserFeedback(PgManagedModel):
     """
     Обратная связь от пользователей.
     """
@@ -610,7 +621,7 @@ class UserFeedback(models.Model):
         return f"Feedback from {self.user.name}: {self.rating}⭐"
 
 
-class FavoriteProperty(models.Model):
+class FavoriteProperty(PgManagedModel):
     """
     Избранные объекты пользователя (снимок карточки).
     """
@@ -710,6 +721,7 @@ class BIComplex(BaseBIComplex):
         return f"ЖК {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Теги: {', '.join(self.features.keys())}"
 
     class Meta:
+        managed = False
         verbose_name = "ЖК (Жилой)"
         verbose_name_plural = "ЖК (Жилые)"
         db_table = 'bi_complexes'
@@ -720,6 +732,7 @@ class BIUnit(BaseBIUnit):
     complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
 
     class Meta(BaseBIUnit.Meta):
+        managed = False
         verbose_name = "Квартира"
         verbose_name_plural = "Квартиры"
         db_table = 'bi_units'
@@ -733,6 +746,7 @@ class BICommercialComplex(BaseBIComplex):
         return f"Коммерческий объект {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Подходит для бизнеса. Теги: {', '.join(self.features.keys())}"
 
     class Meta:
+        managed = False
         verbose_name = "Коммерческий объект"
         verbose_name_plural = "Коммерческие объекты"
         db_table = 'bi_commercial_complexes'
@@ -743,12 +757,13 @@ class BICommercialUnit(BaseBIUnit):
     complex = models.ForeignKey(BICommercialComplex, on_delete=models.CASCADE, related_name='units')
 
     class Meta(BaseBIUnit.Meta):
+        managed = False
         verbose_name = "Офис/Помещение"
         verbose_name_plural = "Офисы/Помещения"
         db_table = 'bi_commercial_units'
 
 
-class DailyUsageLog(models.Model):
+class DailyUsageLog(PgManagedModel):
     """
     Суточный счётчик показанных объектов для каждого пользователя.
     Используется для применения лимитов роли.

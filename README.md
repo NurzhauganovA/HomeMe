@@ -16,26 +16,18 @@ docker compose up -d --build
 cd HomeMe && docker compose up -d --build
 ```
 
-Миграции `telegram_bot`: **`0001_initial.py`** + **`0002_squashed_schema.py`** (всё бывшее 0002–0019 в одном файле).
+Миграции `telegram_bot`: `0001_initial` + `0002_squashed_schema` (без CREATE TABLE для BI и т.д.).
 
-### Если web падает на миграциях
+**Схема таблиц** — в PostgreSQL (pgAdmin), модели с **`managed = False`**.  
+См. `HomeMe/scripts/sql/telegram_bot_pgadmin.sql`.
 
-```bash
-git pull && cd HomeMe && docker compose build --no-cache web && docker compose up -d
-```
-
-Схема уже в PostgreSQL (`bi_complexes` и т.д. есть), а migrate падает с `DuplicateTable`:
+После SQL на сервере:
 
 ```bash
-docker compose exec web python manage.py fix_telegram_bot_migrations
-docker compose exec web python manage.py migrate
+docker compose stop web
+docker compose run --rm -e RUN_MIGRATIONS=0 -e RUN_COLLECTSTATIC=0 web \
+  python manage.py migrate telegram_bot 0002_squashed_schema
+docker compose up -d
 ```
 
-Вручную (если команды ещё нет в образе):
-
-```bash
-docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
-  "DELETE FROM django_migrations WHERE app='telegram_bot' AND name NOT IN ('0001_initial','0002_squashed_schema');"
-docker compose exec web python manage.py migrate telegram_bot 0002_squashed_schema --fake
-docker compose exec web python manage.py migrate
-```
+Если `0001_initial` ещё не помечена, а таблицы уже есть: сначала `--fake` для `0001_initial`.
