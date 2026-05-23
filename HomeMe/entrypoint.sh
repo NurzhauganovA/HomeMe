@@ -13,21 +13,13 @@ echo "PostgreSQL started"
 # Накатываем миграции (только если включено)
 if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
   MIG_DIR="telegram_bot/migrations"
-  MIG_COUNT=$(ls -1 "${MIG_DIR}"/*.py 2>/dev/null | wc -l | tr -d ' ')
-  echo "Migration files in /app/${MIG_DIR}: ${MIG_COUNT} (expected ~19)"
-  if [ ! -f "${MIG_DIR}/0016_dailyusagelog.py" ]; then
-    echo "ERROR: incomplete ${MIG_DIR} (missing 0016_dailyusagelog.py and likely 0002–0015)."
-    if [ -f "HomeMe/${MIG_DIR}/0016_dailyusagelog.py" ]; then
-      echo "Hint: migrations are in ./HomeMe/telegram_bot/migrations (GitHub layout),"
-      echo "      but the image was built from the repo root. Use one of:"
-      echo "        cd HomeMe && docker compose up -d --build"
-      echo "        cd .. && docker compose -f docker-compose.yml up -d --build   # root compose"
-    else
-      echo "Fix: git pull, then rebuild from the Django project folder (HomeMe/):"
-      echo "        cd HomeMe && docker compose build --no-cache && docker compose up -d"
-    fi
+  if [ ! -f "${MIG_DIR}/0002_squashed_schema.py" ]; then
+    echo "ERROR: missing ${MIG_DIR}/0002_squashed_schema.py (need 0001_initial + 0002_squashed_schema)."
+    echo "Fix: git pull && docker compose build --no-cache web && docker compose up -d"
     exit 1
   fi
+  MIG_COUNT=$(ls -1 "${MIG_DIR}"/*.py 2>/dev/null | wc -l | tr -d ' ')
+  echo "Migration files in /app/${MIG_DIR}: ${MIG_COUNT}"
   echo "Running migrations..."
   python manage.py migrate
 else

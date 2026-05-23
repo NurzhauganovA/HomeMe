@@ -16,5 +16,13 @@ docker compose up -d --build
 cd HomeMe && docker compose up -d --build
 ```
 
-Миграции в git: `HomeMe/telegram_bot/migrations/` (файлы `0001` … `0018`).  
-Не путать с `telegram_bot/` в корне репо — такой папки в git нет.
+Миграции `telegram_bot`: **`0001_initial.py`** + **`0002_squashed_schema.py`** (всё бывшее 0002–0019 в одном файле).
+
+### Если web падает на миграциях
+
+```bash
+git pull && cd HomeMe && docker compose build --no-cache web && docker compose up -d
+# схема уже есть в БД:
+docker compose exec web python manage.py migrate telegram_bot 0002_squashed_schema --fake
+docker compose exec web python manage.py migrate
+```
