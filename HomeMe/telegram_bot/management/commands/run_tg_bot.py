@@ -537,14 +537,14 @@ class Command(BaseCommand):
                         search_params=params,
                     )
                     await query.message.reply_text(
-                        BotTextService.get(
+                        await BotTextService.aget(
                             "favorites.saved",
                             fallback="✅ Объект добавлен в избранное!\nВсе сохраненные объекты доступны в разделе 'Избранное'",
                         )
                     )
                 else:
                     await query.message.reply_text(
-                        BotTextService.get("favorites.already_saved", fallback="⭐ Этот объект уже в избранном.")
+                        await BotTextService.aget("favorites.already_saved", fallback="⭐ Этот объект уже в избранном.")
                     )
             except Exception as e:
                 logger.error(f"Failed to save favorite: {e}")
@@ -643,7 +643,7 @@ class Command(BaseCommand):
 
                 prop_title = property_data.get('title', 'недвижимости')
                 if crm_ok:
-                    message_text = BotTextService.get(
+                    message_text = await BotTextService.aget(
                         "bigroup.lead_sent",
                         fallback=(
                             "✅ <b>Заявка отправлена!</b>\n\n"
@@ -659,7 +659,7 @@ class Command(BaseCommand):
                     )
                 else:
                     # Ошибка CRM — всё равно показываем контакты пользователю
-                    message_text = BotTextService.get(
+                    message_text = await BotTextService.aget(
                         "bigroup.lead_fallback",
                         fallback=(
                             "📞 <b>Контакты по объекту</b>\n\n"

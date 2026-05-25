@@ -82,7 +82,7 @@ class EnhancedDialogManager:
                 search_params=None,
             )
             await self._update_state(session, 'START', {})
-            return self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user.name or 'друг')
 
         # Ветка прохождения анкеты обратной связи
         if state == 'SURVEY_IN_PROGRESS':
@@ -93,7 +93,7 @@ class EnhancedDialogManager:
         if is_voice:
             voice_params = await self._apply_voice_ai_params(text, params)
             if voice_params is None:
-                return self._quota_response()
+                return await self._quota_response()
             params = voice_params
             if self._has_search_intent(params, text):
                 response = await self._run_search_with_params(session, params, user)
@@ -121,7 +121,7 @@ class EnhancedDialogManager:
             elif 'поделиться' in lowered_text or 'реферал' in lowered_text or 'приглас' in lowered_text or '🔗' in text:
                 code = await sync_to_async(referral_service.ensure_referral_code)(user)
                 link = referral_service.build_telegram_referral_link(code)
-                response['text'] = BotTextService.get(
+                response['text'] = await BotTextService.aget(
                     'referral.invite',
                     fallback='👥 Поделитесь ботом с друзьями.\nВаша персональная ссылка:\n{link}',
                     link=link,
@@ -133,7 +133,7 @@ class EnhancedDialogManager:
                 if not allowed:
                     return denied
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = BotTextService.get(
+                response['text'] = await BotTextService.aget(
                     "lead.ask_name",
                     fallback="Я соединю тебя с экспертом. Как к тебе обращаться?",
                 )
@@ -146,7 +146,7 @@ class EnhancedDialogManager:
                     lambda: list(FavoriteProperty.objects.filter(user=user).order_by('-created_at'))
                 )()
                 if favorites:
-                    response['text'] = BotTextService.get(
+                    response['text'] = await BotTextService.aget(
                         "favorites.list",
                         fallback="⭐ Ваши избранные объекты:\n\nНажмите 🗑 Удалить на карточке объекта, чтобы убрать из избранного.",
                     )
@@ -157,7 +157,7 @@ class EnhancedDialogManager:
                         dtos.append(dto)
                     response['objects'] = dtos
                 else:
-                    response['text'] = BotTextService.get(
+                    response['text'] = await BotTextService.aget(
                         "favorites.empty",
                         fallback="⭐ Избранное пока пустое.",
                     )
@@ -171,7 +171,7 @@ class EnhancedDialogManager:
                     thread_sensitive=False
                 )(text)
                 if self.ai.consume_quota_error():
-                    return self._quota_response()
+                    return await self._quota_response()
                 params['embedding_text'] = text
                 params['source'] = params.get('source', 'mixed')
 
@@ -187,7 +187,7 @@ class EnhancedDialogManager:
                     thread_sensitive=False
                 )(text, city_hint="Astana")
                 if self.ai.consume_quota_error():
-                    return self._quota_response()
+                    return await self._quota_response()
                 if location_data:
                     center = location_data.get('center_coordinates')
                     radius_km = location_data.get('search_radius_km')
@@ -202,7 +202,7 @@ class EnhancedDialogManager:
                 response = await self._run_search_with_params(session, params, user)
 
             else:
-                return self._scenario_start(user.name)
+                return await self._scenario_start(user.name)
 
         elif state == 'CHOOSING_TYPE':
             if '1' in text or 'bi' in text.lower():
@@ -290,7 +290,7 @@ class EnhancedDialogManager:
             if not (parsed_budget.get('max_price') or parsed_budget.get('min_price')):
                 ai_budget = await self._ai_fallback_parse(text, ['min_price', 'max_price'])
                 if ai_budget is None:
-                    return self._quota_response()
+                    return await self._quota_response()
                 if ai_budget.get('min_price') or ai_budget.get('max_price'):
                     parsed_budget = ai_budget
 
@@ -336,7 +336,7 @@ class EnhancedDialogManager:
             if not (parsed_area.get('min_area') or parsed_area.get('max_area')) and 'не важно' not in lowered_text:
                 ai_area = await self._ai_fallback_parse(text, ['min_area', 'max_area'])
                 if ai_area is None:
-                    return self._quota_response()
+                    return await self._quota_response()
                 if ai_area.get('min_area') or ai_area.get('max_area'):
                     parsed_area = ai_area
 
@@ -395,7 +395,7 @@ class EnhancedDialogManager:
                     # Пробуем через AI
                     ai_rooms = await self._ai_fallback_parse(text, ['rooms'])
                     if ai_rooms is None:
-                        return self._quota_response()
+                        return await self._quota_response()
                     if ai_rooms.get('rooms'):
                         # Если AI вернул одно число, делаем список
                         rooms_value = ai_rooms.get('rooms')
@@ -502,7 +502,7 @@ class EnhancedDialogManager:
                         thread_sensitive=False
                     )(text, city_hint="Astana")
                     if self.ai.consume_quota_error():
-                        return self._quota_response()
+                        return await self._quota_response()
 
                     if location_data:
                         center = location_data.get('center_coordinates')
@@ -656,7 +656,7 @@ class EnhancedDialogManager:
                             filtered, remaining, _ = await sync_to_async(
                                 LimitService.apply_limit)(user, filtered, params)
                             if filtered:
-                                response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
+                                response['text'] = await BotTextService.aget("search.show_more", fallback="Вот ещё варианты: 👇")
                                 response['objects'] = filtered
                                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                                 await self._emit_show_more(user, params)
@@ -665,10 +665,10 @@ class EnhancedDialogManager:
                                 response['text'] = msg
                                 response['buttons'] = ['В главное меню']
                         else:
-                            response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
+                            response['text'] = await BotTextService.aget("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                             response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
+                        response['text'] = await BotTextService.aget("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                         response['buttons'] = ['Изменить параметры поиска']
                 else:
                     current_offset = params.get('offset', 0)
@@ -689,7 +689,7 @@ class EnhancedDialogManager:
                             filtered, remaining, _ = await sync_to_async(
                                 LimitService.apply_limit)(user, filtered, params)
                             if filtered:
-                                response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
+                                response['text'] = await BotTextService.aget("search.show_more", fallback="Вот ещё варианты: 👇")
                                 response['objects'] = filtered
                                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
                                 await self._emit_show_more(user, params)
@@ -698,10 +698,10 @@ class EnhancedDialogManager:
                                 response['text'] = msg
                                 response['buttons'] = ['В главное меню']
                         else:
-                            response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
+                            response['text'] = await BotTextService.aget("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                             response['buttons'] = ['Изменить параметры поиска']
                     else:
-                        response['text'] = BotTextService.get("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
+                        response['text'] = await BotTextService.aget("search.no_more", fallback="Больше вариантов по вашему запросу нет. 🤷‍♂️")
                         response['buttons'] = ['Изменить параметры поиска']
 
             elif 'бюджет' in text.lower() or 'параметр' in text.lower() or 'изменить' in text.lower():
@@ -712,12 +712,12 @@ class EnhancedDialogManager:
                 if not allowed:
                     return denied
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = BotTextService.get(
+                response['text'] = await BotTextService.aget(
                     "lead.ask_name",
                     fallback="Я соединю тебя с экспертом. Как к тебе обращаться?",
                 )
             else:
-                return self._scenario_start(user.name)
+                return await self._scenario_start(user.name)
 
         elif state == 'BROWSING_UNITS':
             lowered_text = text.lower()
@@ -746,12 +746,12 @@ class EnhancedDialogManager:
                         return self._ensure_main_menu_button(response, state)
                     params['offset'] = current_offset + raw_count
                     await self._update_state(session, 'BROWSING_UNITS', params)
-                    response['text'] = BotTextService.get("search.show_more", fallback="Вот ещё варианты: 👇")
+                    response['text'] = await BotTextService.aget("search.show_more", fallback="Вот ещё варианты: 👇")
                     response['objects'] = results
                     response['buttons'] = ['Показать ещё', 'Другой ЖК/БЦ', 'Изменить параметры поиска']
                     await self._emit_show_more(user, params)
                 else:
-                    response['text'] = BotTextService.get("search.no_more", fallback="Варианты по этому ЖК/БЦ закончились. 🤷‍♂️")
+                    response['text'] = await BotTextService.aget("search.no_more", fallback="Варианты по этому ЖК/БЦ закончились. 🤷‍♂️")
                     response['buttons'] = ['Другой ЖК/БЦ', 'Изменить параметры поиска']
 
             elif 'другой' in lowered_text:
@@ -840,7 +840,7 @@ class EnhancedDialogManager:
         elif state == 'NO_RESULTS':
             if 'эксперт' in text.lower():
                 await self._update_state(session, 'LEAD_NAME')
-                response['text'] = BotTextService.get(
+                response['text'] = await BotTextService.aget(
                     "lead.ask_name",
                     fallback="Как тебя зовут?",
                 )
@@ -865,7 +865,7 @@ class EnhancedDialogManager:
                 payload={'client_name': (text or '')[:120]},
                 search_params=session.search_params or {},
             )
-            response['text'] = BotTextService.get(
+            response['text'] = await BotTextService.aget(
                 "lead.submitted",
                 fallback="Спасибо, {name}! Менеджер скоро свяжется. 📞",
                 name=text,
@@ -879,7 +879,7 @@ class EnhancedDialogManager:
                 thread_sensitive=False
             )(text)
             if self.ai.consume_quota_error():
-                return self._quota_response()
+                return await self._quota_response()
             response['text'] = consultation
             response['parse_mode'] = 'plain'
             response['buttons'] = []
@@ -912,14 +912,14 @@ class EnhancedDialogManager:
         submission_id = params.get('survey_submission_id')
         if not submission_id:
             await self._update_state(session, 'START', params)
-            return self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user.name or 'друг')
 
         submission = await sync_to_async(
             lambda: FeedbackSurveySubmission.objects.select_related('survey').filter(id=submission_id, user=user).first()
         )()
         if not submission:
             await self._update_state(session, 'START', params)
-            return self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user.name or 'друг')
 
         question = await SurveyService.get_next_question(submission)
         if not question:
@@ -1108,9 +1108,9 @@ class EnhancedDialogManager:
 
         return text
 
-    def _scenario_start(self, name):
+    async def _scenario_start(self, name):
         return {
-            'text': BotTextService.get(
+            'text': await BotTextService.aget(
                 "start.welcome",
                 fallback=(
                     "Привет, {name}!\n"
@@ -1124,30 +1124,30 @@ class EnhancedDialogManager:
         }
 
     @staticmethod
-    def _quota_response():
+    async def _quota_response():
         return {
-            'text': BotTextService.get(
+            'text': await BotTextService.aget(
                 "error.ai_quota_exceeded",
                 fallback="Лимит запросов к AI исчерпан. 😔 Попробуйте позже или напишите текстом.",
             )
         }
 
-    def _format_intro(self, results, params):
+    async def _format_intro(self, results, params):
         source = params.get('source', 'mixed')
         secondary_category = params.get('secondary_category')
         if source == 'secondary':
             if secondary_category == 'commercial':
-                return BotTextService.get(
+                return await BotTextService.aget(
                     "search.results.secondary_commercial",
                     fallback="Нашел {count} коммерческих объектов на вторичном рынке: 👇",
                     count=len(results),
                 )
-            return BotTextService.get(
+            return await BotTextService.aget(
                 "search.results.secondary_apartments",
                 fallback="Нашел {count} квартир на вторичном рынке: 👇",
                 count=len(results),
             )
-        return BotTextService.get(
+        return await BotTextService.aget(
             "search.results.default",
             fallback="Нашел {count} вариантов: 👇",
             count=len(results),
@@ -1294,7 +1294,7 @@ class EnhancedDialogManager:
                 params['secondary_offset'] = new_secondary_offset
                 await self._update_state(session, 'BROWSING', params)
 
-                response['text'] = self._format_intro(results, params)
+                response['text'] = await self._format_intro(results, params)
                 response['objects'] = results
                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
             else:
@@ -1334,7 +1334,7 @@ class EnhancedDialogManager:
                 params['offset'] = len(results)
                 await self._update_state(session, 'BROWSING', params)
 
-                response['text'] = self._format_intro(results, params)
+                response['text'] = await self._format_intro(results, params)
                 response['objects'] = results
                 response['buttons'] = ['Показать ещё', 'Изменить параметры поиска']
             else:

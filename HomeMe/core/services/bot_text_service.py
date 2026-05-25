@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from asgiref.sync import sync_to_async
 from django.core.cache import cache
 
 from dashboard.models import BotText
@@ -43,6 +44,11 @@ class BotTextService:
         text = text_obj.text if text_obj else fallback
         cache.set(cache_key, text, BotTextService.CACHE_TTL_SECONDS)
         return BotTextService._format(text, fallback, **fmt)
+
+    @staticmethod
+    async def aget(*args, **kwargs) -> str:
+        """Async-обёртка для вызова из telegram bot (process_message и handlers)."""
+        return await sync_to_async(BotTextService.get, thread_sensitive=False)(*args, **kwargs)
 
     @staticmethod
     def _format(text: str, fallback: str, **fmt) -> str:
