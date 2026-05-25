@@ -7,6 +7,18 @@ from django.db import migrations
 
 
 def fill_referral_codes(apps, schema_editor):
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'telegram_bot_botuser'
+              AND column_name = 'referral_code'
+            """
+        )
+        if not cursor.fetchone():
+            return
+
     BotUser = apps.get_model('telegram_bot', 'BotUser')
     for u in BotUser.objects.all():
         if getattr(u, 'referral_code', None):
