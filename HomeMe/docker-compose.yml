@@ -36,6 +36,12 @@ services:
     depends_on:
       - db
       - redis
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1',8000)); s.close()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
     restart: always
 
   # 3. Telegram Bot (Фоновый процесс)
@@ -91,7 +97,8 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     depends_on:
-      - web
+      web:
+        condition: service_started
     restart: always
 
 volumes:
