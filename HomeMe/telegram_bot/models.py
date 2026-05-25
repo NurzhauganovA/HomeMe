@@ -10,18 +10,7 @@ from pgvector.django import VectorField
 import uuid
 
 
-class PgManagedModel(models.Model):
-    """
-    Таблицы создаются и меняются в PostgreSQL (pgAdmin), не через migrate.
-    Django использует модели только как ORM.
-    """
-
-    class Meta:
-        abstract = True
-        managed = False
-
-
-class BotUser(PgManagedModel):
+class BotUser(models.Model):
     """
     Унифицированный пользователь для всех платформ (Telegram, WhatsApp).
     Хранит базовую информацию и настройки.
@@ -124,7 +113,7 @@ class BotUser(PgManagedModel):
         self.save(update_fields=['total_messages', 'last_active_at'])
 
 
-class UserSession(PgManagedModel):
+class UserSession(models.Model):
     """
     Сессия пользователя - хранит контекст диалога и параметры поиска.
     """
@@ -204,7 +193,7 @@ class UserSession(PgManagedModel):
         self.save(update_fields=['search_params', 'updated_at'])
 
 
-class Lead(PgManagedModel):
+class Lead(models.Model):
     """
     Лид - запрос на связь с экспертом.
     """
@@ -308,7 +297,7 @@ class Lead(PgManagedModel):
         self.save()
 
 
-class SecondaryProperty(PgManagedModel):
+class SecondaryProperty(models.Model):
     """
     Объект вторичной недвижимости с поддержкой векторного поиска.
     """
@@ -471,7 +460,7 @@ class SecondaryProperty(PgManagedModel):
         return f"{self.title}. {desc}. Адрес: {self.address}. {self.city or ''}. {self.district or ''}"
 
 
-class BotProductEvent(PgManagedModel):
+class BotProductEvent(models.Model):
     """
     Продуктовая аналитика (ТЗ п.4) — события в боте.
     """
@@ -522,7 +511,7 @@ class BotProductEvent(PgManagedModel):
         return f"{self.event_type} @ {self.created_at:%Y-%m-%d %H:%M}"
 
 
-class SearchLog(PgManagedModel):
+class SearchLog(models.Model):
     """
     Лог поисковых запросов для аналитики и улучшения AI.
     """
@@ -569,7 +558,7 @@ class SearchLog(PgManagedModel):
         return f"Search: {self.query_text[:50]} ({self.results_count} results)"
 
 
-class UserFeedback(PgManagedModel):
+class UserFeedback(models.Model):
     """
     Обратная связь от пользователей.
     """
@@ -621,7 +610,7 @@ class UserFeedback(PgManagedModel):
         return f"Feedback from {self.user.name}: {self.rating}⭐"
 
 
-class FavoriteProperty(PgManagedModel):
+class FavoriteProperty(models.Model):
     """
     Избранные объекты пользователя (снимок карточки).
     """
@@ -721,7 +710,6 @@ class BIComplex(BaseBIComplex):
         return f"ЖК {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Теги: {', '.join(self.features.keys())}"
 
     class Meta:
-        managed = False
         verbose_name = "ЖК (Жилой)"
         verbose_name_plural = "ЖК (Жилые)"
         db_table = 'bi_complexes'
@@ -732,7 +720,6 @@ class BIUnit(BaseBIUnit):
     complex = models.ForeignKey(BIComplex, on_delete=models.CASCADE, related_name='units')
 
     class Meta(BaseBIUnit.Meta):
-        managed = False
         verbose_name = "Квартира"
         verbose_name_plural = "Квартиры"
         db_table = 'bi_units'
@@ -746,7 +733,6 @@ class BICommercialComplex(BaseBIComplex):
         return f"Коммерческий объект {self.name}. Класс: {self.class_name}. Адрес: {self.address}. Описание: {self.description[:200]}. Подходит для бизнеса. Теги: {', '.join(self.features.keys())}"
 
     class Meta:
-        managed = False
         verbose_name = "Коммерческий объект"
         verbose_name_plural = "Коммерческие объекты"
         db_table = 'bi_commercial_complexes'
@@ -757,13 +743,12 @@ class BICommercialUnit(BaseBIUnit):
     complex = models.ForeignKey(BICommercialComplex, on_delete=models.CASCADE, related_name='units')
 
     class Meta(BaseBIUnit.Meta):
-        managed = False
         verbose_name = "Офис/Помещение"
         verbose_name_plural = "Офисы/Помещения"
         db_table = 'bi_commercial_units'
 
 
-class DailyUsageLog(PgManagedModel):
+class DailyUsageLog(models.Model):
     """
     Суточный счётчик показанных объектов для каждого пользователя.
     Используется для применения лимитов роли.

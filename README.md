@@ -16,18 +16,28 @@ docker compose up -d --build
 cd HomeMe && docker compose up -d --build
 ```
 
-Миграции `telegram_bot`: `0001_initial` + `0002_squashed_schema` (без CREATE TABLE для BI и т.д.).
+При старте контейнер `web` автоматически выполняет `python manage.py migrate`.
 
-**Схема таблиц** — в PostgreSQL (pgAdmin), модели с **`managed = False`**.  
-См. `HomeMe/scripts/sql/telegram_bot_pgadmin.sql`.
+## Миграции (чистая БД)
 
-После SQL на сервере:
+После удаления volume PostgreSQL или создания новой пустой БД схема поднимается только через Django:
+
+| Приложение      | Файлы |
+|-----------------|-------|
+| `dashboard`     | `0001_initial`, `0002_initial` |
+| `telegram_bot`  | `0001_enable_pgvector`, `0002_initial` |
+| `whatsapp_bot`  | `0001_initial` |
+
+Порядок: расширение `vector` → роли/анкеты (`dashboard`) → пользователи и объекты (`telegram_bot`) → связи анкет с `BotUser` → WhatsApp.
+
+Полный сброс данных (осторожно, backup уже должен быть):
 
 ```bash
-docker compose stop web
-docker compose run --rm -e RUN_MIGRATIONS=0 -e RUN_COLLECTSTATIC=0 web \
-  python manage.py migrate telegram_bot 0002_squashed_schema
-docker compose up -d
+cd HomeMe
+docker compose down
+docker volume rm homeme_postgres_data   # имя volume смотрите: docker volume ls
+docker compose up -d --build
+docker compose exec web python manage.py createsuperuser
 ```
 
-Если `0001_initial` ещё не помечена, а таблицы уже есть: сначала `--fake` для `0001_initial`.
+Старый SQL-скрипт `scripts/sql/telegram_bot_pgadmin.sql` для новых установок **не нужен** — только для ручного восстановления legacy-схемы.
