@@ -1,25 +1,24 @@
 #!/bin/sh
 
+# Остановка при любой ошибке
 set -e
 
 echo "Waiting for postgres..."
+# Ждем пока БД (хост 'db') станет доступна на порту 5432
 while ! nc -z db 5432; do
   sleep 0.5
 done
 echo "PostgreSQL started"
 
+# Накатываем миграции (только если включено)
 if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
-  MIG_DIR="telegram_bot/migrations"
-  if [ ! -f "${MIG_DIR}/0002_squashed_schema.py" ]; then
-    echo "ERROR: missing ${MIG_DIR}/0002_squashed_schema.py"
-    exit 1
-  fi
-  echo "Running migrations (telegram_bot tables: managed=False, schema in PostgreSQL)..."
-  python manage.py migrate --noinput
+  echo "Running migrations..."
+  python manage.py migrate
 else
   echo "Skipping migrations..."
 fi
 
+# Собираем статику (только если включено)
 if [ "${RUN_COLLECTSTATIC:-1}" = "1" ]; then
   echo "Collecting static files..."
   python manage.py collectstatic --noinput
@@ -27,4 +26,5 @@ else
   echo "Skipping collectstatic..."
 fi
 
+# Запускаем команду, переданную в аргументах (или gunicorn по умолчанию)
 exec "$@"
