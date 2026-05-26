@@ -19,6 +19,9 @@ COLUMNS = [
     "area_kitchen", "prices", "prices_m2", "city_micro_district", "coordinates_source",
 ]
 
+# pgAdmin export с колонкой public_description в конце (49 полей)
+COLUMNS_WITH_PUBLIC = COLUMNS + ["public_description"]
+
 INSERT_COLS = COLUMNS + ["public_description"]
 
 
@@ -29,8 +32,14 @@ def parse_rows(path: Path) -> list[list[str]]:
     for row in reader:
         if not row or not row[0].strip():
             continue
-        if len(row) != len(COLUMNS):
-            raise ValueError(f"Ожидалось {len(COLUMNS)} колонок, получено {len(row)}: id={row[0][:36]}")
+        n = len(row)
+        if n == len(COLUMNS):
+            row = row + [""]  # public_description заполним из raw_data
+        elif n != len(COLUMNS_WITH_PUBLIC):
+            raise ValueError(
+                f"Ожидалось {len(COLUMNS)} или {len(COLUMNS_WITH_PUBLIC)} колонок, "
+                f"получено {n}: id={row[0][:36]}"
+            )
         rows.append(row)
     return rows
 
@@ -104,8 +113,11 @@ def main():
 
     col_list = ", ".join(INSERT_COLS)
     for row in rows:
-        vals = [sql_literal(v, c) for v, c in zip(row, COLUMNS)]
-        pd = public_desc_from_raw(row[COLUMNS.index("raw_data")])
+        base = row[: len(COLUMNS)]
+        vals = [sql_literal(v, c) for v, c in zip(base, COLUMNS)]
+        pd = row[len(COLUMNS)] if len(row) > len(COLUMNS) else ""
+        if not pd.strip():
+            pd = public_desc_from_raw(base[COLUMNS.index("raw_data")])
         vals.append(sql_literal(pd, "public_description") if pd else "''")
         lines.append(
             f"INSERT INTO public.telegram_bot_secondaryproperty ({col_list}) VALUES\n"
