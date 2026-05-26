@@ -1,0 +1,662 @@
+"4af1b23d-62ef-4701-b8c0-894013ce3369"	"Коммерческое помещение 154.9 м², Астана"	"ЖК Green Line. Garden-2.
+
+✅ Первая линия ул.Д.Конаева (Е-796)
+✅ Угловое
+✅ 6 витражных окна
+✅ Две входные группы
+✅ Общая площадь - 154,9м2
+✅ Мощность электричества - 46,47КВт
+✅ Высота потолка - 4,2м
+✅ Парковка перед помещением
+✅ Черновая отделка
+✅ Сдача запланирована на - 3 квартал 2026г. "	"Астана, Нура р-н, Е796"	330000000	0	154.9	1	1	"Астана"	"Есильский"	51.1282205	71.4306682	"77716297597"	"Гульнара Омарова"	false	false	true		true	false	"2026-04-14 13:00:05.477259+00"	"2026-04-24 13:17:22.866104+00"	0		"72b0aa71-3197-5562-85c5-89451a166f0b"	36231539	"commercial"	"sell"	"resold"	"without"	2026	"[]"	"Астана, Нура р-н, Е796"	"https://krisha.kz/a/show/1008442623"	"[""https://media.ilvo.pro/image/re/uploaded/16/80/c1/450250a58bfa07cda8d121d8a6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fc/a0/8a/e3c24758ae4b15af32394996be.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7b/6e/f1/591d44ff521e0a2ccac2d3b865.jpg""]"	"{""id"": 36231539, ""gas"": null, ""lot"": null, ""area"": 154.9, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""72b0aa71-3197-5562-85c5-89451a166f0b"", ""floor"": 1, ""power"": null, ""price"": ""330000000.00"", ""rooms"": null, ""video"": null, ""water"": ""yes"", ""photos"": [""https://media.ilvo.pro/image/re/uploaded/16/80/c1/450250a58bfa07cda8d121d8a6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fc/a0/8a/e3c24758ae4b15af32394996be.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7b/6e/f1/591d44ff521e0a2ccac2d3b865.jpg""], ""prices"": {""BYN"": ""1893504.71"", ""EUR"": ""552199.6"", ""KZT"": ""330000000.0"", ""PLN"": ""2327878.1"", ""RUB"": ""52215189.87"", ""USD"": ""645464.15"", ""UZS"": ""7746478873.24""}, ""region"": ""Акмолинская"", ""repair"": ""without"", ""street"": ""Динмухамеда Кунаева"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-01-05T11:39:14.076778Z"", ""heating"": [""other""], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""8"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-24T13:17:01.731053Z"", ""sewerage"": ""yes"", ""apartment"": ""НП7"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""12224.05"", ""EUR"": ""3564.88"", ""KZT"": ""2130406.71"", ""PLN"": ""15028.26"", ""RUB"": ""337089.67"", ""USD"": ""4166.97"", ""UZS"": ""50009547.28""}, ""rent_type"": null, ""commission"": null, ""facilities"": [""closed_area"", ""video_monitoring""], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1008442623"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Green Line. Garden-2.\n\n✅ Первая линия ул.Д.Конаева (Е-796)\n✅ Угловое\n✅ 6 витражных окна\n✅ Две входные группы \n✅ Общая площадь - 154,9м2\n✅ Мощность электричества - 46,47КВт\n✅ Высота потолка - 4,2м\n✅ Парковка перед помещением\n✅ Черновая отделка\n✅ Сдача запланирована на - 3 квартал 2026г. "", ""electricity"": null, ""responsible"": {""id"": 14816, ""email"": null, ""phones"": [""77716297597""], ""last_name"": ""Омарова"", ""first_name"": ""Гульнара""}, ""rooms_total"": null, ""address_note"": ""Астана, Нура р-н, Е796"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.2, ""construction_year"": 2026, ""distance_from_mkad"": null, ""public_description"": ""В продаже угловое помещение в ЖК Green Line. Garden-2.\n\n✅ Первая линия ул.Д.Конаева (Е-796)\n✅ Угловое\n✅ 6 витражных окна\n✅ Две входные группы \n✅ Общая площадь - 154,9м2\n✅ Мощность электричества - 46,47КВт\n✅ Высота потолка - 4,2м\n✅ Парковка перед помещением\n✅ Черновая отделка\n✅ Сдача запланирована на - 3 квартал 2026г. \n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.2				"{""BYN"": ""1893504.71"", ""EUR"": ""552199.6"", ""KZT"": ""330000000.0"", ""PLN"": ""2327878.1"", ""RUB"": ""52215189.87"", ""USD"": ""645464.15"", ""UZS"": ""7746478873.24""}"	"{""BYN"": ""12224.05"", ""EUR"": ""3564.88"", ""KZT"": ""2130406.71"", ""PLN"": ""15028.26"", ""RUB"": ""337089.67"", ""USD"": ""4166.97"", ""UZS"": ""50009547.28""}"		"geocoded"	"В продаже угловое помещение в ЖК Green Line. Garden-2.
+
+✅ Первая линия ул.Д.Конаева (Е-796)
+✅ Угловое
+✅ 6 витражных окна
+✅ Две входные группы
+✅ Общая площадь - 154,9м2
+✅ Мощность электричества - 46,47КВт
+✅ Высота потолка - 4,2м
+✅ Парковка перед помещением
+✅ Черновая отделка
+✅ Сдача запланирована на - 3 квартал 2026г.
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"6a0c0950-ab0d-45f9-960f-b5a50cef7af7"	"Коммерческое помещение 156.2 м², Астана"	"ЖК Багыстан. 12 позиция.
+
+✅ Первая линия ул.Е-117 (рядом Espresso Day)
+✅ Общая площадь - 156,2 м2 (1 этаж - 98,3 м2, 2 этаж - 57,9 м2)
+✅ 2 витражных окна, 1 витражная входная группа
+✅ Мощность электричества - 15 кВт
+✅ Высота потолка - 4,84 м
+✅ Парковка перед помещением
+✅ С ремонтом под медицинский/образовательный центр (3 кабинета на 1ом этаже, 3 кабинета на 2ом этаже)"	"Астана, Есильский, Е-117, 38"	650000	0	156.2	1	1	"Астана"	"Есильский"	51.091	71.417	"77716297597"	"Гульнара Омарова"	false	false	false		false	false	"2026-04-24 11:17:03.922915+00"	"2026-04-24 11:17:03.922935+00"	0		"253c1d53-740b-4c17-a79d-e155ad885856"	38114960	"commercial"	"rent"	"resold"		2024	"[]"			"[""https://media.ilvo.pro/image/re/uploaded/d8/cb/45/ee6ac172975d311c83747b85c2.jpg"", ""https://media.ilvo.pro/image/re/uploaded/95/7b/67/cdce484bf6f3a150de06c52ac8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7b/9e/cd/3d63a008e4da3f3d8bc644b2de.jpg"", ""https://media.ilvo.pro/image/re/uploaded/30/ba/70/174b84c1e8d6a55cfb32f2b042.jpg"", ""https://media.ilvo.pro/image/re/uploaded/65/e5/8f/972f800b9d8688e13cd0ede5ae.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d9/09/8f/35642f8ad9a3c4f304ffc17daa.jpg"", ""https://media.ilvo.pro/image/re/uploaded/19/93/e2/a0f8a722c44025b33ce9974677.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2b/ef/68/a74077a91bbb135a27e0718ca5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4b/86/66/2d462556ff71d334629853a40e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d9/3a/fe/6588dcf25791c21ff06de83074.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c6/79/e9/ebe523a993b1227a75931efa49.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a4/58/e3/fd36b645d8602178b21e4d8846.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d1/53/1b/74e7e083b93b6c8c57607aa1f8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1e/e0/82/696d76afd84a43855df34550ce.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bf/a9/0d/cb9f01a575b76f3a8e92dba71a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b1/37/31/449d4f694e70c583c7c7d37584.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a6/d7/fd/b670654d3b8880972a8993ca43.jpg"", ""https://media.ilvo.pro/image/re/uploaded/40/a7/f7/071fd4e7cd7209007e7f582bd0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a3/5c/57/6e72178b4bc84fde71bf20d280.jpg"", ""https://media.ilvo.pro/image/re/uploaded/30/64/4c/510887183a99552e9c46fb2f85.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bf/6b/30/d30285080238771131f3810f2b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e3/e8/49/b6b14664fa2cf3329a7c4e2fd3.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/fe/28/32878a493520ee9ac5bdb7fddc.jpg""]"	"{""id"": 38114960, ""gas"": null, ""lot"": null, ""area"": 156.2, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""253c1d53-740b-4c17-a79d-e155ad885856"", ""floor"": 1, ""power"": null, ""price"": ""650000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/d8/cb/45/ee6ac172975d311c83747b85c2.jpg"", ""https://media.ilvo.pro/image/re/uploaded/95/7b/67/cdce484bf6f3a150de06c52ac8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7b/9e/cd/3d63a008e4da3f3d8bc644b2de.jpg"", ""https://media.ilvo.pro/image/re/uploaded/30/ba/70/174b84c1e8d6a55cfb32f2b042.jpg"", ""https://media.ilvo.pro/image/re/uploaded/65/e5/8f/972f800b9d8688e13cd0ede5ae.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d9/09/8f/35642f8ad9a3c4f304ffc17daa.jpg"", ""https://media.ilvo.pro/image/re/uploaded/19/93/e2/a0f8a722c44025b33ce9974677.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2b/ef/68/a74077a91bbb135a27e0718ca5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4b/86/66/2d462556ff71d334629853a40e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d9/3a/fe/6588dcf25791c21ff06de83074.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c6/79/e9/ebe523a993b1227a75931efa49.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a4/58/e3/fd36b645d8602178b21e4d8846.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d1/53/1b/74e7e083b93b6c8c57607aa1f8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1e/e0/82/696d76afd84a43855df34550ce.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bf/a9/0d/cb9f01a575b76f3a8e92dba71a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b1/37/31/449d4f694e70c583c7c7d37584.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a6/d7/fd/b670654d3b8880972a8993ca43.jpg"", ""https://media.ilvo.pro/image/re/uploaded/40/a7/f7/071fd4e7cd7209007e7f582bd0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a3/5c/57/6e72178b4bc84fde71bf20d280.jpg"", ""https://media.ilvo.pro/image/re/uploaded/30/64/4c/510887183a99552e9c46fb2f85.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bf/6b/30/d30285080238771131f3810f2b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e3/e8/49/b6b14664fa2cf3329a7c4e2fd3.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/fe/28/32878a493520ee9ac5bdb7fddc.jpg""], ""prices"": {""BYN"": ""3956.66"", ""EUR"": ""1202.1"", ""KZT"": ""650000.0"", ""PLN"": ""5107.25"", ""RUB"": ""105519.48"", ""USD"": ""1404.28"", ""UZS"": ""16883116.88""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Е-117"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-04-24T11:10:46.074890Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""38"", ""category"": ""rent"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-24T11:16:44.384783Z"", ""sewerage"": null, ""apartment"": ""НП8"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""25.33"", ""EUR"": ""7.7"", ""KZT"": ""4161.33"", ""PLN"": ""32.7"", ""RUB"": ""675.54"", ""USD"": ""8.99"", ""UZS"": ""108086.54""}, ""rent_type"": ""long"", ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Багыстан. 12 позиция.\n\n✅ Первая линия ул.Е-117 (рядом Espresso Day)\n✅ Общая площадь - 156,2 м2 (1 этаж - 98,3 м2, 2 этаж - 57,9 м2)\n✅ 2 витражных окна, 1 витражная входная группа \n✅ Мощность электричества - 15 кВт\n✅ Высота потолка - 4,84 м\n✅ Парковка перед помещением \n✅ С ремонтом под медицинский/образовательный центр (3 кабинета на 1ом этаже, 3 кабинета на 2ом этаже)"", ""electricity"": null, ""responsible"": {""id"": 14816, ""email"": null, ""phones"": [""77716297597""], ""last_name"": ""Омарова"", ""first_name"": ""Гульнара""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.84, ""construction_year"": 2024, ""distance_from_mkad"": null, ""public_description"": ""Сдается помещение в аренду в ЖК Багыстан. 12 позиция.\n\n✅ Первая линия ул.Е-117 (рядом Espresso Day)\n✅ Общая площадь - 156,2 м2 (1 этаж - 98,3 м2, 2 этаж - 57,9 м2)\n✅ 2 витражных окна, 1 витражная входная группа \n✅ Мощность электричества - 15 кВт\n✅ Высота потолка - 4,84 м\n✅ Парковка перед помещением \n✅ С ремонтом под медицинский/образовательный центр (3 кабинета на 1ом этаже, 3 кабинета на 2ом этаже)\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"	"long"	"KZT"	4.84				"{""BYN"": ""3956.66"", ""EUR"": ""1202.1"", ""KZT"": ""650000.0"", ""PLN"": ""5107.25"", ""RUB"": ""105519.48"", ""USD"": ""1404.28"", ""UZS"": ""16883116.88""}"	"{""BYN"": ""25.33"", ""EUR"": ""7.7"", ""KZT"": ""4161.33"", ""PLN"": ""32.7"", ""RUB"": ""675.54"", ""USD"": ""8.99"", ""UZS"": ""108086.54""}"		"geocoded"	"Сдается помещение в аренду в ЖК Багыстан. 12 позиция.
+
+✅ Первая линия ул.Е-117 (рядом Espresso Day)
+✅ Общая площадь - 156,2 м2 (1 этаж - 98,3 м2, 2 этаж - 57,9 м2)
+✅ 2 витражных окна, 1 витражная входная группа
+✅ Мощность электричества - 15 кВт
+✅ Высота потолка - 4,84 м
+✅ Парковка перед помещением
+✅ С ремонтом под медицинский/образовательный центр (3 кабинета на 1ом этаже, 3 кабинета на 2ом этаже)
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"30ce18f4-6950-4c39-89bd-68607d8ff8f8"	"Коммерческое помещение 121.34 м², Астана"	"ЖК ŪIA. BIRLIK
+
+✅Первая линия пр.Улы Дала
+✅Сквозное помещение
+✅Площадь 121,34 кв.м.
+✅Высота потолка 3,9 м
+✅Мощность электричества 24,2 кВт.
+✅Витражная входная группа
+✅Витражные окна - 5
+✅Срок сдачи 01.08.2026г.
+✅Динамично развивающийся район"	"Астана, Нура, Е 908, 23"	160000000	0	121.34	0	1	"Астана"	"Нура"	51.091	71.417	"77053126759"	"Динара Нурмолдина"	false	false	false		true	false	"2026-04-14 12:51:00.481698+00"	"2026-04-24 10:59:44.765077+00"	0		"16a07714-146d-450c-8e7f-9d3932bf2511"	37094330	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/9f/4b/dd/fb908278180232a4d4e10dbce5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/45/af/b5/fdc70560dbf3678a662db97148.jpg""]"	"{""id"": 37094330, ""gas"": null, ""lot"": null, ""area"": 121.34, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""16a07714-146d-450c-8e7f-9d3932bf2511"", ""floor"": null, ""power"": null, ""price"": ""160000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/9f/4b/dd/fb908278180232a4d4e10dbce5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/45/af/b5/fdc70560dbf3678a662db97148.jpg""], ""prices"": {""BYN"": ""919381.72"", ""EUR"": ""273252.04"", ""KZT"": ""160000000.0"", ""PLN"": ""1152654.71"", ""RUB"": ""24653312.79"", ""USD"": ""322028.78"", ""UZS"": ""3940886699.51""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Е 908"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-02-24T09:36:18.004040Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""23"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-10T07:24:41.600147Z"", ""sewerage"": null, ""apartment"": ""2"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7576.91"", ""EUR"": ""2251.95"", ""KZT"": ""1318608.87"", ""PLN"": ""9499.38"", ""RUB"": ""203175.48"", ""USD"": ""2653.94"", ""UZS"": ""32478050.93""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК ŪIA. BIRLIK\n\n✅Первая линия пр.Улы Дала\n✅Сквозное помещение \n✅Площадь 121,34 кв.м.\n✅Высота потолка 3,9 м\n✅Мощность электричества 24,2 кВт.\n✅Витражная входная группа\n✅Витражные окна - 5\n✅Срок сдачи 01.08.2026г.\n✅Динамично развивающийся район"", ""electricity"": null, ""responsible"": {""id"": 14086, ""email"": null, ""phones"": [""77053126759""], ""last_name"": ""Нурмолдина"", ""first_name"": ""Динара""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.9, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК ŪIA. BIRLIK\n\n✅Первая линия пр.Улы Дала\n✅Сквозное помещение \n✅Площадь 121,34 кв.м.\n✅Высота потолка 3,9 м\n✅Мощность электричества 24,2 кВт.\n✅Витражная входная группа\n✅Витражные окна - 5\n✅Срок сдачи 01.08.2026г.\n✅Динамично развивающийся район\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	3.9				"{""BYN"": ""919381.72"", ""EUR"": ""273252.04"", ""KZT"": ""160000000.0"", ""PLN"": ""1152654.71"", ""RUB"": ""24653312.79"", ""USD"": ""322028.78"", ""UZS"": ""3940886699.51""}"	"{""BYN"": ""7576.91"", ""EUR"": ""2251.95"", ""KZT"": ""1318608.87"", ""PLN"": ""9499.38"", ""RUB"": ""203175.48"", ""USD"": ""2653.94"", ""UZS"": ""32478050.93""}"		"geocoded"	"ЖК ŪIA. BIRLIK
+
+✅Первая линия пр.Улы Дала
+✅Сквозное помещение
+✅Площадь 121,34 кв.м.
+✅Высота потолка 3,9 м
+✅Мощность электричества 24,2 кВт.
+✅Витражная входная группа
+✅Витражные окна - 5
+✅Срок сдачи 01.08.2026г.
+✅Динамично развивающийся район
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"9ff42a63-7dd0-4435-acdf-602d1d57a28d"	"Коммерческое помещение 190.0 м², Астана"	"ЖК Promenade Expo
+
+✅ Общая площадь 190 кв.м
+✅ Высота потолка 5 м (имеется мезонин)
+✅ Панорамные окна
+✅ Мощность электричества 28 кВт
+✅ С ремонтом
+✅ Готовый бизнес с арендаторами
+
+На руки 250 млн без моей комиссии
+Арендаторы до пандемии зашли, сидят по сей день
+За аренду оплачивают 1 500 000 тенге
+В курсе о продаже помещения"	"Астана, Есильский, Мангилик Ел, 52"	261630000	0	190	0	1	"Астана"	"Есильский"	51.091	71.417	"77760011123"	"Аруна Талғат"	false	false	true		true	false	"2026-04-23 16:41:18.02841+00"	"2026-04-23 16:41:18.028426+00"	0		"4e6dd5a3-5bd4-58ff-8dd6-25773554a5e5"	36610069	"commercial"	"sell"	"resold"	"good"		"[]"		"https://krisha.kz/a/show/1009017380"	"[""https://media.ilvo.pro/image/re/uploaded/91/34/b6/007ff41cea6d34ceea1ebaf153.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0a/e3/bc/6a1ad292c7080145f64f8f74eb.jpg"", ""https://media.ilvo.pro/image/re/uploaded/51/79/dd/0f5c7aac85ab479c72cee3fe63.jpg"", ""https://media.ilvo.pro/image/re/uploaded/70/48/58/759024b5e5270270e127bb435f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ee/50/44/f1d885d1dc5954fb767dd86101.jpg"", ""https://media.ilvo.pro/image/re/uploaded/aa/4b/58/c551ce0a09c44bdb8b39091b3a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e6/97/aa/5cca54d5c9566bb45ce1190b4c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0e/0d/7c/2cc67e4207e5417ad3f6808de5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c8/75/0a/1ce8ce37993d84f32c67757aae.jpg""]"	"{""id"": 36610069, ""gas"": null, ""lot"": null, ""area"": 190.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""4e6dd5a3-5bd4-58ff-8dd6-25773554a5e5"", ""floor"": null, ""power"": null, ""price"": ""261630000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/91/34/b6/007ff41cea6d34ceea1ebaf153.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0a/e3/bc/6a1ad292c7080145f64f8f74eb.jpg"", ""https://media.ilvo.pro/image/re/uploaded/51/79/dd/0f5c7aac85ab479c72cee3fe63.jpg"", ""https://media.ilvo.pro/image/re/uploaded/70/48/58/759024b5e5270270e127bb435f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ee/50/44/f1d885d1dc5954fb767dd86101.jpg"", ""https://media.ilvo.pro/image/re/uploaded/aa/4b/58/c551ce0a09c44bdb8b39091b3a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e6/97/aa/5cca54d5c9566bb45ce1190b4c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0e/0d/7c/2cc67e4207e5417ad3f6808de5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c8/75/0a/1ce8ce37993d84f32c67757aae.jpg""], ""prices"": {""BYN"": ""1520574.22"", ""EUR"": ""445881.69"", ""KZT"": ""261630000.0"", ""PLN"": ""1878985.92"", ""RUB"": ""41007836.99"", ""USD"": ""528812.53"", ""UZS"": ""6508208955.22""}, ""region"": ""Акмолинская"", ""repair"": ""good"", ""street"": ""Мангилик Ел"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-01-24T08:11:15.800796+00:00"", ""heating"": [], ""housing"": ""Б1"", ""subtype"": ""free_appointment"", ""building"": ""52"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-02-17T09:30:57.215227+00:00"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""8003.02"", ""EUR"": ""2346.75"", ""KZT"": ""1377000.0"", ""PLN"": ""9889.4"", ""RUB"": ""215830.72"", ""USD"": ""2783.22"", ""UZS"": ""34253731.34""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1009017380"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Promenade Expo\n\n✅ Общая площадь 190 кв.м\n✅ Высота потолка 5 м (имеется мезонин)\n✅ Панорамные окна\n✅ Мощность электричества 28 кВт\n✅ С ремонтом\n✅ Готовый бизнес с арендаторами\n\nНа руки 250 млн без моей комиссии\nАрендаторы до пандемии зашли, сидят по сей день\nЗа аренду оплачивают 1 500 000 тенге\nВ курсе о продаже помещения"", ""electricity"": null, ""responsible"": {""id"": 14817, ""email"": null, ""phones"": [""77760011123""], ""last_name"": ""Талғат"", ""first_name"": ""Аруна""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 5.0, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК Promenade Expo\n\n✅ Общая площадь 190 кв.м\n✅ Высота потолка 5 м (имеется мезонин)\n✅ Панорамные окна\n✅ Мощность электричества 28 кВт\n✅ С ремонтом\n✅ Готовый бизнес с арендаторами\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.\n\nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!"", ""city_micro_district"": ""Bi Village""}"	"free_appointment"		"KZT"	5				"{""BYN"": ""1520574.22"", ""EUR"": ""445881.69"", ""KZT"": ""261630000.0"", ""PLN"": ""1878985.92"", ""RUB"": ""41007836.99"", ""USD"": ""528812.53"", ""UZS"": ""6508208955.22""}"	"{""BYN"": ""8003.02"", ""EUR"": ""2346.75"", ""KZT"": ""1377000.0"", ""PLN"": ""9889.4"", ""RUB"": ""215830.72"", ""USD"": ""2783.22"", ""UZS"": ""34253731.34""}"	"Bi Village"	"geocoded"	"ЖК Promenade Expo
+
+✅ Общая площадь 190 кв.м
+✅ Высота потолка 5 м (имеется мезонин)
+✅ Панорамные окна
+✅ Мощность электричества 28 кВт
+✅ С ремонтом
+✅ Готовый бизнес с арендаторами
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"2b4d49a7-4152-4f94-83a3-169dcf80db59"	"Коммерческое помещение 106.0 м², Астана"	"ЖК Soho
+
+✅ Первая линия ул. Жошы хана
+✅ Общая площадь - 106,2 м2
+✅ Мощность электричества -  16,87 квт
+✅ Высота потолков - 4,7
+✅ Парковка перед помещением
+✅ 2 кабинета, кухня на 2 этаже
+✅ Продается с мебелью"	"Астана, Есильский, Ул. Керей, Жанибек хандар, 42"	195000000	0	106	0	1	"Астана"	"Есильский"	51.091	71.417	"77754244997"	"Альмира Оспанбекова"	false	false	false		true	false	"2026-04-23 16:41:06.216938+00"	"2026-04-23 16:41:06.216967+00"	0		"ad5f5a08-c85e-45d7-8681-89ab8699dde4"	36936200	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/12/55/e7/30cd7537a2fe3c5aa2a8aa916f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c4/4c/01/04e01340a89c1d154dadc0cc4b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4e/73/6e/edaa4af15656bc38983d778041.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b1/e9/55/e287c2e7faecfc220b4b903d3a.jpg""]"	"{""id"": 36936200, ""gas"": null, ""lot"": null, ""area"": 106.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""ad5f5a08-c85e-45d7-8681-89ab8699dde4"", ""floor"": null, ""power"": null, ""price"": ""195000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/12/55/e7/30cd7537a2fe3c5aa2a8aa916f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c4/4c/01/04e01340a89c1d154dadc0cc4b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4e/73/6e/edaa4af15656bc38983d778041.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b1/e9/55/e287c2e7faecfc220b4b903d3a.jpg""], ""prices"": {""BYN"": ""1121398.59"", ""EUR"": ""331627.01"", ""KZT"": ""195000000.0"", ""PLN"": ""1396948.21"", ""RUB"": ""30373831.78"", ""USD"": ""393145.16"", ""UZS"": ""4814814814.81""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Ул. Керей, Жанибек хандар"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-02-16T08:11:33.471002+00:00"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""42"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-02-16T10:15:36.525887+00:00"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""10579.23"", ""EUR"": ""3128.56"", ""KZT"": ""1839622.64"", ""PLN"": ""13178.76"", ""RUB"": ""286545.58"", ""USD"": ""3708.92"", ""UZS"": ""45422781.27""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Soho\n\n✅ Первая линия ул. Жошы хана\n✅ Общая площадь - 106,2 м2\n✅ Мощность электричества -  16,87 квт\n✅ Высота потолков - 4,7\n✅ Парковка перед помещением \n✅ 2 кабинета, кухня на 2 этаже \n✅ Продается с мебелью"", ""electricity"": null, ""responsible"": {""id"": 14818, ""email"": null, ""phones"": [""77754244997""], ""last_name"": ""Оспанбекова"", ""first_name"": ""Альмира""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.7, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК Soho\n\n✅ Первая линия ул. Жошы хана\n✅ Общая площадь - 106,2 м2\n✅ Мощность электричества - 16,87 квт\n✅ Высота потолков - 4,7\n✅ Парковка перед помещением \n✅ 2 кабинета, кухня на 2 этаже \n✅ Продается с мебелью"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.7				"{""BYN"": ""1121398.59"", ""EUR"": ""331627.01"", ""KZT"": ""195000000.0"", ""PLN"": ""1396948.21"", ""RUB"": ""30373831.78"", ""USD"": ""393145.16"", ""UZS"": ""4814814814.81""}"	"{""BYN"": ""10579.23"", ""EUR"": ""3128.56"", ""KZT"": ""1839622.64"", ""PLN"": ""13178.76"", ""RUB"": ""286545.58"", ""USD"": ""3708.92"", ""UZS"": ""45422781.27""}"		"geocoded"	"ЖК Soho
+
+✅ Первая линия ул. Жошы хана
+✅ Общая площадь - 106,2 м2
+✅ Мощность электричества - 16,87 квт
+✅ Высота потолков - 4,7
+✅ Парковка перед помещением
+✅ 2 кабинета, кухня на 2 этаже
+✅ Продается с мебелью"
+"b140d9f5-90e9-4e73-91bb-490ab55c78b4"	"Коммерческое помещение 90.6 м², Астана"	"ЖК Alakol
+
+✅На первой линии ул. Серкибаева
+✅ С ремонтом, сквозное
+✅Площадь 90,6 кв.м.
+✅Высота потолка 4 м.
+✅Мощность электричества 14 кВт.
+✅Три окна, виражная входная группа
+✅Новый застраиваемый район локация, дефицит коммерческих помещений
+✅Рядом остановка
+✅Стабильные арендаторы, 6 лет окупаемость
+
+"	"Астана, Сарыаркинский, Чингиза Айтматова, 79"	75000000	0	90.6	0	1	"Астана"	"Сарыаркинский"	51.1995914	71.3210749	"77712777252"	"Айгерим Ильясова"	false	false	false		false	false	"2026-04-14 12:54:38.038211+00"	"2026-04-20 09:54:24.390395+00"	0		"9d1d476e-9eb5-4b36-adf3-864d42a0db51"	35456979	"commercial"	"sell"	"resold"		2025	"[]"			"[""https://media.ilvo.pro/image/re/uploaded/ca/fb/2b/1d8873ffa75a5327c0c73ac27e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2d/82/d9/8d21c8acb0ec74579dc966b812.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/5a/39/08474d7124c16825181513894f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/73/51/a0/c68ba73232bd6484cfb0c53509.jpg"", ""https://media.ilvo.pro/image/re/uploaded/54/d9/c1/445f57b6c385f47157f3260e5a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4a/d4/02/ade7604849d6e9063a7957114f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/54/b1/29/bdfe9bf06f039fa13bd88519d5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/24/f0/a1/0d80f2a7817b75704612f4b8be.jpg"", ""https://media.ilvo.pro/image/re/uploaded/87/d6/95/d27688d4d33ace480ca72b5784.jpg""]"	"{""id"": 35456979, ""gas"": null, ""lot"": null, ""area"": 90.6, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""9d1d476e-9eb5-4b36-adf3-864d42a0db51"", ""floor"": null, ""power"": null, ""price"": ""75000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/ca/fb/2b/1d8873ffa75a5327c0c73ac27e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2d/82/d9/8d21c8acb0ec74579dc966b812.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/5a/39/08474d7124c16825181513894f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/73/51/a0/c68ba73232bd6484cfb0c53509.jpg"", ""https://media.ilvo.pro/image/re/uploaded/54/d9/c1/445f57b6c385f47157f3260e5a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4a/d4/02/ade7604849d6e9063a7957114f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/54/b1/29/bdfe9bf06f039fa13bd88519d5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/24/f0/a1/0d80f2a7817b75704612f4b8be.jpg"", ""https://media.ilvo.pro/image/re/uploaded/87/d6/95/d27688d4d33ace480ca72b5784.jpg""], ""prices"": {""BYN"": ""452570.6"", ""EUR"": ""135440.18"", ""KZT"": ""75000000.0"", ""PLN"": ""573131.59"", ""RUB"": ""12195121.95"", ""USD"": ""159737.6"", ""UZS"": ""1937984496.12""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Чингиза Айтматова"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-11-17T07:26:07.913155Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""79"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-20T09:54:08.797183Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""4995.26"", ""EUR"": ""1494.92"", ""KZT"": ""827814.57"", ""PLN"": ""6325.96"", ""RUB"": ""134604.0"", ""USD"": ""1763.11"", ""UZS"": ""21390557.35""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Alakol\n\n✅На первой линии ул. Серкибаева\n✅ С ремонтом, сквозное\n✅Площадь 90,6 кв.м.\n✅Высота потолка 4 м.\n✅Мощность электричества 14 кВт.\n✅Три окна, виражная входная группа \n✅Новый застраиваемый район локация, дефицит коммерческих помещений\n✅Рядом остановка\n✅Стабильные арендаторы, 6 лет окупаемость\n \n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Сарыаркинский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.0, ""construction_year"": 2025, ""distance_from_mkad"": null, ""public_description"": ""Сдается помещение в ЖК Alakol, с ремонтом\n\n✅На первой линии ул. Серкибаева\n✅ С ремонтом, сквозное\n✅Площадь 90,6 кв.м.\n✅Высота потолка 4 м.\n✅Мощность электричества 14 кВт.\n✅Три окна, виражная входная группа \n✅Новый застраиваемый район локация, дефицит коммерческих помещений\n✅Рядом остановка\n✅Стабильные арендаторы, 6 лет окупаемость\n\n\n Для получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.\n\nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!"", ""city_micro_district"": ""Дачное товарищество \""Западный\""""}"	"free_appointment"		"KZT"	4				"{""BYN"": ""452570.6"", ""EUR"": ""135440.18"", ""KZT"": ""75000000.0"", ""PLN"": ""573131.59"", ""RUB"": ""12195121.95"", ""USD"": ""159737.6"", ""UZS"": ""1937984496.12""}"	"{""BYN"": ""4995.26"", ""EUR"": ""1494.92"", ""KZT"": ""827814.57"", ""PLN"": ""6325.96"", ""RUB"": ""134604.0"", ""USD"": ""1763.11"", ""UZS"": ""21390557.35""}"	"Дачное товарищество ""Западный"""	"geocoded"	"Сдается помещение в ЖК Alakol, с ремонтом
+
+✅На первой линии ул. Серкибаева
+✅ С ремонтом, сквозное
+✅Площадь 90,6 кв.м.
+✅Высота потолка 4 м.
+✅Мощность электричества 14 кВт.
+✅Три окна, виражная входная группа
+✅Новый застраиваемый район локация, дефицит коммерческих помещений
+✅Рядом остановка
+✅Стабильные арендаторы, 6 лет окупаемость
+
+
+ Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"1e52683a-63d1-48a8-b435-7d84c42b0e33"	"Коммерческое помещение 95.0 м², Астана"	"ЖК Samal Park
+
+✅Площадь 95 кв.м
+✅Высота потолка 4,2 м
+✅ Мощность электричества 14 кВт
+✅Три окна, сквозное
+✅Предчистовая отделка
+✅Напротив школы
+
+"	"Жошы хана 14/1"	122000000	0	95	0	1	"Астана"	"Есильский"	51.091	71.417	"77712777252"	"Айгерим Ильясова"	false	false	false		true	false	"2026-04-14 13:14:07.851766+00"	"2026-04-20 09:44:58.296746+00"	0		"e3abec60-a3ea-4e75-a468-3e45025e0499"	37942712	"commercial"	"sell"	"resold"		2023	"[]"	"Жошы хана 14/1"		"[""https://media.ilvo.pro/image/re/uploaded/78/df/8d/8c49f041d3042aa821edfe0f5d.jpg"", ""https://media.ilvo.pro/image/re/uploaded/6f/24/73/db7e413a7adc78c7af310a5883.jpg"", ""https://media.ilvo.pro/image/re/uploaded/62/da/c2/27cd76015b98fd7a171578a6f1.jpg"", ""https://media.ilvo.pro/image/re/uploaded/70/a3/a6/f580c9a22e42200d94014f97c4.jpg""]"	"{""id"": 37942712, ""gas"": null, ""lot"": null, ""area"": 95.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""e3abec60-a3ea-4e75-a468-3e45025e0499"", ""floor"": null, ""power"": null, ""price"": ""122000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/78/df/8d/8c49f041d3042aa821edfe0f5d.jpg"", ""https://media.ilvo.pro/image/re/uploaded/6f/24/73/db7e413a7adc78c7af310a5883.jpg"", ""https://media.ilvo.pro/image/re/uploaded/62/da/c2/27cd76015b98fd7a171578a6f1.jpg"", ""https://media.ilvo.pro/image/re/uploaded/70/a3/a6/f580c9a22e42200d94014f97c4.jpg""], ""prices"": {""BYN"": ""736181.51"", ""EUR"": ""220316.03"", ""KZT"": ""122000000.0"", ""PLN"": ""932294.05"", ""RUB"": ""19837398.37"", ""USD"": ""259839.84"", ""UZS"": ""3152454780.36""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Жошы хана"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-04-14T13:12:41.475486Z"", ""heating"": [], ""housing"": ""1"", ""subtype"": ""free_appointment"", ""building"": ""14"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-20T09:44:41.924298Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7749.28"", ""EUR"": ""2319.12"", ""KZT"": ""1284210.53"", ""PLN"": ""9813.62"", ""RUB"": ""208814.72"", ""USD"": ""2735.16"", ""UZS"": ""33183734.53""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Samal Park\n\n✅Площадь 95 кв.м\n✅Высота потолка 4,2 м\n✅ Мощность электричества 14 кВт\n✅Три окна, сквозное\n✅Предчистовая отделка\n✅Напротив школы\n\n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": ""Жошы хана 14/1"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.2, ""construction_year"": 2023, ""distance_from_mkad"": null, ""public_description"": ""Продается помещение в ЖК Samal Park\n\n✅Площадь 95 кв.м\n✅Высота потолка 4,2 м\n✅ Мощность электричества 14 кВт\n✅Три окна, сквозное\n✅Предчистовая отделка\n✅Напротив школы\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!\n\n\n "", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.2				"{""BYN"": ""736181.51"", ""EUR"": ""220316.03"", ""KZT"": ""122000000.0"", ""PLN"": ""932294.05"", ""RUB"": ""19837398.37"", ""USD"": ""259839.84"", ""UZS"": ""3152454780.36""}"	"{""BYN"": ""7749.28"", ""EUR"": ""2319.12"", ""KZT"": ""1284210.53"", ""PLN"": ""9813.62"", ""RUB"": ""208814.72"", ""USD"": ""2735.16"", ""UZS"": ""33183734.53""}"		"geocoded"	"Продается помещение в ЖК Samal Park
+
+✅Площадь 95 кв.м
+✅Высота потолка 4,2 м
+✅ Мощность электричества 14 кВт
+✅Три окна, сквозное
+✅Предчистовая отделка
+✅Напротив школы
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+
+
+"
+"c4090b69-2ac3-4338-ac89-c494f0ba2750"	"Коммерческое помещение 102.91 м², Астана"	"ЖК ""Samal Park""
+Первая линия Сфера Парка
+✅Площадь 102,91 кв.м.
+✅Высота потолка 3,75 м
+✅Мощность электричества 15,4 кВт.
+✅Витражная входная группа
+✅Витражное окно
+✅Дом сдан, ключи на руках
+✅Динамично развивающийся район
+"	"Астана, Есильский, Жошы хана, 17"	175000000	0	102.91	0	1	"Астана"	"Есильский"	51.091	71.417	"77712777252"	"Айгерим Ильясова"	false	false	false		true	false	"2026-04-14 12:58:02.159936+00"	"2026-04-20 09:38:18.175214+00"	0		"fd6a0950-2d1b-45da-beb8-4382fb22d7b2"	34173908	"commercial"	"sell"	"resold"		2025	"[]"			"[""https://media.ilvo.pro/image/re/uploaded/6f/24/73/db7e413a7adc78c7af310a5883.jpg"", ""https://media.ilvo.pro/image/re/uploaded/62/da/c2/27cd76015b98fd7a171578a6f1.jpg"", ""https://media.ilvo.pro/image/re/uploaded/68/ba/51/fc2100db9e910a840644953500.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a8/b9/d2/673ed0b144520edbbd2700fa76.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c3/74/13/4d84943d92aa9fd1338e1a43fe.jpg""]"	"{""id"": 34173908, ""gas"": null, ""lot"": null, ""area"": 102.91, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""fd6a0950-2d1b-45da-beb8-4382fb22d7b2"", ""floor"": null, ""power"": null, ""price"": ""175000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/6f/24/73/db7e413a7adc78c7af310a5883.jpg"", ""https://media.ilvo.pro/image/re/uploaded/62/da/c2/27cd76015b98fd7a171578a6f1.jpg"", ""https://media.ilvo.pro/image/re/uploaded/68/ba/51/fc2100db9e910a840644953500.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a8/b9/d2/673ed0b144520edbbd2700fa76.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c3/74/13/4d84943d92aa9fd1338e1a43fe.jpg""], ""prices"": {""BYN"": ""1055998.07"", ""EUR"": ""316027.09"", ""KZT"": ""175000000.0"", ""PLN"": ""1337307.05"", ""RUB"": ""28455284.55"", ""USD"": ""372721.08"", ""UZS"": ""4521963824.29""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Жошы хана"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-09-10T07:29:32.606905Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""17"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-20T09:38:01.247961Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""10261.37"", ""EUR"": ""3070.91"", ""KZT"": ""1700515.01"", ""PLN"": ""12994.92"", ""RUB"": ""276506.51"", ""USD"": ""3621.82"", ""UZS"": ""43940956.41""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК \""Samal Park\""\nПервая линия Сфера Парка\n✅Площадь 102,91 кв.м.\n✅Высота потолка 3,75 м\n✅Мощность электричества 15,4 кВт.\n✅Витражная входная группа \n✅Витражное окно\n✅Дом сдан, ключи на руках\n✅Динамично развивающийся район\n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.75, ""construction_year"": 2025, ""distance_from_mkad"": null, ""public_description"": ""Эксклюзивное предложение в ЖК \""Samal Park\""\n\n✅Первая линия Сфера Парка\n✅Площадь 102,91 кв.м.\n✅Высота потолка 3,75 м\n✅Мощность электричества 15,4 кВт.\n✅Витражная входная группа \n✅Витражное окно\n✅Дом сдан, ключи на руках\n✅Динамично развивающийся район\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ Abu Dhabi Plaza;, блок В, 5 этаж, офис 505. \n \nМы всегда рады вам!\n"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	3.75				"{""BYN"": ""1055998.07"", ""EUR"": ""316027.09"", ""KZT"": ""175000000.0"", ""PLN"": ""1337307.05"", ""RUB"": ""28455284.55"", ""USD"": ""372721.08"", ""UZS"": ""4521963824.29""}"	"{""BYN"": ""10261.37"", ""EUR"": ""3070.91"", ""KZT"": ""1700515.01"", ""PLN"": ""12994.92"", ""RUB"": ""276506.51"", ""USD"": ""3621.82"", ""UZS"": ""43940956.41""}"		"geocoded"	"Эксклюзивное предложение в ЖК ""Samal Park""
+
+✅Первая линия Сфера Парка
+✅Площадь 102,91 кв.м.
+✅Высота потолка 3,75 м
+✅Мощность электричества 15,4 кВт.
+✅Витражная входная группа
+✅Витражное окно
+✅Дом сдан, ключи на руках
+✅Динамично развивающийся район
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ Abu Dhabi Plaza;, блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+"
+"4e24bec3-7cb6-44a4-8e24-9cf853a26c04"	"Коммерческое помещение 85.0 м², Астана"	"ЖК Sandi Qala 2
+
+✅Первая линия ул. Жошы Хана
+✅Площадь 85 кв.м.
+✅Высота потолка 4,5м.
+✅Витражное окно и три витражных окна
+✅ Парковочная зона
+✅ Приточно-вытяжная система
+✅ Густонаселенный район, активный трафик
+"	"Астана, Есильский р-н, Жошы хана 20"	120000000	0	85	0	1	"Астана"	"Есильский"	51.091	71.417	"77712777252"	"Айгерим Ильясова"	false	false	false		true	false	"2026-04-15 13:33:00.745748+00"	"2026-04-20 07:41:07.440481+00"	0		"2915a5a4-ece3-459a-8a3a-80ca47086818"	36376098	"commercial"	"sell"	"resold"		2026	"[]"	"Астана, Есильский р-н, Жошы хана 20"	"https://krisha.kz/a/show/1008719063"	"[""https://media.ilvo.pro/image/re/uploaded/30/39/32/9f611d5abc63ca94f614fe4a2a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7e/f3/1e/76fc4ba1b744bdad2a6e62958a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/da/a0/76/265d4791b0313c119898afc3e7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/43/f8/a4/61b0b2dccbb5d82f2f774a287c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/10/5e/c0/6e5b19a0a8a01730a6694e7bd6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/af/6d/80/64b3841570e4c40192ed49258f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/95/56/80/1ab5cfb514a8771787041395ee.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e0/09/3a/a6424a9fdc76502c8fb805c1bd.jpg""]"	"{""id"": 36376098, ""gas"": null, ""lot"": null, ""area"": 85.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""2915a5a4-ece3-459a-8a3a-80ca47086818"", ""floor"": null, ""power"": null, ""price"": ""120000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/30/39/32/9f611d5abc63ca94f614fe4a2a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7e/f3/1e/76fc4ba1b744bdad2a6e62958a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/da/a0/76/265d4791b0313c119898afc3e7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/43/f8/a4/61b0b2dccbb5d82f2f774a287c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/10/5e/c0/6e5b19a0a8a01730a6694e7bd6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/af/6d/80/64b3841570e4c40192ed49258f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/95/56/80/1ab5cfb514a8771787041395ee.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e0/09/3a/a6424a9fdc76502c8fb805c1bd.jpg""], ""prices"": {""BYN"": ""724112.96"", ""EUR"": ""216704.29"", ""KZT"": ""120000000.0"", ""PLN"": ""917010.55"", ""RUB"": ""19512195.12"", ""USD"": ""255580.17"", ""UZS"": ""3100775193.8""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Жошы хана"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-01-14T10:25:58.548611Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""16"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-20T07:40:56.320509Z"", ""sewerage"": null, ""apartment"": ""8"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""8518.98"", ""EUR"": ""2549.46"", ""KZT"": ""1411764.71"", ""PLN"": ""10788.36"", ""RUB"": ""229555.24"", ""USD"": ""3006.83"", ""UZS"": ""36479708.16""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1008719063"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Sandi Qala 2\n\n✅Первая линия ул. Жошы Хана\n✅Площадь 85 кв.м.\n✅Высота потолка 4,5м.\n✅Витражное окно и три витражных окна\n✅ Парковочная зона \n✅ Приточно-вытяжная система \n✅ Густонаселенный район, активный трафик \n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": ""Астана, Есильский р-н, Жошы хана 20"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.5, ""construction_year"": 2026, ""distance_from_mkad"": null, ""public_description"": ""Продается помещение в ЖК Sandi Qala 2\n\n✅Первая линия ул. Жошы Хана\n✅Площадь 85 кв.м.\n✅Высота потолка 4,5м.\n✅Витражное окно и три витражных окна\n✅ Парковочная зона \n✅ Приточно-вытяжная система\n✅ Густонаселенный район, активный трафик \n\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!\n\n\n "", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.5				"{""BYN"": ""724112.96"", ""EUR"": ""216704.29"", ""KZT"": ""120000000.0"", ""PLN"": ""917010.55"", ""RUB"": ""19512195.12"", ""USD"": ""255580.17"", ""UZS"": ""3100775193.8""}"	"{""BYN"": ""8518.98"", ""EUR"": ""2549.46"", ""KZT"": ""1411764.71"", ""PLN"": ""10788.36"", ""RUB"": ""229555.24"", ""USD"": ""3006.83"", ""UZS"": ""36479708.16""}"		"geocoded"	"Продается помещение в ЖК Sandi Qala 2
+
+✅Первая линия ул. Жошы Хана
+✅Площадь 85 кв.м.
+✅Высота потолка 4,5м.
+✅Витражное окно и три витражных окна
+✅ Парковочная зона
+✅ Приточно-вытяжная система
+✅ Густонаселенный район, активный трафик
+
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+
+
+"
+"aebe197e-c81a-4d6d-9f5d-5155d2bb3489"	"Коммерческое помещение 432.0 м², Астана"	"ЖК Виктория
+
+✅ Общая площадь 432 квм
+✅ Мощность электричества 50 квт
+✅ С долгосрочными арендаторами на 5  лет
+✅ Первая линия пр.Б.Момышулы
+✅ Высота потолка 3м
+✅ Кухня с профессиональной вытяжкой
+✅ Без жилого фонда наверху
+✅ Две входные группы
+✅ Профессиональная система охлаждения серверов проведена по всему периметру помещения.
+
+
+
+"	"Астана, Алматинский, Бауыржана Момышулы, 2"	235000000	0	432	0	1	"Астана"	"Алматинский"	51.1434824	71.5424476	"77055553504"	"Фариза Багдатова"	false	false	false		true	false	"2026-04-15 11:59:17.484983+00"	"2026-04-15 11:59:17.485012+00"	0		"904cdb7e-7b7b-4e84-b4af-927f32359ea8"	37486981	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/9b/ed/53/6e6262076c34b7dd2789f65cc2.jpg"", ""https://media.ilvo.pro/image/re/uploaded/02/ca/30/1c1c36c728d992a79f68dab33e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/5b/65/68/7159960f52e07725a1c52eb93e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d3/64/4d/2ba07ae4943bf52a4da5bcc3cf.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fb/fa/70/b4be8a5014d45b21c2008b7882.jpg"", ""https://media.ilvo.pro/image/re/uploaded/45/31/f1/ed9f42a1ca37a8d70aa78d6a4a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/58/4e/4b/5b62ff83816338c5b995ad7375.jpg"", ""https://media.ilvo.pro/image/re/uploaded/12/8a/24/740d5b265a50ed01e5c296131b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/11/87/ee/f182646fbd7da1b64bd8ca61e8.jpg""]"	"{""id"": 37486981, ""gas"": null, ""lot"": null, ""area"": 432.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""904cdb7e-7b7b-4e84-b4af-927f32359ea8"", ""floor"": null, ""power"": null, ""price"": ""235000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/9b/ed/53/6e6262076c34b7dd2789f65cc2.jpg"", ""https://media.ilvo.pro/image/re/uploaded/02/ca/30/1c1c36c728d992a79f68dab33e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/5b/65/68/7159960f52e07725a1c52eb93e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d3/64/4d/2ba07ae4943bf52a4da5bcc3cf.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fb/fa/70/b4be8a5014d45b21c2008b7882.jpg"", ""https://media.ilvo.pro/image/re/uploaded/45/31/f1/ed9f42a1ca37a8d70aa78d6a4a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/58/4e/4b/5b62ff83816338c5b995ad7375.jpg"", ""https://media.ilvo.pro/image/re/uploaded/12/8a/24/740d5b265a50ed01e5c296131b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/11/87/ee/f182646fbd7da1b64bd8ca61e8.jpg""], ""prices"": {""BYN"": ""1467007.93"", ""EUR"": ""426412.15"", ""KZT"": ""235000000.0"", ""PLN"": ""1819448.75"", ""RUB"": ""40378006.87"", ""USD"": ""490584.94"", ""UZS"": ""5949367088.61""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Бауыржана Момышулы"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-03-18T13:27:01.181957Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""2"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-15T11:59:15.715036Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""3395.85"", ""EUR"": ""987.07"", ""KZT"": ""543981.48"", ""PLN"": ""4211.69"", ""RUB"": ""93467.61"", ""USD"": ""1135.61"", ""UZS"": ""13771683.08""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Виктория\n\n✅ Общая площадь 432 квм\n✅ Мощность электричества 50 квт\n✅ С долгосрочными арендаторами на 5  лет \n✅ Первая линия пр.Б.Момышулы\n✅ Высота потолка 3м\n✅ Кухня с профессиональной вытяжкой\n✅ Без жилого фонда наверху\n✅ Две входные группы\n✅ Профессиональная система охлаждения серверов проведена по всему периметру помещения.\n\n\n\n"", ""electricity"": null, ""responsible"": {""id"": 14088, ""email"": null, ""phones"": [""77055553504""], ""last_name"": ""Багдатова"", ""first_name"": ""Фариза ""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Алматинский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.0, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК Виктория\n\n✅ Общая площадь 432 квм\n✅ Мощность электричества 50 квт\n✅ С долгосрочными арендаторами на 5  лет \n✅ Первая линия пр.Б.Момышулы\n✅ Высота потолка 3м\n✅ Кухня с профессиональной вытяжкой\n✅ Без жилого фонда наверху\n✅ Две входные группы\n✅ Профессиональная система охлаждения серверов проведена по всему периметру помещения.\n\n\n\n"", ""city_micro_district"": ""Юго-Восток (правая сторона)""}"	"free_appointment"		"KZT"	3				"{""BYN"": ""1467007.93"", ""EUR"": ""426412.15"", ""KZT"": ""235000000.0"", ""PLN"": ""1819448.75"", ""RUB"": ""40378006.87"", ""USD"": ""490584.94"", ""UZS"": ""5949367088.61""}"	"{""BYN"": ""3395.85"", ""EUR"": ""987.07"", ""KZT"": ""543981.48"", ""PLN"": ""4211.69"", ""RUB"": ""93467.61"", ""USD"": ""1135.61"", ""UZS"": ""13771683.08""}"	"Юго-Восток (правая сторона)"	"geocoded"	"ЖК Виктория
+
+✅ Общая площадь 432 квм
+✅ Мощность электричества 50 квт
+✅ С долгосрочными арендаторами на 5  лет
+✅ Первая линия пр.Б.Момышулы
+✅ Высота потолка 3м
+✅ Кухня с профессиональной вытяжкой
+✅ Без жилого фонда наверху
+✅ Две входные группы
+✅ Профессиональная система охлаждения серверов проведена по всему периметру помещения.
+
+
+
+"
+"c3d37d6e-17c5-431c-b710-7baeb0c6f67e"	"Коммерческое помещение 92.67 м², Астана"	"ЖК Zhana Urpaq
+
+✅ угловое помещение
+✅ Площадь  92,67 кв.м
+✅ Светлое помещение 5 окон
+✅ Мощность электричества:  15 кВт
+✅ Высота потолков: 4 м
+✅ Парковка перед помещением
+✅Идеальный вариант для мед учреждений, подходит для любого вида деятельности
+
+
+
+
+"	"Астана, Есильский р-н, Аль-Фараби 7/2"	900000	0	92.67	1	1	"Астана"	"Есильский"	51.091	71.417	"77712777252"	"Айгерим Ильясова"	false	false	false		false	false	"2026-04-15 06:30:04.698033+00"	"2026-04-15 06:34:48.27565+00"	0		"6d0a673d-b552-472e-b715-a9b10cf3a432"	37942860	"commercial"	"rent"	"resold"		2024	"[]"	"Астана, Есильский р-н, Аль-Фараби 7/2"	"https://krisha.kz/a/show/1005836616"	"[""https://media.ilvo.pro/image/re/uploaded/70/ac/ac/0548a038c833a046c34dc69a9c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a8/92/66/97b84f1993722f0f4614be0d4a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/cc/31/89/2fb591bf8b0fdb706f359bbe2e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/20/b5/90/1470670b145944f5944be588fd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/60/cb/a7/8a12067a1a7e2691a107b1d7ad.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fa/bf/88/4315feed14466870181785fd6b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/36/62/f4/c82b578d31e67ed0d88561094e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4d/98/c6/8faa1618102ad949ea64641ac7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/08/14/7b/fe341dcfc9d66d27127b7e6203.jpg"", ""https://media.ilvo.pro/image/re/c2f1ead4a4817dd2/b2/10/54/b1dcd49b730cdc466ed63a8552.jpg"", ""https://media.ilvo.pro/image/re/uploaded/39/8a/27/9811d1ccb27db8233c742d0ae2.jpg""]"	"{""id"": 37942860, ""gas"": null, ""lot"": null, ""area"": 92.67, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""6d0a673d-b552-472e-b715-a9b10cf3a432"", ""floor"": 1, ""power"": null, ""price"": ""900000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/70/ac/ac/0548a038c833a046c34dc69a9c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a8/92/66/97b84f1993722f0f4614be0d4a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/cc/31/89/2fb591bf8b0fdb706f359bbe2e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/20/b5/90/1470670b145944f5944be588fd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/60/cb/a7/8a12067a1a7e2691a107b1d7ad.jpg"", ""https://media.ilvo.pro/image/re/uploaded/fa/bf/88/4315feed14466870181785fd6b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/36/62/f4/c82b578d31e67ed0d88561094e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4d/98/c6/8faa1618102ad949ea64641ac7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/08/14/7b/fe341dcfc9d66d27127b7e6203.jpg"", ""https://media.ilvo.pro/image/re/c2f1ead4a4817dd2/b2/10/54/b1dcd49b730cdc466ed63a8552.jpg"", ""https://media.ilvo.pro/image/re/uploaded/39/8a/27/9811d1ccb27db8233c742d0ae2.jpg""], ""prices"": {""BYN"": ""5391.8"", ""EUR"": ""1620.75"", ""KZT"": ""900000.0"", ""PLN"": ""6891.8"", ""RUB"": ""144230.77"", ""USD"": ""1895.14"", ""UZS"": ""22959183.67""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Аль-Фараби"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-04-14T13:18:59.272550Z"", ""heating"": [], ""housing"": ""2"", ""subtype"": ""free_appointment"", ""building"": ""7"", ""category"": ""rent"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-15T06:34:46.688588Z"", ""sewerage"": null, ""apartment"": ""НП-24"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""58.18"", ""EUR"": ""17.49"", ""KZT"": ""9711.88"", ""PLN"": ""74.37"", ""RUB"": ""1556.39"", ""USD"": ""20.45"", ""UZS"": ""247752.06""}, ""rent_type"": ""long"", ""commission"": null, ""facilities"": [""parking_space""], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1005836616"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Zhana Urpaq \n\n✅ угловое помещение \n✅ Площадь  92,67 кв.м\n✅ Светлое помещение 5 окон  \n✅ Мощность электричества:  15 кВт \n✅ Высота потолков: 4 м\n✅ Парковка перед помещением\n✅Идеальный вариант для мед учреждений, подходит для любого вида деятельности\n\n\n\n\n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": ""Астана, Есильский р-н, Аль-Фараби 7/2"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.8, ""construction_year"": 2024, ""distance_from_mkad"": null, ""public_description"": ""Продам помещение в ЖК Zhana Urpaq \n\n✅ угловое помещение \n✅ Площадь помещения: 92,67 кв.м\n✅ Светлое помещение 5 окон  \n✅ Мощность электричества:  15 кВт \n✅ Высота потолков: 3,8 м\n✅ Парковка перед помещением\n✅Идеальный вариант для мед учреждений, подходит для любого вида деятельности\n\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.\n\nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!\n\n"", ""city_micro_district"": null}"	"free_appointment"	"long"	"KZT"	3.8				"{""BYN"": ""5391.8"", ""EUR"": ""1620.75"", ""KZT"": ""900000.0"", ""PLN"": ""6891.8"", ""RUB"": ""144230.77"", ""USD"": ""1895.14"", ""UZS"": ""22959183.67""}"	"{""BYN"": ""58.18"", ""EUR"": ""17.49"", ""KZT"": ""9711.88"", ""PLN"": ""74.37"", ""RUB"": ""1556.39"", ""USD"": ""20.45"", ""UZS"": ""247752.06""}"		"geocoded"	"Продам помещение в ЖК Zhana Urpaq
+
+✅ угловое помещение
+✅ Площадь помещения: 92,67 кв.м
+✅ Светлое помещение 5 окон
+✅ Мощность электричества:  15 кВт
+✅ Высота потолков: 3,8 м
+✅ Парковка перед помещением
+✅Идеальный вариант для мед учреждений, подходит для любого вида деятельности
+
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+
+"
+"2ea1aca5-2b36-4058-ba71-bf415cab6b01"	"building 90.9 м², Астана"	"ЖК ""BAIDAULET""
+
+✅Первая линия ЕК-15 (рядом с якорным арендатором Small)
+✅Площадь 90,9 кв.м
+✅Высота потолка 4 м.
+✅Мощность электричества 14 кВт.
+✅Парковка перед помещением
+✅Предчистовая отделка
+
+Объект Мухаммада"	"Астана, Астана, Е-15, 16"	800000	0	90.9	0	1	"Астана"	"Астана"	51.091	71.417	"77067271065"	"Бакыт Адиль"	false	false	false		false	false	"2026-04-15 05:51:00.535479+00"	"2026-04-15 05:51:00.53553+00"	0		"3b8ca919-1232-4f61-ae48-ee272975d0af"	35624090	"commercial"	"rent"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/ee/6b/45/e13e976f3508f07c7564cb1359.jpg"", ""https://media.ilvo.pro/image/re/uploaded/8f/f6/70/3ff3479518bd3f98129227e74c.jpg""]"	"{""id"": 35624090, ""gas"": null, ""lot"": null, ""area"": 90.9, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""3b8ca919-1232-4f61-ae48-ee272975d0af"", ""floor"": null, ""power"": null, ""price"": ""800000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/ee/6b/45/e13e976f3508f07c7564cb1359.jpg"", ""https://media.ilvo.pro/image/re/uploaded/8f/f6/70/3ff3479518bd3f98129227e74c.jpg""], ""prices"": {""BYN"": ""5094.89"", ""EUR"": ""1504.13"", ""KZT"": ""800000.0"", ""PLN"": ""6423.64"", ""RUB"": ""137457.04"", ""USD"": ""1737.73"", ""UZS"": ""21164021.16""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Е-15"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-11-26T04:25:21.375745Z"", ""heating"": [], ""housing"": null, ""subtype"": ""building"", ""building"": ""16"", ""category"": ""rent"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-08T14:01:20.165797Z"", ""sewerage"": null, ""apartment"": ""24"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""56.05"", ""EUR"": ""16.55"", ""KZT"": ""8800.88"", ""PLN"": ""70.67"", ""RUB"": ""1512.18"", ""USD"": ""19.12"", ""UZS"": ""232827.52""}, ""rent_type"": ""long"", ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК \""BAIDAULET\""\n\n✅Первая линия ЕК-15 (рядом с якорным арендатором Small)\n✅Площадь 90,9 кв.м\n✅Высота потолка 4 м.\n✅Мощность электричества 14 кВт.\n✅Парковка перед помещением\n✅Предчистовая отделка\n\nОбъект Мухаммада"", ""electricity"": null, ""responsible"": {""id"": 15125, ""email"": null, ""phones"": [""77067271065"", ""77758661065""], ""last_name"": ""Адиль"", ""first_name"": ""Бакыт""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": null, ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": null, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК \""BAIDAULET\""\n\n✅Первая линия ЕК-15 (рядом с якорным арендатором Small)\n✅Площадь 90,9 кв.м\n✅Высота потолка 4 м.\n✅Мощность электричества 14 кВт.\n✅Парковка перед помещением\n✅Предчистовая отделка\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"building"	"long"	"KZT"					"{""BYN"": ""5094.89"", ""EUR"": ""1504.13"", ""KZT"": ""800000.0"", ""PLN"": ""6423.64"", ""RUB"": ""137457.04"", ""USD"": ""1737.73"", ""UZS"": ""21164021.16""}"	"{""BYN"": ""56.05"", ""EUR"": ""16.55"", ""KZT"": ""8800.88"", ""PLN"": ""70.67"", ""RUB"": ""1512.18"", ""USD"": ""19.12"", ""UZS"": ""232827.52""}"		"geocoded"	"ЖК ""BAIDAULET""
+
+✅Первая линия ЕК-15 (рядом с якорным арендатором Small)
+✅Площадь 90,9 кв.м
+✅Высота потолка 4 м.
+✅Мощность электричества 14 кВт.
+✅Парковка перед помещением
+✅Предчистовая отделка
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"64e1ca57-76ba-4477-b04b-005a4c9d71d7"	"Коммерческое помещение 118.7 м², Астана"	"ЖК Respublika, блок А
+
+✅ Общая площадь 118,7 кв.м
+✅ Высота потолка 4.5 м
+✅ Мощность электричества 18 кВт (есть возможность увеличить)
+✅ Выход на Экопарк
+✅ Витражные окна
+✅ Отдельная входная группа
+✅ Электричество проведено
+✅ Ведутся ремонтные работы, готово на 90%
+
+Баннер СДАМ висит
+Актуально на 27.02.2026"	"Астана, Сыганак 24"	165000000	0	118.7	1	1	"Астана"	"Нура"	51.091	71.417	"77760011123"	"Аруна Талғат"	false	false	false		true	false	"2026-04-15 05:49:20.755213+00"	"2026-04-15 05:49:20.755241+00"	0		"7d1d29ab-88dd-5fa0-8a25-6a633914d8b4"	35936535	"commercial"	"sell"	"resold"		2025	"[]"	"Астана, Сыганак 24"	"https://krisha.kz/a/show/1007644950"	"[""https://media.ilvo.pro/image/re/uploaded/6c/c6/e7/3e02218ce9b232076d4d5ec480.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b7/af/66/d5a1e0db731088c65a30a50734.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2d/ed/7c/106b4f700e0870acc1bd6aef71.jpg""]"	"{""id"": 35936535, ""gas"": null, ""lot"": null, ""area"": 118.7, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""7d1d29ab-88dd-5fa0-8a25-6a633914d8b4"", ""floor"": 1, ""power"": null, ""price"": ""165000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/6c/c6/e7/3e02218ce9b232076d4d5ec480.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b7/af/66/d5a1e0db731088c65a30a50734.jpg"", ""https://media.ilvo.pro/image/re/uploaded/2d/ed/7c/106b4f700e0870acc1bd6aef71.jpg""], ""prices"": {""BYN"": ""927956.81"", ""EUR"": ""270434.17"", ""KZT"": ""165000000.0"", ""PLN"": ""1140684.41"", ""RUB"": ""25229357.8"", ""USD"": ""317545.85"", ""UZS"": ""3837209302.33""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Сыганак"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-12-02T14:46:29.092422Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""24"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-17T14:30:18.985424Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7817.66"", ""EUR"": ""2278.3"", ""KZT"": ""1390058.97"", ""PLN"": ""9609.81"", ""RUB"": ""212547.24"", ""USD"": ""2675.2"", ""UZS"": ""32326952.84""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1007644950"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Respublika, блок А\n\n✅ Общая площадь 118,7 кв.м\n✅ Высота потолка 4.5 м\n✅ Мощность электричества 18 кВт (есть возможность увеличить)\n✅ Выход на Экопарк\n✅ Витражные окна\n✅ Отдельная входная группа\n✅ Электричество проведено\n✅ Ведутся ремонтные работы, готово на 90%\n\nБаннер СДАМ висит \nАктуально на 27.02.2026"", ""electricity"": null, ""responsible"": {""id"": 14817, ""email"": null, ""phones"": [""77760011123""], ""last_name"": ""Талғат"", ""first_name"": ""Аруна""}, ""rooms_total"": null, ""address_note"": ""Астана, Сыганак 24"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.5, ""construction_year"": 2025, ""distance_from_mkad"": null, ""public_description"": ""ЖК Respublika, блок А\n\n✅ Общая площадь 118,7 кв.м\n✅ Высота потолка 4.5 м\n✅ Мощность электричества 18 кВт (есть возможность увеличить)\n✅ Выход на Экопарк\n✅ Витражные окна\n✅ Отдельная входная группа\n✅ Электричество проведено\n✅ Ведутся ремонтные работы, готово на 90%\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.5				"{""BYN"": ""927956.81"", ""EUR"": ""270434.17"", ""KZT"": ""165000000.0"", ""PLN"": ""1140684.41"", ""RUB"": ""25229357.8"", ""USD"": ""317545.85"", ""UZS"": ""3837209302.33""}"	"{""BYN"": ""7817.66"", ""EUR"": ""2278.3"", ""KZT"": ""1390058.97"", ""PLN"": ""9609.81"", ""RUB"": ""212547.24"", ""USD"": ""2675.2"", ""UZS"": ""32326952.84""}"		"geocoded"	"ЖК Respublika, блок А
+
+✅ Общая площадь 118,7 кв.м
+✅ Высота потолка 4.5 м
+✅ Мощность электричества 18 кВт (есть возможность увеличить)
+✅ Выход на Экопарк
+✅ Витражные окна
+✅ Отдельная входная группа
+✅ Электричество проведено
+✅ Ведутся ремонтные работы, готово на 90%
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"898af536-63b5-4548-9d6e-fdfcee738d94"	"trading_area 190.0 м², Астана"	"ЖК Capital Park. Light
+
+✅Общая площадь 190 кв.м (190 кв.м., по полу 123 кв.м)
+✅Мощность электричества 40 кВт
+✅Высота потолка 4.35 м
+✅С ремонтом
+✅Готовый бизнес"	"Астана, Есильский р-н, Ханов Керея и Жанибека 50"	214000000	0	190	0	1	"Астана"	"Есильский"	51.091	71.417	"77760011123"	"Аруна Талғат"	false	false	false		true	false	"2026-04-15 05:48:49.791642+00"	"2026-04-15 05:48:49.791659+00"	0		"de79f5b7-a586-551a-bf3b-90e4b7d6b05e"	36481686	"commercial"	"sell"	"resold"		2024	"[]"	"Астана, Есильский р-н, Ханов Керея и Жанибека 50"	"https://krisha.kz/a/show/683860440"	"[""https://media.ilvo.pro/image/re/uploaded/fc/6a/3a/b0fadf08b04b33ea91740eee04.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1c/df/66/7d43910c1b135be1a510ff5c0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/32/a1/45/e268f1436bdf8649a6cf58722c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/40/f8/8f/77ed6771f95ca2eb37bfe4ba93.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d5/4a/9c/3d6b875a48fd1f0041d485dc39.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ff/4e/ac/45a48b2f1d0dfecedc3c73cb8c.jpg""]"	"{""id"": 36481686, ""gas"": null, ""lot"": null, ""area"": 190.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""de79f5b7-a586-551a-bf3b-90e4b7d6b05e"", ""floor"": null, ""power"": 40, ""price"": ""214000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/fc/6a/3a/b0fadf08b04b33ea91740eee04.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1c/df/66/7d43910c1b135be1a510ff5c0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/32/a1/45/e268f1436bdf8649a6cf58722c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/40/f8/8f/77ed6771f95ca2eb37bfe4ba93.jpg"", ""https://media.ilvo.pro/image/re/uploaded/d5/4a/9c/3d6b875a48fd1f0041d485dc39.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ff/4e/ac/45a48b2f1d0dfecedc3c73cb8c.jpg""], ""prices"": {""BYN"": ""1337332.83"", ""EUR"": ""384373.6"", ""KZT"": ""214000000.0"", ""PLN"": ""1638842.09"", ""RUB"": ""36960276.34"", ""USD"": ""443532.51"", ""UZS"": ""5404040404.04""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Ханов Керея и Жанибека"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2023-04-10T07:22:55.366849Z"", ""heating"": [], ""housing"": null, ""subtype"": ""trading_area"", ""building"": ""50"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-19T11:16:58.681413Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7038.59"", ""EUR"": ""2023.02"", ""KZT"": ""1126315.79"", ""PLN"": ""8625.48"", ""RUB"": ""194527.77"", ""USD"": ""2334.38"", ""UZS"": ""28442317.92""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/683860440"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Capital Park. Light\n\n✅Общая площадь 190 кв.м (190 кв.м., по полу 123 кв.м)\n✅Мощность электричества 40 кВт\n✅Высота потолка 4.35 м\n✅С ремонтом\n✅Готовый бизнес"", ""electricity"": null, ""responsible"": {""id"": 14817, ""email"": null, ""phones"": [""77760011123""], ""last_name"": ""Талғат"", ""first_name"": ""Аруна""}, ""rooms_total"": null, ""address_note"": ""Астана, Есильский р-н, Ханов Керея и Жанибека 50"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.35, ""construction_year"": 2024, ""distance_from_mkad"": null, ""public_description"": ""ЖК Capital Park. Light\n\n✅Общая площадь 190 кв.м (190 кв.м., по полу 123 кв.м)\n✅Мощность электричества 40 кВт\n✅Высота потолка 4.35 м\n✅С ремонтом\n✅Готовый бизнес\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.\n\nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"trading_area"		"KZT"	4.35				"{""BYN"": ""1337332.83"", ""EUR"": ""384373.6"", ""KZT"": ""214000000.0"", ""PLN"": ""1638842.09"", ""RUB"": ""36960276.34"", ""USD"": ""443532.51"", ""UZS"": ""5404040404.04""}"	"{""BYN"": ""7038.59"", ""EUR"": ""2023.02"", ""KZT"": ""1126315.79"", ""PLN"": ""8625.48"", ""RUB"": ""194527.77"", ""USD"": ""2334.38"", ""UZS"": ""28442317.92""}"		"geocoded"	"ЖК Capital Park. Light
+
+✅Общая площадь 190 кв.м (190 кв.м., по полу 123 кв.м)
+✅Мощность электричества 40 кВт
+✅Высота потолка 4.35 м
+✅С ремонтом
+✅Готовый бизнес
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"bf74c8a9-e24c-4f0a-a2d8-8a1cc25b3706"	"Коммерческое помещение 122.0 м², Астана"	"ЖК Венский квартал
+
+✅ Вид на междомовое пространство
+✅ Общая площадь - 122 м2
+✅ 3 витражных окна, 1 витражная входная группа
+✅ Мощность электричества - 17 КВт
+✅ Высота потолка - 3 м
+✅ Парковка перед помещением
+✅ С отличным ремонтом
+"	"Астана, Есильский р-н, Бокейхана 27"	124000000	0	122	1	1	"Астана"	"Есильский"	51.091	71.417	"77716297597"	"Гульнара Омарова"	false	false	true		true	false	"2026-04-14 12:58:52.097464+00"	"2026-04-14 12:58:52.097485+00"	0		"2e4adf75-8cf1-5199-8689-3ac79d7a122b"	35938430	"commercial"	"sell"	"resold"	"good"	2015	"[]"	"Астана, Есильский р-н, Бокейхана 27"	"https://krisha.kz/a/show/1002859214"	"[""https://media.ilvo.pro/image/re/uploaded/33/09/6e/bd0b13287d99878466fc5e45a5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ea/f7/f7/4640a89fb6cc8f24f385746430.jpg"", ""https://media.ilvo.pro/image/re/uploaded/88/f5/e5/8ee44faa30c95743546d19a4f2.jpg""]"	"{""id"": 35938430, ""gas"": null, ""lot"": null, ""area"": 122.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""2e4adf75-8cf1-5199-8689-3ac79d7a122b"", ""floor"": 1, ""power"": null, ""price"": ""124000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/33/09/6e/bd0b13287d99878466fc5e45a5.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ea/f7/f7/4640a89fb6cc8f24f385746430.jpg"", ""https://media.ilvo.pro/image/re/uploaded/88/f5/e5/8ee44faa30c95743546d19a4f2.jpg""], ""prices"": {""BYN"": ""696238.07"", ""EUR"": ""202415.93"", ""KZT"": ""124000000.0"", ""PLN"": ""855054.48"", ""RUB"": ""18960244.65"", ""USD"": ""237375.09"", ""UZS"": ""2844036697.25""}, ""region"": ""Акмолинская"", ""repair"": ""good"", ""street"": ""Алихана Бокейхана"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-06-24T11:30:02.606170Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""27"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-18T13:02:56.181772Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""5706.87"", ""EUR"": ""1659.15"", ""KZT"": ""1016393.44"", ""PLN"": ""7008.64"", ""RUB"": ""155411.84"", ""USD"": ""1945.7"", ""UZS"": ""23311776.21""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1002859214"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Венский квартал \n\n✅ Вид на междомовое пространство\n✅ Общая площадь - 122 м2 \n✅ 3 витражных окна, 1 витражная входная группа\n✅ Мощность электричества - 17 КВт\n✅ Высота потолка - 3 м \n✅ Парковка перед помещением  \n✅ С отличным ремонтом \n"", ""electricity"": null, ""responsible"": {""id"": 14816, ""email"": null, ""phones"": [""77716297597""], ""last_name"": ""Омарова"", ""first_name"": ""Гульнара""}, ""rooms_total"": null, ""address_note"": ""Астана, Есильский р-н, Бокейхана 27"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.0, ""construction_year"": 2015, ""distance_from_mkad"": null, ""public_description"": ""Продается помещение в ЖК Венский квартал \n\n✅ Вид на междомовое пространство\n✅ Общая площадь - 122 м2 \n✅ 1 витраж, 1 витражная входная группа\n✅ Мощность электричества - 17 КВт\n✅ Высота потолка - 3 м \n✅ Парковка перед помещением  \n✅ С отличным ремонтом \n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": ""Bi Village""}"	"free_appointment"		"KZT"	3				"{""BYN"": ""696238.07"", ""EUR"": ""202415.93"", ""KZT"": ""124000000.0"", ""PLN"": ""855054.48"", ""RUB"": ""18960244.65"", ""USD"": ""237375.09"", ""UZS"": ""2844036697.25""}"	"{""BYN"": ""5706.87"", ""EUR"": ""1659.15"", ""KZT"": ""1016393.44"", ""PLN"": ""7008.64"", ""RUB"": ""155411.84"", ""USD"": ""1945.7"", ""UZS"": ""23311776.21""}"	"Bi Village"	"geocoded"	"Продается помещение в ЖК Венский квартал
+
+✅ Вид на междомовое пространство
+✅ Общая площадь - 122 м2
+✅ 1 витраж, 1 витражная входная группа
+✅ Мощность электричества - 17 КВт
+✅ Высота потолка - 3 м
+✅ Парковка перед помещением
+✅ С отличным ремонтом
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"dd30d438-7868-4ab8-96b4-2dd8fc90c02c"	"Коммерческое помещение 158.26 м², Астана"	"ЖК ""MOD Urban""
+
+✅ 1 линия по ул. Рыскулова
+✅ Общая площадь 158,26 кв.м
+✅ Высота потолка 4,2 м
+✅ Мощность электричества 31,56 кВт
+✅ 2 витражных окна
+✅ Парковка перед помещением
+"	"Астана, Есильский, Турара Рыскулова, 16"	230000000	0	158.26	0	1	"Астана"	"Есильский"	51.091	71.417	"77002995820"	"Руслан Жусупов"	false	false	false		true	false	"2026-04-14 12:58:26.097153+00"	"2026-04-14 12:58:26.09717+00"	0		"d3bdbe14-8074-4cbf-a0ae-83247eea3aad"	36553103	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/17/fd/d4/7bafa31cb0bff7e8b7f0d2c0fd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/ea/fb/3dddddd219f6848712cf1473be.jpg""]"	"{""id"": 36553103, ""gas"": null, ""lot"": null, ""area"": 158.26, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""d3bdbe14-8074-4cbf-a0ae-83247eea3aad"", ""floor"": null, ""power"": null, ""price"": ""230000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/17/fd/d4/7bafa31cb0bff7e8b7f0d2c0fd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/ea/fb/3dddddd219f6848712cf1473be.jpg""], ""prices"": {""BYN"": ""1290684.62"", ""EUR"": ""389414.69"", ""KZT"": ""230000000.0"", ""PLN"": ""1637826.68"", ""RUB"": ""34743202.42"", ""USD"": ""456938.51"", ""UZS"": ""5542168674.7""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Турара Рыскулова"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-01-23T23:15:50.310403Z"", ""heating"": [], ""housing"": ""2"", ""subtype"": ""free_appointment"", ""building"": ""16"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-01-26T11:19:15.014799Z"", ""sewerage"": null, ""apartment"": ""18"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""8155.47"", ""EUR"": ""2460.6"", ""KZT"": ""1453304.69"", ""PLN"": ""10348.96"", ""RUB"": ""219532.43"", ""USD"": ""2887.26"", ""UZS"": ""35019390.08""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК \""MOD Urban\""\n\n✅ 1 линия по ул. Рыскулова\n✅ Общая площадь 158,26 кв.м\n✅ Высота потолка 4,2 м\n✅ Мощность электричества 31,56 кВт\n✅ 2 витражных окна\n✅ Парковка перед помещением\n"", ""electricity"": null, ""responsible"": {""id"": 10353, ""email"": null, ""phones"": [""77002995820""], ""last_name"": ""Жусупов"", ""first_name"": ""Руслан""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.2, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""Продается помещение в ЖК \""MOD Urban\""\n\n✅ 1 линия по ул. Рыскулова\n✅ Общая площадь 158,26 кв.м\n✅ Высота потолка 4,2 м\n✅ Мощность электричества 31,56 кВт\n✅ 2 витражных окна\n✅ Парковка перед помещением\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": ""Bi Village""}"	"free_appointment"		"KZT"	4.2				"{""BYN"": ""1290684.62"", ""EUR"": ""389414.69"", ""KZT"": ""230000000.0"", ""PLN"": ""1637826.68"", ""RUB"": ""34743202.42"", ""USD"": ""456938.51"", ""UZS"": ""5542168674.7""}"	"{""BYN"": ""8155.47"", ""EUR"": ""2460.6"", ""KZT"": ""1453304.69"", ""PLN"": ""10348.96"", ""RUB"": ""219532.43"", ""USD"": ""2887.26"", ""UZS"": ""35019390.08""}"	"Bi Village"	"geocoded"	"Продается помещение в ЖК ""MOD Urban""
+
+✅ 1 линия по ул. Рыскулова
+✅ Общая площадь 158,26 кв.м
+✅ Высота потолка 4,2 м
+✅ Мощность электричества 31,56 кВт
+✅ 2 витражных окна
+✅ Парковка перед помещением
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"ddcdf924-daec-4bec-b987-94e30a4deec8"	"Коммерческое помещение 87.54 м², Астана"	"ЖК ""Capital Park Art""
+
+✅ Общая площадь 87,54 квм
+✅ Высота потолка 4,5 м
+✅ Мощность электричества 17,1 кВт
+✅ Парковка перед помещением
+✅ 2 витражных окна
+✅ Сдача проекта - октябрь 2026"	"Астана, Есильский, Аль-Фараби, 7"	135000000	0	87.54	1	1	"Астана"	"Есильский"	51.091	71.417	"77002995820"	"Руслан Жусупов"	false	false	false		true	false	"2026-04-14 12:57:11.207589+00"	"2026-04-14 12:57:11.207615+00"	0		"f38dec78-35aa-4f96-bcb8-69af9b5260e4"	33576250	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/25/6b/79/98c65a6e69d2bad6d3f64a3e0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/be/16/47/11192dfce21fd76b336b2c1343.jpg"", ""https://media.ilvo.pro/image/re/uploaded/19/c3/6d/5dbfab309745e9f755b3dae1c3.jpg""]"	"{""id"": 33576250, ""gas"": null, ""lot"": null, ""area"": 87.54, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""f38dec78-35aa-4f96-bcb8-69af9b5260e4"", ""floor"": 1, ""power"": null, ""price"": ""135000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/25/6b/79/98c65a6e69d2bad6d3f64a3e0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/be/16/47/11192dfce21fd76b336b2c1343.jpg"", ""https://media.ilvo.pro/image/re/uploaded/19/c3/6d/5dbfab309745e9f755b3dae1c3.jpg""], ""prices"": {""BYN"": ""849270.26"", ""EUR"": ""248573.01"", ""KZT"": ""135000000.0"", ""PLN"": ""1063327.03"", ""RUB"": ""23037542.66"", ""USD"": ""286953.19"", ""UZS"": ""3488372093.02""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Аль-Фараби"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-08-10T10:29:44.687963Z"", ""heating"": [], ""housing"": ""3"", ""subtype"": ""free_appointment"", ""building"": ""7"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-05T00:09:36.064002Z"", ""sewerage"": null, ""apartment"": ""8"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""9701.51"", ""EUR"": ""2839.54"", ""KZT"": ""1542152.16"", ""PLN"": ""12146.76"", ""RUB"": ""263165.9"", ""USD"": ""3277.97"", ""UZS"": ""39848893.0""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК \""Capital Park Art\""\n\n✅ Общая площадь 87,54 квм\n✅ Высота потолка 4,5 м\n✅ Мощность электричества 17,1 кВт\n✅ Парковка перед помещением\n✅ 2 витражных окна\n✅ Сдача проекта - октябрь 2026"", ""electricity"": null, ""responsible"": {""id"": 10353, ""email"": null, ""phones"": [""77002995820""], ""last_name"": ""Жусупов"", ""first_name"": ""Руслан""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.5, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""ЖК \""Capital Park Art\""\n\n✅ Общая площадь 87,54 квм\n✅ Высота потолка 34,5 м\n✅ Мощность электричества 17,1 кВт\n✅ Парковка перед помещением\n✅ 2 витражных окна\n✅ Сдача проекта - октябрь 2026\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.5				"{""BYN"": ""849270.26"", ""EUR"": ""248573.01"", ""KZT"": ""135000000.0"", ""PLN"": ""1063327.03"", ""RUB"": ""23037542.66"", ""USD"": ""286953.19"", ""UZS"": ""3488372093.02""}"	"{""BYN"": ""9701.51"", ""EUR"": ""2839.54"", ""KZT"": ""1542152.16"", ""PLN"": ""12146.76"", ""RUB"": ""263165.9"", ""USD"": ""3277.97"", ""UZS"": ""39848893.0""}"		"geocoded"	"ЖК ""Capital Park Art""
+
+✅ Общая площадь 87,54 квм
+✅ Высота потолка 34,5 м
+✅ Мощность электричества 17,1 кВт
+✅ Парковка перед помещением
+✅ 2 витражных окна
+✅ Сдача проекта - октябрь 2026
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"c45566ef-20e3-4614-bdc7-72af683b8f4e"	"Коммерческое помещение 87.6 м², Астана"	"ЖК Capital Park Art
+
+✅Площадь 87,6 кв.м.
+✅Высота потолка 4,5 м
+✅Два витражных окна
+✅Витражная входная группа
+✅Мощность электричества 17,1 кВт.
+✅ Густонаселенный район, хороший трафик
+✅ Витражная входная группа смотрит на Capital Park Sky"	"Астана, Есильский, Аль Фараби, 3/2"	135000000	0	87.6	0	1	"Астана"	"Есильский"	51.091	71.417	"77002995820"	"Руслан Жусупов"	false	false	false		true	false	"2026-04-14 12:56:40.393121+00"	"2026-04-14 12:56:40.393146+00"	0		"2f4d8b30-d9b2-494e-82ed-75bfe59c0bc2"	34848997	"commercial"	"sell"	"resold"		2026	"[]"			"[""https://media.ilvo.pro/image/re/uploaded/25/6b/79/98c65a6e69d2bad6d3f64a3e0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0f/fe/3c/5dba6a2feaa938e8d54ef68fc3.jpg""]"	"{""id"": 34848997, ""gas"": null, ""lot"": null, ""area"": 87.6, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""2f4d8b30-d9b2-494e-82ed-75bfe59c0bc2"", ""floor"": null, ""power"": null, ""price"": ""135000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/25/6b/79/98c65a6e69d2bad6d3f64a3e0f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/0f/fe/3c/5dba6a2feaa938e8d54ef68fc3.jpg""], ""prices"": {""BYN"": ""849270.26"", ""EUR"": ""248573.01"", ""KZT"": ""135000000.0"", ""PLN"": ""1063327.03"", ""RUB"": ""23037542.66"", ""USD"": ""286953.19"", ""UZS"": ""3488372093.02""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Аль Фараби"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2025-10-14T14:40:45.859571Z"", ""heating"": [], ""housing"": ""1"", ""subtype"": ""free_appointment"", ""building"": ""3/2"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-05T00:10:07.400112Z"", ""sewerage"": null, ""apartment"": ""6"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""9694.87"", ""EUR"": ""2837.59"", ""KZT"": ""1541095.89"", ""PLN"": ""12138.44"", ""RUB"": ""262985.65"", ""USD"": ""3275.72"", ""UZS"": ""39821599.24""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Capital Park Art\n\n✅Площадь 87,6 кв.м.\n✅Высота потолка 4,5 м\n✅Два витражных окна\n✅Витражная входная группа\n✅Мощность электричества 17,1 кВт.\n✅ Густонаселенный район, хороший трафик\n✅ Витражная входная группа смотрит на Capital Park Sky"", ""electricity"": null, ""responsible"": {""id"": 10353, ""email"": null, ""phones"": [""77002995820""], ""last_name"": ""Жусупов"", ""first_name"": ""Руслан""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Есильский"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.5, ""construction_year"": 2026, ""distance_from_mkad"": null, ""public_description"": ""Продается коммерческое помещение в ЖК Capital Park Art\n\n✅Площадь 87,6 кв.м.\n✅Высота потолка 4,5 м\n✅Два витражных окна\n✅Витражная входная группа\n✅Мощность электричества 17,1 кВт.\n✅ Густонаселенный район, хороший трафик\n✅ Витражная входная группа смотрит на Capital Park Sky\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n \nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.5				"{""BYN"": ""849270.26"", ""EUR"": ""248573.01"", ""KZT"": ""135000000.0"", ""PLN"": ""1063327.03"", ""RUB"": ""23037542.66"", ""USD"": ""286953.19"", ""UZS"": ""3488372093.02""}"	"{""BYN"": ""9694.87"", ""EUR"": ""2837.59"", ""KZT"": ""1541095.89"", ""PLN"": ""12138.44"", ""RUB"": ""262985.65"", ""USD"": ""3275.72"", ""UZS"": ""39821599.24""}"		"geocoded"	"Продается коммерческое помещение в ЖК Capital Park Art
+
+✅Площадь 87,6 кв.м.
+✅Высота потолка 4,5 м
+✅Два витражных окна
+✅Витражная входная группа
+✅Мощность электричества 17,1 кВт.
+✅ Густонаселенный район, хороший трафик
+✅ Витражная входная группа смотрит на Capital Park Sky
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"984cfc2d-d839-478e-8d83-057eb7de89f3"	"Коммерческое помещение 150.6 м², Астана"	"ЖК GreenLine.Astra
+
+✅ Площадь по полу 150,6 кв.м (мезонин 65 кв.м)
+✅ Высота потолка 3,9 м
+✅ Увеличенная мощность электричества 60кВт
+✅ Парковочная зона перед помещением
+✅ Действующие стабильные арендаторы
+✅ Вытяжка, приточка
+
+Оформлено на ТОО,
+залог 115,0млн в Банке,
+ДКП 134,0млн,
+окупаемость 7 лет
+аренда 1,9млн. аптека
+"	"Астана, Нура р-н, Е 900 10"	215000000	0	150.6	0	1	"Астана"	"Нура"			"77712777252"	"Айгерим Ильясова"	false	false	false		false	false	"2026-04-14 12:55:49.990405+00"	"2026-04-14 12:55:49.990425+00"	0		"24f4c7e2-1f10-49fa-8132-1ee07c80cf2b"	37497619	"commercial"	"sell"	"resold"		2025	"[]"	"Астана, Нура р-н, Е 900 10"	"https://krisha.kz/a/show/1007330336"	"[""https://media.ilvo.pro/image/re/uploaded/76/68/ed/424db8bafb1fc20568f3e35e8d.jpg"", ""https://media.ilvo.pro/image/re/uploaded/dd/20/ed/1ea62d7d15a06e984e29282aca.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1f/f2/4b/e90e9174ba54b8c4408aadd718.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ea/bf/84/78cc7a065def5aa4af4c55c7ae.jpg"", ""https://media.ilvo.pro/image/re/uploaded/33/21/c6/bbdcb56c22d76c30ab098b705f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/86/dc/41/a94806068e03e399cbad3fd06a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/58/49/38/87c7ea61825675a3ee9256bba0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4b/19/1b/8d3c4c6b75a0b8b95c76d08fab.jpg""]"	"{""id"": 37497619, ""gas"": null, ""lot"": null, ""area"": 150.6, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""24f4c7e2-1f10-49fa-8132-1ee07c80cf2b"", ""floor"": null, ""power"": null, ""price"": ""215000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/76/68/ed/424db8bafb1fc20568f3e35e8d.jpg"", ""https://media.ilvo.pro/image/re/uploaded/dd/20/ed/1ea62d7d15a06e984e29282aca.jpg"", ""https://media.ilvo.pro/image/re/uploaded/1f/f2/4b/e90e9174ba54b8c4408aadd718.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ea/bf/84/78cc7a065def5aa4af4c55c7ae.jpg"", ""https://media.ilvo.pro/image/re/uploaded/33/21/c6/bbdcb56c22d76c30ab098b705f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/86/dc/41/a94806068e03e399cbad3fd06a.jpg"", ""https://media.ilvo.pro/image/re/uploaded/58/49/38/87c7ea61825675a3ee9256bba0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/4b/19/1b/8d3c4c6b75a0b8b95c76d08fab.jpg""], ""prices"": {""BYN"": ""1347033.39"", ""EUR"": ""385601.81"", ""KZT"": ""215000000.0"", ""PLN"": ""1649785.14"", ""RUB"": ""37456445.99"", ""USD"": ""445752.91"", ""UZS"": ""5429292929.29""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Е-900"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-03-19T06:27:40.750549Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""10"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-25T14:34:40.996655Z"", ""sewerage"": null, ""apartment"": ""10"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""8944.44"", ""EUR"": ""2560.44"", ""KZT"": ""1427622.84"", ""PLN"": ""10954.75"", ""RUB"": ""248714.78"", ""USD"": ""2959.85"", ""UZS"": ""36051081.87""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1007330336"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК GreenLine.Astra\n\n✅ Площадь по полу 150,6 кв.м (мезонин 65 кв.м)\n✅ Высота потолка 3,9 м\n✅ Увеличенная мощность электричества 60кВт\n✅ Парковочная зона перед помещением\n✅ Действующие стабильные арендаторы \n✅ Вытяжка, приточка \n\nОформлено на ТОО, \nзалог 115,0млн в Банке, \nДКП 134,0млн, \nокупаемость 7 лет\nаренда 1,9млн. аптека\n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": ""Астана, Нура р-н, Е 900 10"", ""area_kitchen"": null, ""floors_total"": 1, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 3.9, ""construction_year"": 2025, ""distance_from_mkad"": null, ""public_description"": ""ЖК GreenLine.Astra\n\n✅ Площадь по полу 150,6 кв.м (мезонин 65 кв.м)\n✅ Высота потолка 3,9 м\n✅ Увеличенная мощность электричества 60кВт\n✅ Парковочная зона перед помещением\n✅ Действующие стабильные арендаторы \n✅ Вытяжка, приточка \n\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!"", ""city_micro_district"": ""Бигвиль GreenLine""}"	"free_appointment"		"KZT"	3.9				"{""BYN"": ""1347033.39"", ""EUR"": ""385601.81"", ""KZT"": ""215000000.0"", ""PLN"": ""1649785.14"", ""RUB"": ""37456445.99"", ""USD"": ""445752.91"", ""UZS"": ""5429292929.29""}"	"{""BYN"": ""8944.44"", ""EUR"": ""2560.44"", ""KZT"": ""1427622.84"", ""PLN"": ""10954.75"", ""RUB"": ""248714.78"", ""USD"": ""2959.85"", ""UZS"": ""36051081.87""}"	"Бигвиль GreenLine"		"ЖК GreenLine.Astra
+
+✅ Площадь по полу 150,6 кв.м (мезонин 65 кв.м)
+✅ Высота потолка 3,9 м
+✅ Увеличенная мощность электричества 60кВт
+✅ Парковочная зона перед помещением
+✅ Действующие стабильные арендаторы
+✅ Вытяжка, приточка
+
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"c34602d5-32e2-4c33-a0b0-998328e5cacd"	"Коммерческое помещение 120.0 м², Астана"	"ЖК Grand Turan Comfort
+
+✅ Вид на ЖК Алтын Шар 2
+✅ Общая площадь - 120м2
+✅ Высота потолка - 4,4м
+✅ Мощность электричества - 25 КВт
+✅ 2 витражных окна, 1 витражная входная группа
+✅ С арендаторами (продуктовый магазин)
+✅ Густонаселенный район
+✅ Ежемесячная аренда - 1,1млн.тг., договор с ежегодной индексацией (май)
+"	"Астана, Нура, Туран, 43"	160000000	0	120	0	1	"Астана"	"Нура"	51.091	71.417	"77716297597"	"Гульнара Омарова"	false	false	false		true	false	"2026-04-14 12:55:46.45038+00"	"2026-04-14 12:55:46.450398+00"	0		"95280c5a-7fbf-4ac5-a005-955cbfdfa917"	36534795	"commercial"	"sell"	"resold"		2024	"[]"		"https://krisha.kz/a/show/1008888555"	"[""https://media.ilvo.pro/image/re/uploaded/69/cc/64/4941e9d27d5371e28d6876b285.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/d7/8c/eb9d7bc96de18a9fd763b009e6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/53/9b/06/52d286b35042b485b695e0d7af.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ee/2b/9a/a3bd2cf1300a9ff115857d2b7c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f9/81/fc/81a7e794531ae0ad0a1368a8ef.jpg"", ""https://media.ilvo.pro/image/re/uploaded/73/d6/bd/02fd24a732a7143a175e3c45a7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f4/46/03/4de3f16367f493be38efc73243.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7e/2a/9f/75cc6d2c2697cf9abb547aa769.jpg"", ""https://media.ilvo.pro/image/re/uploaded/14/c6/0e/e2e446b0612e795f9bd11c2afb.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f1/f2/1d/e3f11f622422c26c75918ec7db.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c1/f2/38/f5782973140b70e119cca863a8.jpg""]"	"{""id"": 36534795, ""gas"": null, ""lot"": null, ""area"": 120.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""95280c5a-7fbf-4ac5-a005-955cbfdfa917"", ""floor"": null, ""power"": null, ""price"": ""160000000.00"", ""rooms"": null, ""video"": ""https://krisha.kz/a/show/1008888555"", ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/69/cc/64/4941e9d27d5371e28d6876b285.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e2/d7/8c/eb9d7bc96de18a9fd763b009e6.jpg"", ""https://media.ilvo.pro/image/re/uploaded/53/9b/06/52d286b35042b485b695e0d7af.jpg"", ""https://media.ilvo.pro/image/re/uploaded/ee/2b/9a/a3bd2cf1300a9ff115857d2b7c.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f9/81/fc/81a7e794531ae0ad0a1368a8ef.jpg"", ""https://media.ilvo.pro/image/re/uploaded/73/d6/bd/02fd24a732a7143a175e3c45a7.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f4/46/03/4de3f16367f493be38efc73243.jpg"", ""https://media.ilvo.pro/image/re/uploaded/7e/2a/9f/75cc6d2c2697cf9abb547aa769.jpg"", ""https://media.ilvo.pro/image/re/uploaded/14/c6/0e/e2e446b0612e795f9bd11c2afb.jpg"", ""https://media.ilvo.pro/image/re/uploaded/f1/f2/1d/e3f11f622422c26c75918ec7db.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c1/f2/38/f5782973140b70e119cca863a8.jpg""], ""prices"": {""BYN"": ""947642.74"", ""EUR"": ""279310.1"", ""KZT"": ""160000000.0"", ""PLN"": ""1193050.48"", ""RUB"": ""25437201.91"", ""USD"": ""324306.79"", ""UZS"": ""3940886699.51""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Туран"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-01-23T05:55:32.144595Z"", ""heating"": [], ""housing"": ""6"", ""subtype"": ""free_appointment"", ""building"": ""43"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-18T13:00:22.848124Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7897.02"", ""EUR"": ""2327.58"", ""KZT"": ""1333333.33"", ""PLN"": ""9942.09"", ""RUB"": ""211976.68"", ""USD"": ""2702.56"", ""UZS"": ""32840722.5""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""ЖК Grand Turan Comfort\n\n✅ Вид на ЖК Алтын Шар 2\n✅ Общая площадь - 120м2\n✅ Высота потолка - 4,4м\n✅ Мощность электричества - 25 КВт\n✅ 2 витражных окна, 1 витражная входная группа\n✅ С арендаторами (продуктовый магазин)\n✅ Густонаселенный район\n✅ Ежемесячная аренда - 1,1млн.тг., договор с ежегодной индексацией (май)\n"", ""electricity"": null, ""responsible"": {""id"": 14816, ""email"": null, ""phones"": [""77716297597""], ""last_name"": ""Омарова"", ""first_name"": ""Гульнара""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": ""https://krisha.kz/a/show/1008888555"", ""overhaul_year"": null, ""ceiling_height"": 4.4, ""construction_year"": 2024, ""distance_from_mkad"": null, ""public_description"": ""Продается помещение в ЖК Grand Turan\n\n✅ Вид на ЖК Алтын Шар 2\n✅ Общая площадь - 120м2\n✅ Высота потолка - 4,4м\n✅ Мощность электричества - 25 КВт\n✅ 2 витражных окна, 1 витражная входная группа\n✅ С арендаторами (продуктовый магазин)\n✅ Густонаселенный район\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!\n"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.4				"{""BYN"": ""947642.74"", ""EUR"": ""279310.1"", ""KZT"": ""160000000.0"", ""PLN"": ""1193050.48"", ""RUB"": ""25437201.91"", ""USD"": ""324306.79"", ""UZS"": ""3940886699.51""}"	"{""BYN"": ""7897.02"", ""EUR"": ""2327.58"", ""KZT"": ""1333333.33"", ""PLN"": ""9942.09"", ""RUB"": ""211976.68"", ""USD"": ""2702.56"", ""UZS"": ""32840722.5""}"		"geocoded"	"Продается помещение в ЖК Grand Turan
+
+✅ Вид на ЖК Алтын Шар 2
+✅ Общая площадь - 120м2
+✅ Высота потолка - 4,4м
+✅ Мощность электричества - 25 КВт
+✅ 2 витражных окна, 1 витражная входная группа
+✅ С арендаторами (продуктовый магазин)
+✅ Густонаселенный район
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+"
+"7fb565fc-b5bb-4f62-9ef3-c702bbde9be0"	"Коммерческое помещение 155.0 м², Астана"	"ЖК ""GreenLine.Asyl Mura Jubanov""
+
+✅ Первая линия Толе би
+✅ Общая площадь 155 кв.м
+✅ Высота потолка переменная 4,2 м; 3,6м
+✅ Мощность электричества 20 кВт
+✅ Отдельная вытяжка
+✅ Выход в паркинг
+✅ С действующими арендаторами
+✅ Парковка перед помещением
+"	"Астана, Толе би 63"	205000000	0	155	1	1	"Астана"	"Нура"	51.1282205	71.4306682	"77053126759"	"Динара Нурмолдина"	false	false	true		true	false	"2026-04-14 12:51:45.850909+00"	"2026-04-14 12:51:45.850935+00"	0		"f68c6680-f63c-4bab-9c3a-c90789c27687"	36853799	"commercial"	"sell"	"resold"	"good"	2023	"[]"	"Астана, Толе би 63"	"https://krisha.kz/a/show/1008521633"	"[""https://media.ilvo.pro/image/re/uploaded/86/eb/65/670983adb0ef51756ecb9f0e51.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bb/f0/01/a7a1af0821bb52a5eeee36dbc3.jpg"", ""https://media.ilvo.pro/image/re/uploaded/20/b8/02/93ae64639f49afe461925b415b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/c2/5c/8f3cc5ae71b394bedf4e23d255.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b2/42/d7/10d2d8de73bbfef46cb4f9e77e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/82/2f/6e/7a3dcb91074e92eff68a01b9dc.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/8d/fe/d5c5affd5be54be58dd55ee0f4.jpg""]"	"{""id"": 36853799, ""gas"": null, ""lot"": null, ""area"": 155.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""f68c6680-f63c-4bab-9c3a-c90789c27687"", ""floor"": 1, ""power"": null, ""price"": ""205000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/86/eb/65/670983adb0ef51756ecb9f0e51.jpg"", ""https://media.ilvo.pro/image/re/uploaded/bb/f0/01/a7a1af0821bb52a5eeee36dbc3.jpg"", ""https://media.ilvo.pro/image/re/uploaded/20/b8/02/93ae64639f49afe461925b415b.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/c2/5c/8f3cc5ae71b394bedf4e23d255.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b2/42/d7/10d2d8de73bbfef46cb4f9e77e.jpg"", ""https://media.ilvo.pro/image/re/uploaded/82/2f/6e/7a3dcb91074e92eff68a01b9dc.jpg"", ""https://media.ilvo.pro/image/re/uploaded/c0/8d/fe/d5c5affd5be54be58dd55ee0f4.jpg""], ""prices"": {""BYN"": ""1220238.1"", ""EUR"": ""358291.39"", ""KZT"": ""205000000.0"", ""PLN"": ""1524390.24"", ""RUB"": ""32852564.1"", ""USD"": ""417014.18"", ""UZS"": ""5061728395.06""}, ""region"": ""Акмолинская"", ""repair"": ""good"", ""street"": ""Толе Би"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-02-11T07:16:55.865152Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""63"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-04-01T06:48:10.785815Z"", ""sewerage"": null, ""apartment"": ""24"", ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""7872.5"", ""EUR"": ""2311.56"", ""KZT"": ""1322580.65"", ""PLN"": ""9834.78"", ""RUB"": ""211952.03"", ""USD"": ""2690.41"", ""UZS"": ""32656312.23""}, ""rent_type"": null, ""commission"": null, ""facilities"": [""closed_area"", ""video_monitoring""], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/1008521633"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК \""GreenLine.Asyl Mura Jubanov\""\n\n✅ Первая линия Толе би \n✅ Общая площадь 155 кв.м\n✅ Высота потолка переменная 4,2 м; 3,6м\n✅ Мощность электричества 20 кВт\n✅ Отдельная вытяжка\n✅ Выход в паркинг \n✅ С действующими арендаторами\n✅ Парковка перед помещением \n"", ""electricity"": null, ""responsible"": {""id"": 14086, ""email"": null, ""phones"": [""77053126759""], ""last_name"": ""Нурмолдина"", ""first_name"": ""Динара""}, ""rooms_total"": null, ""address_note"": ""Астана, Толе би 63"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.2, ""construction_year"": 2023, ""distance_from_mkad"": null, ""public_description"": ""ЖК \""GreenLine.Asyl Mura Jubanov\""\n\n✅ Первая линия Толе би \n✅ Общая площадь 155 кв.м\n✅ Высота потолка переменная 4,2 м; 3,6м\n✅ Мощность электричества 20 кВт\n✅ Отдельная вытяжка\n✅ Выход в паркинг \n✅ С действующими арендаторами\n✅ Парковка перед помещением \n\nДля получения подробной информации свяжитесь с нами удобным для вас способом. \n \nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты. \n \nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны. \n \nНаш офис: г. Астана, ул.Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505. \n\nМы всегда рады вам!\n"", ""city_micro_district"": ""Бигвиль GreenLine""}"	"free_appointment"		"KZT"	4.2				"{""BYN"": ""1220238.1"", ""EUR"": ""358291.39"", ""KZT"": ""205000000.0"", ""PLN"": ""1524390.24"", ""RUB"": ""32852564.1"", ""USD"": ""417014.18"", ""UZS"": ""5061728395.06""}"	"{""BYN"": ""7872.5"", ""EUR"": ""2311.56"", ""KZT"": ""1322580.65"", ""PLN"": ""9834.78"", ""RUB"": ""211952.03"", ""USD"": ""2690.41"", ""UZS"": ""32656312.23""}"	"Бигвиль GreenLine"	"geocoded"	"ЖК ""GreenLine.Asyl Mura Jubanov""
+
+✅ Первая линия Толе би
+✅ Общая площадь 155 кв.м
+✅ Высота потолка переменная 4,2 м; 3,6м
+✅ Мощность электричества 20 кВт
+✅ Отдельная вытяжка
+✅ Выход в паркинг
+✅ С действующими арендаторами
+✅ Парковка перед помещением
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул.Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!
+"
+"e00e4629-cc37-429d-99b8-d2797479e081"	"Коммерческое помещение 75.0 м², Астана"	"ЖК Arkada 2
+
+✅ Витражное окно
+✅ Общая площадь - 75 кв. м
+✅ Высота потолка - 3,8м
+✅ Помещение с ремонтом
+✅ Парковка перед помещением
+"	"Астана, Нура р-н, Е-489 6"	60000000	0	75	1	1	"Астана"	"Нура"	51.0592468	71.4106032	"77712777252"	"Айгерим Ильясова"	false	false	false		true	false	"2026-04-14 12:51:36.334078+00"	"2026-04-14 12:51:36.334099+00"	0		"fedbc414-2598-4575-bf40-32426f4df75b"	37016117	"commercial"	"sell"	"resold"		2020	"[]"	"Астана, Нура р-н, Е-489 6"	"https://krisha.kz/a/show/698942993"	"[""https://media.ilvo.pro/image/re/uploaded/8b/f1/55/30f40a9ce98e1c4067252a0f11.jpg"", ""https://media.ilvo.pro/image/re/uploaded/25/29/7a/5ac0352ccfd143f683642062cd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/97/04/32/01268891814f581a69c239bc5f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/66/a1/a0/119026d857764637d3d3ccc7ab.jpg""]"	"{""id"": 37016117, ""gas"": null, ""lot"": null, ""area"": 75.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""fedbc414-2598-4575-bf40-32426f4df75b"", ""floor"": 1, ""power"": null, ""price"": ""60000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/8b/f1/55/30f40a9ce98e1c4067252a0f11.jpg"", ""https://media.ilvo.pro/image/re/uploaded/25/29/7a/5ac0352ccfd143f683642062cd.jpg"", ""https://media.ilvo.pro/image/re/uploaded/97/04/32/01268891814f581a69c239bc5f.jpg"", ""https://media.ilvo.pro/image/re/uploaded/66/a1/a0/119026d857764637d3d3ccc7ab.jpg""], ""prices"": {""BYN"": ""374953.13"", ""EUR"": ""107768.3"", ""KZT"": ""60000000.0"", ""PLN"": ""459488.44"", ""RUB"": ""10362694.3"", ""USD"": ""124354.91"", ""UZS"": ""1515151515.15""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Е-489"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-02-20T08:29:55.996172Z"", ""heating"": [], ""housing"": null, ""subtype"": ""free_appointment"", ""building"": ""6"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-19T19:53:06.542252Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""4999.38"", ""EUR"": ""1436.91"", ""KZT"": ""800000.0"", ""PLN"": ""6126.51"", ""RUB"": ""138169.26"", ""USD"": ""1658.07"", ""UZS"": ""20202020.2""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": ""https://krisha.kz/a/show/698942993"", ""structures"": [], ""area_living"": null, ""description"": ""ЖК Arkada 2\n\n✅ Витражное окно \n✅ Общая площадь - 75 кв. м\n✅ Высота потолка - 3,8м\n✅ Помещение с ремонтом\n✅ Парковка перед помещением\n"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": ""Астана, Нура р-н, Е-489 6"", ""area_kitchen"": null, ""floors_total"": null, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": 4.2, ""construction_year"": 2020, ""distance_from_mkad"": null, ""public_description"": ""Продается коммерческое помещение в ЖК Arkada 2\n\n✅ Витражное окно \n✅ Общая площадь - 75 кв. м\n✅ Высота потолка - 3,8м\n✅ Парковка \n✅ Помещение с ремонтом\n\nДля получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.\n\nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"free_appointment"		"KZT"	4.2				"{""BYN"": ""374953.13"", ""EUR"": ""107768.3"", ""KZT"": ""60000000.0"", ""PLN"": ""459488.44"", ""RUB"": ""10362694.3"", ""USD"": ""124354.91"", ""UZS"": ""1515151515.15""}"	"{""BYN"": ""4999.38"", ""EUR"": ""1436.91"", ""KZT"": ""800000.0"", ""PLN"": ""6126.51"", ""RUB"": ""138169.26"", ""USD"": ""1658.07"", ""UZS"": ""20202020.2""}"		"geocoded"	"Продается коммерческое помещение в ЖК Arkada 2
+
+✅ Витражное окно
+✅ Общая площадь - 75 кв. м
+✅ Высота потолка - 3,8м
+✅ Парковка
+✅ Помещение с ремонтом
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны.
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
+"2630af38-c330-433b-a7bc-628c3f218f32"	"building 3510.0 м², Астана"	"Здание
+
+✅ Общая площадь - 3 510 кв. м
+✅ Участок 34 сотки земли (в аренде до ноября 2026 г)
+✅ 3 этажа
+✅ Высота потолков - 1 этаж 4,5 м, 2 этаж 4 м, 3 этаж 3,5 м
+✅ 3 входные группы
+✅ Парковочная зона перед помещением
+✅Заведено электричество на 400 квт
+✅ Необходимо сделать облицовку, стекла и ввод в эксплуатацию"	"Астана, Нура, Туран, 75"	1800000000	0	3510	0	3	"Астана"	"Нура"	51.091	71.417	"77712777252"	"Айгерим Ильясова"	false	false	false		true	false	"2026-04-14 12:50:40.420315+00"	"2026-04-14 12:50:40.420361+00"	0		"2a263eb3-42d5-4a91-9063-6e7b4897b2ce"	37142131	"commercial"	"sell"	"resold"			"[]"			"[""https://media.ilvo.pro/image/re/uploaded/ce/e3/cb/373711e0512e88029209f62bf0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a0/41/53/2e6d79b81c24a0e330bceefd60.jpg"", ""https://media.ilvo.pro/image/re/uploaded/89/7a/85/af81f3b5ec5abf2067ab28cf45.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a3/9d/50/a0bceb3dfc8ee07625c3a48425.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e1/15/8c/c6b35cd4ef3eef5cdda2eed788.jpg"", ""https://media.ilvo.pro/image/re/uploaded/56/3b/be/e7535652fe7a1a5ecc5a4b9ffc.jpg"", ""https://media.ilvo.pro/image/re/uploaded/66/1d/89/5ebeddddf4a7fba485f52b7307.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b5/dd/7b/70a1dec602768f21ef26612af8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/6e/c5/f2/288300f73cccaa27985c32ac36.jpg""]"	"{""id"": 37142131, ""gas"": null, ""lot"": null, ""area"": 3510.0, ""bail"": null, ""city"": ""Астана"", ""plot"": null, ""roof"": [], ""type"": ""commercial"", ""uuid"": ""2a263eb3-42d5-4a91-9063-6e7b4897b2ce"", ""floor"": null, ""power"": null, ""price"": ""1800000000.00"", ""rooms"": null, ""video"": null, ""water"": null, ""photos"": [""https://media.ilvo.pro/image/re/uploaded/ce/e3/cb/373711e0512e88029209f62bf0.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a0/41/53/2e6d79b81c24a0e330bceefd60.jpg"", ""https://media.ilvo.pro/image/re/uploaded/89/7a/85/af81f3b5ec5abf2067ab28cf45.jpg"", ""https://media.ilvo.pro/image/re/uploaded/a3/9d/50/a0bceb3dfc8ee07625c3a48425.jpg"", ""https://media.ilvo.pro/image/re/uploaded/e1/15/8c/c6b35cd4ef3eef5cdda2eed788.jpg"", ""https://media.ilvo.pro/image/re/uploaded/56/3b/be/e7535652fe7a1a5ecc5a4b9ffc.jpg"", ""https://media.ilvo.pro/image/re/uploaded/66/1d/89/5ebeddddf4a7fba485f52b7307.jpg"", ""https://media.ilvo.pro/image/re/uploaded/b5/dd/7b/70a1dec602768f21ef26612af8.jpg"", ""https://media.ilvo.pro/image/re/uploaded/6e/c5/f2/288300f73cccaa27985c32ac36.jpg""], ""prices"": {""BYN"": ""11163483.01"", ""EUR"": ""3232758.62"", ""KZT"": ""1800000000.0"", ""PLN"": ""13812154.7"", ""RUB"": ""307692307.69"", ""USD"": ""3735757.42"", ""UZS"": ""45454545454.55""}, ""region"": ""Акмолинская"", ""repair"": null, ""street"": ""Туран"", ""balcony"": {}, ""country"": {""id"": 3, ""code"": ""KZ"", ""name"": ""Казахстан""}, ""created"": ""2026-02-26T08:30:52.779408Z"", ""heating"": [], ""housing"": ""1"", ""subtype"": ""building"", ""building"": ""75"", ""category"": ""sell"", ""contract"": null, ""currency"": ""KZT"", ""district"": ""Астана"", ""exchange"": false, ""latitude"": null, ""lavatory"": {}, ""material"": [], ""modified"": ""2026-03-27T09:00:21.231210Z"", ""sewerage"": null, ""apartment"": null, ""condition"": ""resold"", ""direction"": null, ""longitude"": null, ""prices_m2"": {""BYN"": ""3180.48"", ""EUR"": ""921.01"", ""KZT"": ""512820.51"", ""PLN"": ""3935.09"", ""RUB"": ""87661.63"", ""USD"": ""1064.32"", ""UZS"": ""12950012.95""}, ""rent_type"": null, ""commission"": null, ""facilities"": [], ""metro_name"": null, ""registered"": null, ""source_url"": null, ""structures"": [], ""area_living"": null, ""description"": ""Здание \n\n✅ Общая площадь - 3 510 кв. м \n✅ Участок 34 сотки земли (в аренде до ноября 2026 г)\n✅ 3 этажа\n✅ Высота потолков - 1 этаж 4,5 м, 2 этаж 4 м, 3 этаж 3,5 м\n✅ 3 входные группы \n✅ Парковочная зона перед помещением \n✅Заведено электричество на 400 квт \n✅ Необходимо сделать облицовку, стекла и ввод в эксплуатацию"", ""electricity"": null, ""responsible"": {""id"": 10188, ""email"": null, ""phones"": [""77712777252""], ""last_name"": ""Ильясова"", ""first_name"": ""Айгерим""}, ""rooms_total"": null, ""address_note"": null, ""area_kitchen"": null, ""floors_total"": 3, ""city_district"": ""Нура"", ""exchange_note"": null, ""external_link"": null, ""overhaul_year"": null, ""ceiling_height"": null, ""construction_year"": null, ""distance_from_mkad"": null, ""public_description"": ""Продается здание \n\n✅ Общая площадь - 3 510 кв. м \n✅ Участок 34 сотки земли \n✅ 3 этажа\n✅ Высота потолков: 1 этаж-4,5 м, 2 этаж-4 м, 3 этаж-3,5 м\n✅ 3 входные группы \n✅Заведено электричество на 400 квт\n✅ Парковочная зона перед помещением \n\nДля получения подробной информации свяжитесь с нами удобным для вас способом.\n\nЕсли данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.\n\nАгентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны!\n\nНаш офис: г. Астана, ул. Сыганак 60/2, БЦ \""Abu Dhabi Plaza\"", блок В, 5 этаж, офис 505.\n\nМы всегда рады вам!"", ""city_micro_district"": null}"	"building"		"KZT"					"{""BYN"": ""11163483.01"", ""EUR"": ""3232758.62"", ""KZT"": ""1800000000.0"", ""PLN"": ""13812154.7"", ""RUB"": ""307692307.69"", ""USD"": ""3735757.42"", ""UZS"": ""45454545454.55""}"	"{""BYN"": ""3180.48"", ""EUR"": ""921.01"", ""KZT"": ""512820.51"", ""PLN"": ""3935.09"", ""RUB"": ""87661.63"", ""USD"": ""1064.32"", ""UZS"": ""12950012.95""}"		"geocoded"	"Продается здание
+
+✅ Общая площадь - 3 510 кв. м
+✅ Участок 34 сотки земли
+✅ 3 этажа
+✅ Высота потолков: 1 этаж-4,5 м, 2 этаж-4 м, 3 этаж-3,5 м
+✅ 3 входные группы
+✅Заведено электричество на 400 квт
+✅ Парковочная зона перед помещением
+
+Для получения подробной информации свяжитесь с нами удобным для вас способом.
+
+Если данное помещение не соответствует вашим ожиданиям, мы с радостью предложим альтернативные варианты.
+
+Агентство Prime Estate — ваш надежный партнер в сфере коммерческой недвижимости Астаны!
+
+Наш офис: г. Астана, ул. Сыганак 60/2, БЦ ""Abu Dhabi Plaza"", блок В, 5 этаж, офис 505.
+
+Мы всегда рады вам!"
