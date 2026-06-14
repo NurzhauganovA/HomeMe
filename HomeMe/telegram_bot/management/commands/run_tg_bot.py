@@ -86,7 +86,24 @@ class Command(BaseCommand):
             return
 
         # Инициализация
-        application = ApplicationBuilder().token(token).concurrent_updates(16).build()
+        async def post_init(application):
+            me = await application.bot.get_me()
+            if me.username:
+                from core.services import referral_service
+                referral_service.cache_telegram_bot_username(me.username)
+                logger.info("Bot username cached for referrals: @%s", me.username)
+            else:
+                logger.warning(
+                    "У бота нет @username в Telegram — реферальные ссылки t.me будут недоступны"
+                )
+
+        application = (
+            ApplicationBuilder()
+            .token(token)
+            .concurrent_updates(16)
+            .post_init(post_init)
+            .build()
+        )
 
         application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
@@ -163,7 +180,7 @@ class Command(BaseCommand):
             from telegram_bot.models import UserSession
 
             bot_user = await sync_to_async(BotUser.objects.get)(
-                user_id=str(user.username),
+                user_id=str(user.id),
                 platform='telegram'
             )
             session = await sync_to_async(lambda: bot_user.session)()
@@ -185,7 +202,7 @@ class Command(BaseCommand):
             from asgiref.sync import sync_to_async
 
             bot_user = await sync_to_async(BotUser.objects.get)(
-                user_id=str(user.username),
+                user_id=str(user.id),
                 platform='telegram'
             )
 

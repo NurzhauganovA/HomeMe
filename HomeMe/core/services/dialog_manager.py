@@ -49,10 +49,11 @@ class EnhancedDialogManager:
 
         await sync_to_async(referral_service.ensure_referral_code)(user)
 
+        referral_attached = False
         start_arg = referral_service.parse_start_argument(text)
         if start_arg:
-            attached = await sync_to_async(referral_service.try_attach_referrer)(user, start_arg)
-            if attached:
+            referral_attached = await sync_to_async(referral_service.try_attach_referrer)(user, start_arg)
+            if referral_attached:
                 await sync_to_async(ProductAnalyticsService.record)(
                     user, 'referral_join',
                     payload={'start_arg': start_arg},
@@ -82,7 +83,7 @@ class EnhancedDialogManager:
                 search_params=None,
             )
             await self._update_state(session, 'START', {})
-            return await self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user, referral_attached=referral_attached)
 
         # Ветка прохождения анкеты обратной связи
         if state == 'SURVEY_IN_PROGRESS':
@@ -120,12 +121,19 @@ class EnhancedDialogManager:
 
             elif 'поделиться' in lowered_text or 'реферал' in lowered_text or 'приглас' in lowered_text or '🔗' in text:
                 code = await sync_to_async(referral_service.ensure_referral_code)(user)
+                share = referral_service.build_referral_share_text(code)
                 link = referral_service.build_telegram_referral_link(code)
-                response['text'] = await BotTextService.aget(
-                    'referral.invite',
-                    fallback='👥 Поделитесь ботом с друзьями.\nВаша персональная ссылка:\n{link}',
-                    link=link,
-                )
+                if link:
+                    response['text'] = await BotTextService.aget(
+                        'referral.invite',
+                        fallback='👥 Поделитесь ботом с друзьями.\nВаша персональная ссылка:\n{link}',
+                        link=link,
+                    )
+                else:
+                    response['text'] = (
+                        '👥 Поделитесь ботом с друзьями.\n'
+                        f'Пусть друг откроет бота и отправит команду:\n{share}'
+                    )
                 response['buttons'] = ['В главное меню']
 
             elif text == '3' or 'эксперт' in lowered_text:
@@ -202,7 +210,7 @@ class EnhancedDialogManager:
                 response = await self._run_search_with_params(session, params, user)
 
             else:
-                return await self._scenario_start(user.name)
+                return await self._scenario_start(user)
 
         elif state == 'CHOOSING_TYPE':
             if '1' in text or 'bi' in text.lower():
@@ -717,7 +725,7 @@ class EnhancedDialogManager:
                     fallback="Я соединю тебя с экспертом. Как к тебе обращаться?",
                 )
             else:
-                return await self._scenario_start(user.name)
+                return await self._scenario_start(user)
 
         elif state == 'BROWSING_UNITS':
             lowered_text = text.lower()
@@ -912,14 +920,14 @@ class EnhancedDialogManager:
         submission_id = params.get('survey_submission_id')
         if not submission_id:
             await self._update_state(session, 'START', params)
-            return await self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user)
 
         submission = await sync_to_async(
             lambda: FeedbackSurveySubmission.objects.select_related('survey').filter(id=submission_id, user=user).first()
         )()
         if not submission:
             await self._update_state(session, 'START', params)
-            return await self._scenario_start(user.name or 'друг')
+            return await self._scenario_start(user)
 
         question = await SurveyService.get_next_question(submission)
         if not question:
@@ -1108,18 +1116,31 @@ class EnhancedDialogManager:
 
         return text
 
-    async def _scenario_start(self, name):
-        return {
-            'text': await BotTextService.aget(
-                "start.welcome",
-                fallback=(
-                    "Привет, {name}!\n"
-                    "Я HomeMe - ИИ-агент по недвижимости в Астане 🏠.\n"
-                    "Помогу подобрать новостройки BI Group и вторичку, "
-                    "а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?"
-                ),
-                name=name,
+    async def _scenario_start(self, user, referral_attached: bool = False):
+        name = user.name or 'друг'
+        welcome = await BotTextService.aget(
+            "start.welcome",
+            fallback=(
+                "Привет, {name}!\n"
+                "Я HomeMe - ИИ-агент по недвижимости в Астане 🏠.\n"
+                "Помогу подобрать новостройки BI Group и вторичку, "
+                "а ещё расскажу про районы и локации.\n\nЧто хочешь сделать?"
             ),
+            name=name,
+        )
+        if referral_attached and user.invited_by_id:
+            referrer = await sync_to_async(
+                lambda: BotUser.objects.filter(pk=user.invited_by_id).values_list('name', 'user_id').first()
+            )()
+            referrer_label = (referrer[0] if referrer and referrer[0] else None) or 'друг'
+            referred_note = await BotTextService.aget(
+                "referral.welcome_referred",
+                fallback="🎉 Вас пригласил {referrer}! Добро пожаловать.\n\n",
+                referrer=referrer_label,
+            )
+            welcome = f"{referred_note}{welcome}"
+        return {
+            'text': welcome,
             'buttons': ['1. Подобрать объект', '⭐ Избранные', '2. Узнать про районы', '🔗 Поделиться с другом']
         }
 
