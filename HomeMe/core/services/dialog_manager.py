@@ -134,6 +134,8 @@ class EnhancedDialogManager:
                         '👥 Поделитесь ботом с друзьями.\n'
                         f'Пусть друг откроет бота и отправит команду:\n{share}'
                     )
+                # Без Markdown: символ _ в @username бота ломает ссылку (Telegram «съедает» _)
+                response['parse_mode'] = 'plain'
                 response['buttons'] = ['В главное меню']
 
             elif text == '3' or 'эксперт' in lowered_text:

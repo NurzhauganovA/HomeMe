@@ -97,17 +97,16 @@ def _fetch_bot_username_from_api() -> Optional[str]:
 def resolve_telegram_bot_username() -> Optional[str]:
     """
     Username бота для ссылок t.me/{username}.
-    Порядок: кэш → TELEGRAM_BOT_USERNAME в .env → getMe API.
+    Порядок: TELEGRAM_BOT_USERNAME в .env → кэш (getMe при старте) → getMe API.
     """
-    cached = cache.get(BOT_USERNAME_CACHE_KEY)
-    if cached:
-        return str(cached).lstrip("@")
-
     configured = getattr(settings, "TELEGRAM_BOT_USERNAME", None) or ""
     configured = str(configured).lstrip("@").strip()
     if configured:
-        cache_telegram_bot_username(configured)
         return configured
+
+    cached = cache.get(BOT_USERNAME_CACHE_KEY)
+    if cached:
+        return str(cached).lstrip("@")
 
     from_api = _fetch_bot_username_from_api()
     if from_api:
