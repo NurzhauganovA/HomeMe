@@ -50,15 +50,23 @@ class EnhancedDialogManager:
         await sync_to_async(referral_service.ensure_referral_code)(user)
 
         referral_attached = False
+        referral_result = None
         start_arg = referral_service.parse_start_argument(text)
         if start_arg:
-            referral_attached = await sync_to_async(referral_service.try_attach_referrer)(user, start_arg)
+            referral_result = await sync_to_async(referral_service.process_referral_start)(user, start_arg)
+            referral_attached = referral_result.consumed
             if referral_attached:
+                payload = {'start_arg': start_arg, 'source': referral_result.source}
+                if referral_result.role_assigned:
+                    payload['role_assigned'] = referral_result.role_name
                 await sync_to_async(ProductAnalyticsService.record)(
                     user, 'referral_join',
-                    payload={'start_arg': start_arg},
+                    payload=payload,
                     search_params=None,
                 )
+
+        if created or not user.role_id:
+            await sync_to_async(referral_service.ensure_default_role)(user)
 
         session, _ = await sync_to_async(UserSession.objects.get_or_create)(user=user)
 

@@ -79,6 +79,14 @@ class BotUser(models.Model):
         related_name="referrals",
         verbose_name="Пригласивший",
     )
+    referral_link = models.ForeignKey(
+        'dashboard.ReferralLink',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='registered_users',
+        verbose_name="Реферальная ссылка (кампания)",
+    )
 
     # Настройки
     is_active = models.BooleanField(default=True)

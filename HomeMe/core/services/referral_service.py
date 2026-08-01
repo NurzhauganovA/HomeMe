@@ -1,11 +1,12 @@
 """
-Реферальная система (ТЗ п.10) — код приглашения и привязка пригласившего.
+Реферальная система (ТЗ п.10) — код приглашения, привязка пригласившего, роли.
 """
 from __future__ import annotations
 
 import logging
 import re
 import secrets
+from dataclasses import dataclass
 from typing import Optional
 
 import requests
@@ -19,9 +20,34 @@ logger = logging.getLogger(__name__)
 BOT_USERNAME_CACHE_KEY = "homeme:telegram_bot_username"
 BOT_USERNAME_CACHE_TTL = 86400
 
+DEFAULT_ROLE_NAME = "Базовый"
+REFERRAL_ROLE_NAME = "Реферал"
+
+REF_CODE_PATTERN = re.compile(r"^ref_([A-Za-z0-9]+)$", re.I)
+
+
+@dataclass
+class ReferralProcessResult:
+    """Результат обработки /start ref_CODE."""
+
+    consumed: bool = False
+    source: Optional[str] = None  # 'user' | 'campaign'
+    role_assigned: bool = False
+    role_name: Optional[str] = None
+
 
 def generate_referral_code() -> str:
     return secrets.token_hex(4).upper()
+
+
+def _code_exists(code: str, exclude_user_pk=None) -> bool:
+    from dashboard.models import ReferralLink
+
+    if BotUser.objects.filter(referral_code__iexact=code).exclude(pk=exclude_user_pk).exists():
+        return True
+    if ReferralLink.objects.filter(code__iexact=code).exists():
+        return True
+    return False
 
 
 def ensure_referral_code(user: BotUser) -> str:
@@ -29,13 +55,22 @@ def ensure_referral_code(user: BotUser) -> str:
         return user.referral_code
     for _ in range(20):
         code = generate_referral_code()
-        if not BotUser.objects.filter(referral_code=code).exclude(pk=user.pk).exists():
+        if not _code_exists(code, exclude_user_pk=user.pk):
             user.referral_code = code
             user.save(update_fields=["referral_code"])
             return code
     user.referral_code = f"U{user.pk.hex[:12].upper()}"
     user.save(update_fields=["referral_code"])
     return user.referral_code
+
+
+def generate_campaign_code() -> str:
+    """Уникальный код для админской реферальной ссылки."""
+    for _ in range(30):
+        code = secrets.token_hex(5).upper()
+        if not _code_exists(code):
+            return code
+    return secrets.token_hex(8).upper()
 
 
 def parse_start_argument(text: str) -> Optional[str]:
@@ -48,23 +83,85 @@ def parse_start_argument(text: str) -> Optional[str]:
     return parts[1].strip() or None
 
 
-def try_attach_referrer(invitee: BotUser, start_arg: Optional[str]) -> bool:
-    """
-    Если start_arg вида ref_XXXXX — привязываем invited_by (один раз).
-    Возвращает True, если привязка выполнена в этом вызове.
-    """
-    if not start_arg or invitee.invited_by_id:
+def _get_role_by_name(name: str):
+    from dashboard.models import Role
+
+    return Role.objects.filter(name=name, is_active=True).first()
+
+
+def _assign_role_if_needed(user: BotUser, role) -> bool:
+    if not role or user.role_id:
         return False
-    m = re.match(r"^ref_([A-Za-z0-9]+)$", start_arg.strip(), re.I)
+    user.role = role
+    user.save(update_fields=["role"])
+    return True
+
+
+def ensure_default_role(user: BotUser) -> bool:
+    """Назначает роль «Базовый», если у пользователя ещё нет роли."""
+    if user.role_id:
+        return False
+    role = _get_role_by_name(DEFAULT_ROLE_NAME)
+    if not role:
+        logger.warning("Роль «%s» не найдена — пользователь %s останется без роли", DEFAULT_ROLE_NAME, user.pk)
+        return False
+    user.role = role
+    user.save(update_fields=["role"])
+    return True
+
+
+def process_referral_start(invitee: BotUser, start_arg: Optional[str]) -> ReferralProcessResult:
+    """
+    Обрабатывает /start ref_CODE:
+    - админская ссылка (ReferralLink) → роль из ссылки;
+    - пользовательская ссылка → invited_by + роль «Реферал».
+    """
+    result = ReferralProcessResult()
+    if not start_arg:
+        return result
+
+    m = REF_CODE_PATTERN.match(start_arg.strip())
     if not m:
-        return False
+        return result
+
     code = m.group(1).upper()
+
+    from dashboard.models import ReferralLink
+
+    campaign = (
+        ReferralLink.objects.filter(code__iexact=code, is_active=True)
+        .select_related("role")
+        .first()
+    )
+    if campaign:
+        if not invitee.referral_link_id:
+            invitee.referral_link = campaign
+            invitee.save(update_fields=["referral_link"])
+        if _assign_role_if_needed(invitee, campaign.role):
+            result.role_assigned = True
+            result.role_name = campaign.role.name
+        result.consumed = True
+        result.source = "campaign"
+        return result
+
+    if invitee.invited_by_id:
+        return result
+
     referrer = BotUser.objects.filter(referral_code__iexact=code).exclude(pk=invitee.pk).first()
     if not referrer:
-        return False
+        return result
+
     invitee.invited_by = referrer
     invitee.save(update_fields=["invited_by"])
-    return True
+
+    referral_role = _get_role_by_name(REFERRAL_ROLE_NAME)
+    if _assign_role_if_needed(invitee, referral_role):
+        result.role_assigned = True
+        result.role_name = REFERRAL_ROLE_NAME
+
+    result.consumed = True
+    result.source = "user"
+    return result
 
 
 def cache_telegram_bot_username(username: str) -> None:

@@ -3,9 +3,11 @@ Dashboard Forms
 Формы для админ-панели с использованием crispy-forms
 """
 
+import re
+
 from django import forms
-from telegram_bot.models import SecondaryProperty, Lead
-from .models import Role, Permission
+from telegram_bot.models import SecondaryProperty, Lead, BotUser
+from .models import Role, Permission, ReferralLink
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Div, Field
 
@@ -143,6 +145,59 @@ class AssignRoleForm(forms.Form):
         empty_label="— Без роли —",
         label="Роль"
     )
+
+
+class ReferralLinkForm(forms.ModelForm):
+    """Форма создания/редактирования админской реферальной ссылки."""
+
+    class Meta:
+        model = ReferralLink
+        fields = ['name', 'code', 'role', 'is_active', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Источник, канал, комментарий...'}),
+            'code': forms.TextInput(attrs={'placeholder': 'Оставьте пустым для автогенерации', 'style': 'text-transform: uppercase;'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].queryset = Role.objects.filter(is_active=True).order_by('name')
+        self.fields['code'].required = False
+        self.fields['code'].help_text = 'Уникальный код для ссылки t.me/bot?start=ref_CODE. Если пусто — сгенерируется автоматически.'
+
+        for name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.setdefault('class', 'form-check-input')
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.setdefault('class', 'form-select')
+            else:
+                field.widget.attrs.setdefault('class', 'form-control')
+
+    def clean_code(self):
+        code = (self.cleaned_data.get('code') or '').strip().upper()
+        if not code and not self.instance.pk:
+            return code
+        if not code and self.instance.pk:
+            return self.instance.code
+        if not re.match(r'^[A-Z0-9]{4,32}$', code):
+            raise forms.ValidationError('Код: только латиница и цифры, от 4 до 32 символов.')
+
+        qs_user = BotUser.objects.filter(referral_code__iexact=code)
+        qs_link = ReferralLink.objects.filter(code__iexact=code)
+        if self.instance.pk:
+            qs_link = qs_link.exclude(pk=self.instance.pk)
+        if qs_user.exists() or qs_link.exists():
+            raise forms.ValidationError('Этот код уже используется.')
+        return code
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if not instance.code:
+            from core.services import referral_service
+            instance.code = referral_service.generate_campaign_code()
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class LeadUpdateForm(forms.ModelForm):

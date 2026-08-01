@@ -125,6 +125,16 @@ VALUES
      true, NOW(), NOW(), 9999, 9999, 9999, 9999, 9999)
 ON CONFLICT (name) DO NOTHING;
 
+-- Роль: Реферал (пришёл по ссылке от другого пользователя)
+INSERT INTO dashboard_role
+    (name, description, is_active, created_at, updated_at,
+     limit_apartments_daily, limit_commercial_daily,
+     limit_primary_daily, limit_secondary_daily, limit_total_daily)
+VALUES
+    ('Реферал', 'Пользователь, пришедший по реферальной ссылке друга',
+     true, NOW(), NOW(), 5, 3, 5, 5, 10)
+ON CONFLICT (name) DO NOTHING;
+
 
 -- =============================================================================
 -- Назначение разрешений базовым ролям
@@ -155,3 +165,21 @@ SELECT r.id, p.id
 FROM dashboard_role r, dashboard_permission p
 WHERE r.name = 'VIP'
 ON CONFLICT DO NOTHING;
+
+-- Реферал: те же права, что у «Базовый»
+INSERT INTO dashboard_role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM dashboard_role r, dashboard_permission p
+WHERE r.name = 'Реферал'
+  AND p.codename IN ('use_bot', 'search_properties', 'manage_favorites',
+                     'view_apartments', 'view_primary_market', 'view_secondary_market')
+ON CONFLICT DO NOTHING;
+
+
+-- =============================================================================
+-- Бэкфилл: каждому пользователю бота без роли выдаём «Базовый»
+-- Аналог: python manage.py assign_default_roles
+-- =============================================================================
+UPDATE telegram_bot_botuser
+SET role_id = (SELECT id FROM dashboard_role WHERE name = 'Базовый' AND is_active LIMIT 1)
+WHERE role_id IS NULL;

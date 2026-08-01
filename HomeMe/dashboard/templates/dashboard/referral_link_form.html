@@ -1,0 +1,68 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if is_create %}Новая реферальная ссылка{% else %}Редактирование ссылки{% endif %}{% endblock %}
+{% block page_title %}{% if is_create %}Создать реферальную ссылку{% else %}Редактировать: {{ object.name }}{% endif %}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="{% url 'dashboard:referral_link_list' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        {% if not is_create and object.code %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header fw-semibold">Готовая ссылка</div>
+            <div class="card-body">
+                {% if telegram_link %}
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control font-monospace small" id="ref-link" readonly value="{{ telegram_link }}">
+                    <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('ref-link').value)">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p class="small text-muted mb-0">Новые пользователи получат роль <strong>{{ object.role.name }}</strong>.</p>
+                {% else %}
+                <p class="text-muted small mb-0">Username бота не настроен — укажите TELEGRAM_BOT_USERNAME в .env</p>
+                {% endif %}
+            </div>
+        </div>
+        {% if registrations %}
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">Последние регистрации ({{ registrations|length }})</div>
+            <ul class="list-group list-group-flush">
+                {% for u in registrations %}
+                <li class="list-group-item d-flex justify-content-between align-items-center small">
+                    <a href="{% url 'dashboard:user_detail' u.pk %}">{{ u.name|default:u.user_id }}</a>
+                    <span class="text-muted">{{ u.created_at|date:"d.m.Y H:i" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body small text-muted">
+                <p class="mb-2"><strong>Пользовательские ссылки</strong> в боте (кнопка «Поделиться») автоматически выдают роль «Реферал».</p>
+                <p class="mb-0"><strong>Админские ссылки</strong> здесь — для кампаний с любой ролью: Instagram, офлайн-мероприятия, партнёры и т.д.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

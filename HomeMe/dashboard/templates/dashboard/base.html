@@ -359,7 +359,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'dashboard:referral_analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'referral_analytics' %}active{% endif %}">
+                <a href="{% url 'dashboard:referral_link_list' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-user-plus"></i>
                     <span>Рефералы</span>
                 </a>

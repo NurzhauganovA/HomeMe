@@ -3,7 +3,7 @@ from .models import (
     ApiAccessToken, Permission, Role, BotText,
     FeedbackSurvey, FeedbackSurveyQuestion,
     FeedbackSurveySubmission, FeedbackSurveyAnswer,
-    BIGroupLeadLog,
+    BIGroupLeadLog, ReferralLink,
 )
 
 
@@ -52,6 +52,18 @@ class RoleAdmin(admin.ModelAdmin):
     def get_users_count(self, obj):
         return obj.bot_users.count()
     get_users_count.short_description = "Пользователей"
+
+
+@admin.register(ReferralLink)
+class ReferralLinkAdmin(admin.ModelAdmin):
+    list_display = ("name", "code", "role", "is_active", "get_registrations_count", "created_at")
+    list_filter = ("is_active", "role")
+    search_fields = ("name", "code", "notes")
+    readonly_fields = ("created_at", "updated_at")
+
+    @admin.display(description="Регистраций")
+    def get_registrations_count(self, obj):
+        return obj.get_registrations_count()
 
 
 @admin.register(BotText)

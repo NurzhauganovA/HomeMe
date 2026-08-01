@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test import SimpleTestCase, TestCase
 
 from core.services import referral_service
+from dashboard.models import ReferralLink, Role
 from telegram_bot.models import BotUser
 
 
@@ -31,6 +32,7 @@ class ReferralParsingTests(SimpleTestCase):
 
 class ReferralAttachTests(TestCase):
     def setUp(self):
+        self.referral_role = Role.objects.create(name=referral_service.REFERRAL_ROLE_NAME, is_active=True)
         self.referrer = BotUser.objects.create(
             platform="telegram",
             user_id="111",
@@ -44,24 +46,69 @@ class ReferralAttachTests(TestCase):
         )
 
     def test_attach_referrer_by_code(self):
-        attached = referral_service.try_attach_referrer(self.invitee, "ref_ref11111")
-        self.assertTrue(attached)
+        result = referral_service.process_referral_start(self.invitee, "ref_ref11111")
+        self.assertTrue(result.consumed)
+        self.assertEqual(result.source, "user")
         self.invitee.refresh_from_db()
         self.assertEqual(self.invitee.invited_by_id, self.referrer.pk)
+        self.assertEqual(self.invitee.role_id, self.referral_role.pk)
 
     def test_attach_only_once(self):
-        referral_service.try_attach_referrer(self.invitee, "ref_REF11111")
+        referral_service.process_referral_start(self.invitee, "ref_REF11111")
         other = BotUser.objects.create(platform="telegram", user_id="333", referral_code="OTHERCODE")
-        attached_again = referral_service.try_attach_referrer(self.invitee, "ref_OTHERCODE")
-        self.assertFalse(attached_again)
+        result = referral_service.process_referral_start(self.invitee, "ref_OTHERCODE")
+        self.assertFalse(result.consumed)
         self.invitee.refresh_from_db()
         self.assertEqual(self.invitee.invited_by_id, self.referrer.pk)
 
     def test_no_self_referral(self):
-        attached = referral_service.try_attach_referrer(self.referrer, "ref_REF11111")
-        self.assertFalse(attached)
+        result = referral_service.process_referral_start(self.referrer, "ref_REF11111")
+        self.assertFalse(result.consumed)
 
     def test_invitee_without_telegram_username_still_works(self):
         self.assertIsNone(self.invitee.username)
-        attached = referral_service.try_attach_referrer(self.invitee, "ref_REF11111")
-        self.assertTrue(attached)
+        result = referral_service.process_referral_start(self.invitee, "ref_REF11111")
+        self.assertTrue(result.consumed)
+
+
+class CampaignReferralTests(TestCase):
+    def setUp(self):
+        self.vip_role = Role.objects.create(name="VIP", is_active=True)
+        self.campaign = ReferralLink.objects.create(
+            name="Instagram",
+            code="CAMPINSTA",
+            role=self.vip_role,
+        )
+        self.invitee = BotUser.objects.create(platform="telegram", user_id="444", name="CampaignUser")
+
+    def test_campaign_link_assigns_role(self):
+        result = referral_service.process_referral_start(self.invitee, "ref_CAMPINSTA")
+        self.assertTrue(result.consumed)
+        self.assertEqual(result.source, "campaign")
+        self.assertTrue(result.role_assigned)
+        self.invitee.refresh_from_db()
+        self.assertEqual(self.invitee.role_id, self.vip_role.pk)
+        self.assertEqual(self.invitee.referral_link_id, self.campaign.pk)
+
+    def test_inactive_campaign_ignored(self):
+        self.campaign.is_active = False
+        self.campaign.save()
+        result = referral_service.process_referral_start(self.invitee, "ref_CAMPINSTA")
+        self.assertFalse(result.consumed)
+
+
+class DefaultRoleTests(TestCase):
+    def test_ensure_default_role(self):
+        Role.objects.create(name=referral_service.DEFAULT_ROLE_NAME, is_active=True)
+        user = BotUser.objects.create(platform="telegram", user_id="555")
+        self.assertTrue(referral_service.ensure_default_role(user))
+        user.refresh_from_db()
+        self.assertEqual(user.role.name, referral_service.DEFAULT_ROLE_NAME)
+
+    def test_ensure_default_role_skips_if_has_role(self):
+        role = Role.objects.create(name="Агент", is_active=True)
+        Role.objects.create(name=referral_service.DEFAULT_ROLE_NAME, is_active=True)
+        user = BotUser.objects.create(platform="telegram", user_id="556", role=role)
+        self.assertFalse(referral_service.ensure_default_role(user))
+        user.refresh_from_db()
+        self.assertEqual(user.role.name, "Агент")

@@ -294,6 +294,40 @@ class FeedbackSurveyAnswer(models.Model):
         return f"{self.submission_id}/{self.question_id}"
 
 
+class ReferralLink(models.Model):
+    """Админская реферальная ссылка с назначенной ролью (источник / кампания)."""
+
+    name = models.CharField("Название", max_length=100)
+    code = models.CharField(
+        "Код ссылки",
+        max_length=32,
+        unique=True,
+        db_index=True,
+        help_text="Используется в t.me/bot?start=ref_CODE",
+    )
+    role = models.ForeignKey(
+        Role,
+        on_delete=models.PROTECT,
+        related_name='referral_links',
+        verbose_name="Роль (пакет)",
+    )
+    is_active = models.BooleanField("Активна", default=True, db_index=True)
+    notes = models.TextField("Заметки", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Реферальная ссылка"
+        verbose_name_plural = "Реферальные ссылки"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+    def get_registrations_count(self):
+        return self.registered_users.count()
+
+
 class BIGroupLeadLog(models.Model):
     """Лог отправок лидов в CRM BI Group."""
 

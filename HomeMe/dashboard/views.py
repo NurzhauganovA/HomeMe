@@ -8,7 +8,7 @@ from django.db.models import Q, Count, Min, Max
 from django.db.models.functions import TruncDate
 
 from telegram_bot.models import Lead, SecondaryProperty, BIComplex, BotUser, BIUnit, BICommercialComplex, BICommercialUnit, DailyUsageLog, BotProductEvent, FavoriteProperty
-from .models import ApiAccessToken, Role, Permission, FeedbackSurvey, FeedbackSurveyQuestion, BotText, BIGroupLeadLog
+from .models import ApiAccessToken, Role, Permission, FeedbackSurvey, FeedbackSurveyQuestion, BotText, BIGroupLeadLog, ReferralLink
 from datetime import timedelta
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -26,7 +26,8 @@ import shutil
 from django.db import models
 
 from core.services.secondary_importer import SecondaryImporter
-from .forms import SecondaryPropertyForm, LeadUpdateForm, RoleForm, AssignRoleForm
+from .forms import SecondaryPropertyForm, LeadUpdateForm, RoleForm, AssignRoleForm, ReferralLinkForm
+from core.services import referral_service
 from django.conf import settings
 from core.services.survey_service import SurveyService
 
@@ -1436,6 +1437,7 @@ class ReferralAnalyticsView(StaffRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['total_invited'] = BotUser.objects.exclude(invited_by__isnull=True).count()
+        ctx['total_campaign'] = BotUser.objects.exclude(referral_link__isnull=True).count()
         ctx['referral_join_events'] = BotProductEvent.objects.filter(event_type='referral_join').count()
         ctx['top_referrers'] = (
             BotUser.objects.annotate(invited_count=Count('referrals'))
@@ -1448,7 +1450,79 @@ class ReferralAnalyticsView(StaffRequiredMixin, TemplateView):
             .select_related('invited_by', 'role')
             .order_by('-created_at')[:50]
         )
+        ctx['campaign_links'] = (
+            ReferralLink.objects.annotate(registrations=Count('registered_users'))
+            .select_related('role')
+            .order_by('-created_at')[:20]
+        )
         return ctx
+
+
+class ReferralLinkListView(StaffRequiredMixin, ListView):
+    """Список админских реферальных ссылок."""
+
+    model = ReferralLink
+    template_name = 'dashboard/referral_link_list.html'
+    context_object_name = 'links'
+    paginate_by = 30
+
+    def get_queryset(self):
+        return (
+            ReferralLink.objects.annotate(registrations=Count('registered_users'))
+            .select_related('role')
+            .order_by('-created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['bot_username'] = referral_service.resolve_telegram_bot_username()
+        return ctx
+
+
+class ReferralLinkCreateView(StaffRequiredMixin, CreateView):
+    model = ReferralLink
+    form_class = ReferralLinkForm
+    template_name = 'dashboard/referral_link_form.html'
+    success_url = reverse_lazy('dashboard:referral_link_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Ссылка «{form.instance.name}» создана')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['is_create'] = True
+        ctx['bot_username'] = referral_service.resolve_telegram_bot_username()
+        return ctx
+
+
+class ReferralLinkUpdateView(StaffRequiredMixin, UpdateView):
+    model = ReferralLink
+    form_class = ReferralLinkForm
+    template_name = 'dashboard/referral_link_form.html'
+    success_url = reverse_lazy('dashboard:referral_link_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Ссылка «{form.instance.name}» обновлена')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['is_create'] = False
+        ctx['bot_username'] = referral_service.resolve_telegram_bot_username()
+        ctx['telegram_link'] = referral_service.build_telegram_referral_link(self.object.code)
+        ctx['registrations'] = self.object.registered_users.select_related('role').order_by('-created_at')[:30]
+        return ctx
+
+
+class ReferralLinkToggleView(StaffRequiredMixin, View):
+    def post(self, request, pk):
+        link = get_object_or_404(ReferralLink, pk=pk)
+        link.is_active = not link.is_active
+        link.save(update_fields=['is_active', 'updated_at'])
+        status = 'активирована' if link.is_active else 'деактивирована'
+        messages.success(request, f'Ссылка «{link.name}» {status}')
+        return redirect('dashboard:referral_link_list')
 
 
 class BIGroupLeadLogView(StaffRequiredMixin, ListView):

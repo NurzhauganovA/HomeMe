@@ -63,6 +63,12 @@ urlpatterns = [
     path('analytics/leads/', views.LeadAnalyticsView.as_view(), name='lead_analytics'),
     path('analytics/referrals/', views.ReferralAnalyticsView.as_view(), name='referral_analytics'),
 
+    # Реферальные ссылки (админ)
+    path('referrals/', views.ReferralLinkListView.as_view(), name='referral_link_list'),
+    path('referrals/create/', views.ReferralLinkCreateView.as_view(), name='referral_link_create'),
+    path('referrals/<int:pk>/edit/', views.ReferralLinkUpdateView.as_view(), name='referral_link_update'),
+    path('referrals/<int:pk>/toggle/', views.ReferralLinkToggleView.as_view(), name='referral_link_toggle'),
+
     # Логи BI Group CRM
     path('bigroup-leads/', views.BIGroupLeadLogView.as_view(), name='bigroup_lead_log'),
 
